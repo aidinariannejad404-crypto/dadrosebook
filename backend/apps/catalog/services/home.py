@@ -7,8 +7,9 @@ from apps.content.models import Banner, GuideVideo
 from apps.core.jalali import jalali_year
 from apps.core.services.store_settings import get_store_settings
 
-from ..models import Book, ExamEvent, ExamType, RelatedCourse, StudyKitRecommendation, Subject
+from ..models import Book, ExamEvent, ExamType, StudyKitRecommendation, Subject
 from .books import active_category_tree, book_card_queryset
+from .courses import exposed_courses
 from .editions import current_exam_year
 
 RAIL_SIZE = 12
@@ -100,9 +101,7 @@ def get_home_data(exam_type: str | None = None) -> dict:
                 "-sales_count", "id"
             )[:RAIL_SIZE]
         ),
-        "featured_course": RelatedCourse.objects.filter(is_active=True)
-        .order_by("order", "id")
-        .first(),
+        "featured_course": exposed_courses().order_by("order", "id").first(),
         "guide_videos": list(
             GuideVideo.objects.filter(is_active=True)
             .select_related("subject", "exam_type")

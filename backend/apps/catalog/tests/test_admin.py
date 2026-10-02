@@ -21,7 +21,8 @@ def admin_client(client):
     [
         "catalog_book", "catalog_bookvariant", "catalog_subject", "catalog_examtype",
         "catalog_examevent", "catalog_category", "catalog_person", "catalog_publisher",
-        "catalog_studykitrecommendation", "catalog_relatedcourse", "content_banner",
+        "catalog_studykitrecommendation", "catalog_relatedcourse", "catalog_subjectcoursediscount",
+        "content_banner",
         "content_guidevideo", "accounts_user",
     ],
 )  # fmt: skip
@@ -93,6 +94,8 @@ def test_book_created_in_admin_gets_search_text(admin_client, catalog):
         "variants-0-is_active": "on",
         "sample_pages-TOTAL_FORMS": 0,
         "sample_pages-INITIAL_FORMS": 0,
+        "course_links-TOTAL_FORMS": 0,
+        "course_links-INITIAL_FORMS": 0,
     }
     response = admin_client.post(url, data)
     assert response.status_code == 302, response.content.decode()[:3000]

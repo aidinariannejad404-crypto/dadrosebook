@@ -15,5 +15,6 @@ urlpatterns = [
     path("categories/", views.CategoryTreeView.as_view(), name="category-list"),
     path("categories/<str:slug>/", views.CategoryDetailView.as_view(), name="category-detail"),
     path("exam-events/", views.ExamEventListView.as_view(), name="exam-event-list"),
+    path("courses/", views.CourseListView.as_view(), name="course-list"),
     path("study-kits/", views.StudyKitListView.as_view(), name="study-kit-list"),
 ]

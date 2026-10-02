@@ -115,21 +115,203 @@ class Publisher(SluggedModel):
         return self.name
 
 
+class CourseQuerySet(models.QuerySet):
+    def exposed(self):
+        """Courses that may appear on the site: active, open for sale and with a known price.
+
+        Archived courses and old WooCommerce products are kept for reference only.
+        """
+        return self.filter(is_active=True, status__in=RelatedCourse.EXPOSED_STATUSES).filter(
+            models.Q(is_free=True) | models.Q(price__isnull=False)
+        )
+
+
 class RelatedCourse(TimeStampedModel):
-    title = models.CharField("عنوان", max_length=200)
-    url = models.URLField("لینک دوره")
-    price = models.PositiveIntegerField("قیمت (تومان)", default=0)
+    """A course of the Dadrose academy (dadrose.com). Purchase links out to the academy site.
+
+    The model keeps its historic name (``RelatedCourse``) and table; the API calls it ``Course``.
+    """
+
+    class CourseType(models.TextChoices):
+        FULL = "FULL", "دوره جامع"
+        ESSENTIALS = "ESSENTIALS", "امهات"
+        TIPS_TESTS = "TIPS_TESTS", "نکته و تست"
+        REVIEW = "REVIEW", "جمع‌بندی"
+        WORKSHOP_ADVICE = "WORKSHOP_ADVICE", "مشاوره و کارگاه"
+        MOCK = "MOCK", "آزمون آزمایشی"
+        PACKAGE = "PACKAGE", "پکیج"
+        OTHER = "OTHER", "سایر"
+
+    class Status(models.TextChoices):
+        OPEN = "OPEN", "قابل خرید"
+        OPEN_UNLISTED = "OPEN_UNLISTED", "قابل خرید (خارج از فهرست)"
+        ARCHIVED = "ARCHIVED", "بایگانی‌شده"
+        LEGACY = "LEGACY", "محصول قدیمی"
+
+    EXPOSED_STATUSES = (Status.OPEN, Status.OPEN_UNLISTED)
+
+    title = models.CharField("عنوان", max_length=250)
+    url = models.URLField("لینک دوره", max_length=500, unique=True)
+    course_type = models.CharField(
+        "نوع دوره", max_length=20, choices=CourseType.choices, default=CourseType.OTHER
+    )
+    subject = models.ForeignKey(
+        Subject,
+        verbose_name="درس",
+        null=True,
+        blank=True,
+        related_name="courses",
+        on_delete=models.SET_NULL,
+    )
+    exam_types = models.ManyToManyField(
+        ExamType, verbose_name="آزمون‌ها", related_name="courses", blank=True
+    )
+    teachers = models.JSONField(
+        "مدرسان", default=list, blank=True, help_text='فهرست نام‌ها، مثلاً ["امین بیات"].'
+    )
+    price = models.PositiveIntegerField(
+        "قیمت (تومان)",
+        null=True,
+        blank=True,
+        help_text="خالی یعنی قیمت نامعلوم (نمایش داده نمی‌شود).",
+    )
+    sale_price = models.PositiveIntegerField("قیمت با تخفیف (تومان)", null=True, blank=True)
+    is_free = models.BooleanField("رایگان", default=False)
+    hours = models.DecimalField("ساعت آموزش", max_digits=6, decimal_places=2, null=True, blank=True)
+    sessions = models.PositiveSmallIntegerField("تعداد جلسات", null=True, blank=True)
+    students_count = models.PositiveIntegerField("تعداد دانشجو", null=True, blank=True)
+    rating = models.DecimalField(
+        "امتیاز",
+        max_digits=2,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+    )
+    reviews_count = models.PositiveIntegerField("تعداد نظرها", default=0)
     image = models.ImageField("تصویر", upload_to="courses/", blank=True)
+    image_source_url = models.URLField("نشانی منبع تصویر", max_length=500, blank=True)
+    intro_video_url = models.URLField("ویدیوی معرفی / جلسه رایگان", max_length=500, blank=True)
+    short_description = models.CharField("توضیح کوتاه", max_length=300, blank=True)
+    selling_points = models.JSONField(
+        "ویژگی‌ها", default=list, blank=True, help_text="فهرست جمله‌های کوتاه."
+    )
+    status = models.CharField(
+        "وضعیت",
+        max_length=20,
+        choices=Status.choices,
+        default=Status.OPEN,
+        help_text="فقط دوره‌های «قابل خرید» روی سایت نمایش داده می‌شوند.",
+    )
+    is_module = models.BooleanField("بخشی از یک دوره بزرگ‌تر", default=False)
+    source_url = models.URLField("منبع اطلاعات", max_length=500, blank=True)
+    checked_on = models.DateField("تاریخ بررسی", null=True, blank=True)
+    notes = models.TextField("یادداشت داخلی", blank=True)
     is_active = models.BooleanField("فعال", default=True)
     order = models.PositiveSmallIntegerField("ترتیب", default=0)
 
+    objects = CourseQuerySet.as_manager()
+
     class Meta:
-        verbose_name = "دوره مرتبط"
-        verbose_name_plural = "دوره‌های مرتبط"
+        verbose_name = "دوره آکادمی"
+        verbose_name_plural = "دوره‌های آکادمی"
         ordering = ["order", "id"]
 
     def __str__(self) -> str:
         return self.title
+
+    @property
+    def effective_price(self) -> int:
+        from .services.pricing import effective_price
+
+        if self.is_free:
+            return 0
+        return effective_price(self.price or 0, self.sale_price)
+
+    @property
+    def is_exposed(self) -> bool:
+        return (
+            self.is_active
+            and self.status in self.EXPOSED_STATUSES
+            and (self.is_free or self.price is not None)
+        )
+
+
+class BookCourse(models.Model):
+    """A book ↔ course link with its relevance (shown in ``course_offer``)."""
+
+    class Relevance(models.TextChoices):
+        REFERENCED = "referenced", "تدریس‌شده بر اساس همین کتاب"
+        SAME_AUTHOR = "same_author", "تدریس توسط مؤلف همین کتاب"
+        SAME_SUBJECT = "same_subject", "دوره همین درس"
+        GENERAL = "general", "مهارت آزمون"
+
+    RANK = {
+        Relevance.REFERENCED: 0,
+        Relevance.SAME_AUTHOR: 1,
+        Relevance.SAME_SUBJECT: 2,
+        Relevance.GENERAL: 3,
+    }
+
+    book = models.ForeignKey(
+        "Book", verbose_name="کتاب", related_name="course_links", on_delete=models.CASCADE
+    )
+    course = models.ForeignKey(
+        RelatedCourse, verbose_name="دوره", related_name="book_links", on_delete=models.CASCADE
+    )
+    relevance = models.CharField(
+        "نوع ارتباط", max_length=20, choices=Relevance.choices, default=Relevance.SAME_SUBJECT
+    )
+    order = models.PositiveSmallIntegerField("ترتیب", default=0)
+    reason = models.CharField("دلیل (داخلی)", max_length=500, blank=True)
+
+    class Meta:
+        verbose_name = "دوره مرتبط با کتاب"
+        verbose_name_plural = "دوره‌های مرتبط با کتاب"
+        ordering = ["order", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["book", "course"], name="unique_book_course"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.book_id} ↔ {self.course}"
+
+
+class SubjectCourseDiscount(TimeStampedModel):
+    """A course discount code the academy created, shown on the books of one subject."""
+
+    subject = models.ForeignKey(
+        Subject, verbose_name="درس", related_name="course_discounts", on_delete=models.CASCADE
+    )
+    code = models.CharField("کد تخفیف", max_length=50)
+    percent = models.PositiveSmallIntegerField(
+        "درصد تخفیف",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+    )
+    label = models.CharField(
+        "متن نمایشی",
+        max_length=200,
+        blank=True,
+        help_text="خالی بگذارید تا خودکار ساخته شود، مثلاً «۱۵٪ تخفیف دوره‌های حقوق مدنی "
+        "برای خریداران این کتاب».",
+    )
+    expires_on = models.DateField(
+        "تاریخ انقضا",
+        null=True,
+        blank=True,
+        help_text="خالی یعنی تا تاریخ آزمون بعدی نمایش داده می‌شود.",
+    )
+    is_active = models.BooleanField("فعال", default=True)
+
+    class Meta:
+        verbose_name = "کد تخفیف دوره"
+        verbose_name_plural = "کدهای تخفیف دوره"
+        ordering = ["-id"]
+
+    def __str__(self) -> str:
+        return f"{self.code} — {self.subject}"
 
 
 class Book(SluggedModel):
@@ -209,7 +391,11 @@ class Book(SluggedModel):
     sample_pdf = models.FileField("نمونه PDF", upload_to="samples/", blank=True)
     intro_video_url = models.URLField("ویدیوی معرفی", blank=True)
     related_courses = models.ManyToManyField(
-        RelatedCourse, verbose_name="دوره‌های مرتبط", related_name="books", blank=True
+        RelatedCourse,
+        verbose_name="دوره‌های مرتبط",
+        related_name="books",
+        blank=True,
+        through=BookCourse,
     )
     is_featured = models.BooleanField("ویژه", default=False)
     is_quick_review = models.BooleanField("سریع‌خوان", default=False)

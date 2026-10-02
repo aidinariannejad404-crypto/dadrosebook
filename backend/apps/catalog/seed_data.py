@@ -123,12 +123,31 @@ def load_old_categories() -> list[dict]:
         return json.load(f)
 
 
-RELATED_COURSE = {
-    "title": "دوره جامع حقوق مدنی ۱ تا ۸",
-    "price": 8_125_000,
-    "url": "https://dadrose.com/",
-    "subject": "حقوق مدنی",  # linked to every book of this subject
+# --- academy courses (dadrose.com) -------------------------------------------------------------
+# ``seed_courses.json``: every course/product found on dadrose.com on 2026-10-02 (all statuses;
+# only open ones are ever shown). ``seed_book_courses.json``: ranked course links per book.
+# See docs/research/dadrose-courses-analysis.md.
+COURSES_FILE = DATA_DIR / "seed_courses.json"
+BOOK_COURSES_FILE = DATA_DIR / "seed_book_courses.json"
+COURSE_STATUS_MAP = {
+    "open": "OPEN",
+    "open_unlisted": "OPEN_UNLISTED",
+    "archived": "ARCHIVED",
+    "legacy_product": "LEGACY",
 }
+# The single placeholder course of the earlier seed (replaced by the real course list).
+PLACEHOLDER_COURSE_URL = "https://dadrose.com/"
+
+
+def load_courses() -> list[dict]:
+    with COURSES_FILE.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_book_courses() -> list[dict]:
+    with BOOK_COURSES_FILE.open(encoding="utf-8") as f:
+        return json.load(f)
+
 
 EXAM_EVENTS = [
     # name, exam type, Jalali (y, m, d), expected Gregorian date (asserted in tests)

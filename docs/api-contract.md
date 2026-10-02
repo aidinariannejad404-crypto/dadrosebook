@@ -73,7 +73,9 @@ Fields and params marked **(added after research)** come from the Phase 1 quick 
   "edition_badge": null,                 // (P1-1) "ویرایش ۱۴۰۵" (Persian digits of publish_year) when publish_year >=
                                          // current exam year (Jalali year of the next upcoming ExamEvent, else this Jalali year)
   "law_updated_until": "",               // (P1-1) free text, e.g. "اصلاحات قانون حمایت خانواده ۱۴۰۴"; "" when unknown → «به‌روز تا: …»
-  "course_badge": "دوره جامع حقوق مدنی ۱ تا ۸", // (P1-13) title of the first active related course, or null
+  "course_badge": "دوره جامع حقوق مدنی ۱ تا ۸", // (P1-13) title of the first open related course, or null.
+                                         // Since the course cross-sell: only courses linked as `referenced`
+                                         // or `same_author` count (the badge reads «منبع دوره دادرُز»)
   "social_proof": {                      // (P1-14)
     "subject_rank": 1,                   //   1..3: rank by sales_count within the book's first subject (active books,
                                          //   ties → lower id first); null when > 3 or sales_count == 0

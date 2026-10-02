@@ -6,6 +6,7 @@ from django.db.models import Exists, OuterRef, Prefetch, Q, QuerySet, Subquery
 
 from ..models import (
     Book,
+    BookCourse,
     BookSamplePage,
     BookVariant,
     Category,
@@ -17,6 +18,8 @@ from ..models import (
 )
 from .pricing import min_effective_price_expression
 from .social_proof import books_ahead_in_subject_expression, first_subject_expression
+
+COURSE_SOURCE_RELEVANCE = (BookCourse.Relevance.REFERENCED, BookCourse.Relevance.SAME_AUTHOR)
 
 
 def active_variants_qs() -> QuerySet:
@@ -51,10 +54,18 @@ def has_sample_q() -> Q:
 
 
 def first_course_title_expression():
+    """Title of the first exposed course taught from this book or by its author (link order).
+
+    Same-subject links do not count: «منبع دوره دادرُز» must be true.
+    """
     return Subquery(
-        RelatedCourse.objects.filter(books=OuterRef("pk"), is_active=True)
+        BookCourse.objects.filter(
+            book=OuterRef("pk"),
+            relevance__in=COURSE_SOURCE_RELEVANCE,
+            course__in=RelatedCourse.objects.exposed(),
+        )
         .order_by("order", "id")
-        .values("title")[:1]
+        .values("course__title")[:1]
     )
 
 

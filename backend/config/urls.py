@@ -9,6 +9,7 @@ api_v1 = [
     path("health/", HealthView.as_view(), name="health"),
     path("store/settings/", StoreSettingsView.as_view(), name="store-settings"),
     path("catalog/", include("apps.catalog.api.urls")),
+    path("leads/", include("apps.leads.api.urls")),
 ]
 
 urlpatterns = [

@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from ..models import Book, BookSamplePage, Category, ExamType, RelatedCourse
 from ..services.books import active_category_tree, book_card_queryset
+from ..services.courses import course_links_queryset, exposed_courses
 from ..services.home import get_home_data, subjects_with_book_count, upcoming_exam_events
 from ..services.related import related_books
 from ..services.study_kits import kit_placements, study_kits
@@ -64,11 +65,14 @@ class BookDetailView(generics.RetrieveAPIView):
             "translators",
             "categories",
             Prefetch("sample_pages", queryset=BookSamplePage.objects.order_by("order", "id")),
-            Prefetch("related_courses", queryset=RelatedCourse.objects.order_by("order", "id")),
+            Prefetch(
+                "course_links", queryset=course_links_queryset(), to_attr="exposed_course_links"
+            ),
         )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        context["exam_type"] = selected_exam_type(self.request)
         if getattr(self, "_book", None) is not None:
             context["kit_placements"] = kit_placements(self._book)
         return context
@@ -147,3 +151,23 @@ class StudyKitListView(APIView):
             subjects=_multi(request.query_params, "subject"),
         )
         return Response(s.StudyKitSerializer(kits, many=True, context={"request": request}).data)
+
+
+class CourseListView(APIView):
+    """Exposed academy courses; ``subject``/``exam_type`` (slugs) and ``course_type`` filters."""
+
+    def get(self, request):
+        params = request.query_params
+        qs = exposed_courses()
+        subjects = _multi(params, "subject")
+        if subjects:
+            qs = qs.filter(subject__slug__in=subjects)
+        exam_types = _multi(params, "exam_type")
+        if exam_types:
+            qs = qs.filter(exam_types__slug__in=exam_types)
+        valid_types = set(RelatedCourse.CourseType.values)
+        types = [t.upper() for t in _multi(params, "course_type") if t.upper() in valid_types]
+        if types:
+            qs = qs.filter(course_type__in=types)
+        courses = qs.distinct().order_by("order", "id")
+        return Response(s.CourseSerializer(courses, many=True, context={"request": request}).data)

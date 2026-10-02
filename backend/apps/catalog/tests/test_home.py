@@ -58,7 +58,9 @@ def test_home_endpoint_shape(api, content):
     assert set(data["hero_banners"][0]) == {
         "id", "title", "subtitle", "image", "link_url", "link_label",
     }  # fmt: skip
-    assert set(data["featured_course"]) == {"id", "title", "url", "price", "image"}
+    from .test_api import COURSE_KEYS
+
+    assert set(data["featured_course"]) == COURSE_KEYS
     video = data["guide_videos"][0]
     assert set(video) == {"id", "title", "video_url", "thumbnail", "subject", "exam_type"}
     assert video["exam_type"] is None and video["subject"]["slug"] == "حقوق-مدنی"

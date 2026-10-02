@@ -15,12 +15,14 @@ from rest_framework.test import APIClient
 from apps.catalog import seed_data
 from apps.catalog.models import (
     Book,
+    BookCourse,
     BookVariant,
     Category,
     ExamEvent,
     ExamType,
     Person,
     Publisher,
+    RelatedCourse,
     StudyKitItem,
     StudyKitRecommendation,
     Subject,
@@ -235,13 +237,7 @@ def test_study_kits(seeded):
     assert set(kits.filter(exam_type__name="مرکز وکلا").values_list("weight", flat=True)) == {None}
 
 
-def test_related_course_on_civil_law_books(seeded):
-    civil = Book.objects.filter(subjects__name="حقوق مدنی")
-    assert civil.count() == sum(1 for r in RECORDS if "حقوق مدنی" in r["subjects"])
-    assert all(b.related_courses.get().price == 8_125_000 for b in civil)
-    assert not Book.objects.exclude(subjects__name="حقوق مدنی").filter(
-        related_courses__isnull=False
-    )
+def test_banners(seeded):
     assert Banner.objects.get(placement="HERO").link_url == "/kit"
 
 
@@ -287,3 +283,69 @@ def test_seed_if_empty_keeps_admin_edits(db):
     call_command("seed_catalog", "--if-empty")
     variant.refresh_from_db()
     assert variant.price == 123_000
+
+
+# --- academy courses ----------------------------------------------------------------------------
+COURSES = seed_data.load_courses()
+BOOK_COURSES = seed_data.load_book_courses()
+
+
+def test_course_data_files_shape():
+    assert len(COURSES) == 78
+    assert len({c["url"] for c in COURSES}) == len(COURSES)
+    assert {c["status"] for c in COURSES} <= set(seed_data.COURSE_STATUS_MAP)
+    assert {c["course_type"] for c in COURSES} <= set(RelatedCourse.CourseType.values)
+    urls = {c["url"] for c in COURSES}
+    assert all(link["course_url"] in urls for row in BOOK_COURSES for link in row["courses"])
+    assert {link["relevance"] for row in BOOK_COURSES for link in row["courses"]} <= set(
+        BookCourse.Relevance.values
+    )
+
+
+def test_seed_courses_and_links(seeded):
+    assert RelatedCourse.objects.count() == len(COURSES)
+    open_rows = [
+        c
+        for c in COURSES
+        if c["status"] in ("open", "open_unlisted") and (c["price"] is not None or c["is_free"])
+    ]
+    assert RelatedCourse.objects.exposed().count() == len(open_rows)
+    assert not RelatedCourse.objects.exposed().filter(status__in=["ARCHIVED", "LEGACY"]).exists()
+    assert not RelatedCourse.objects.filter(url=seed_data.PLACEHOLDER_COURSE_URL).exists()
+    assert BookCourse.objects.count() == sum(len(r["courses"]) for r in BOOK_COURSES)
+
+    flagship = RelatedCourse.objects.get(url=COURSES[0]["url"])
+    assert flagship.subject.name == "حقوق مدنی"
+    assert flagship.intro_video_url == "https://www.aparat.com/v/nssk9vk"
+    assert set(flagship.exam_types.values_list("name", flat=True)) == set(COURSES[0]["exam_types"])
+    assert flagship.checked_on == dt.date(2026, 10, 2)
+
+    diagram = Book.objects.get(slug="حقوق-مدنی-نموداری")
+    links = list(diagram.course_links.select_related("course").order_by("order"))
+    assert links and all(x.relevance == "referenced" for x in links)
+    assert all("امین بیات" in x.course.teachers for x in links)
+    empty = [r["book_slug"] for r in BOOK_COURSES if not r["courses"]]
+    assert empty and not BookCourse.objects.filter(book__slug__in=empty).exists()
+
+
+def test_seed_courses_is_idempotent(seeded):
+    before = (RelatedCourse.objects.count(), BookCourse.objects.count())
+    call_command("seed_catalog")
+    assert (RelatedCourse.objects.count(), BookCourse.objects.count()) == before
+
+
+def test_seeded_civil_book_course_offer(seeded):
+    api = APIClient()
+    data = api.get(f"/api/v1/catalog/books/{quote('حقوق-مدنی-نموداری')}/").json()
+    offer = data["course_offer"]
+    assert offer["highlight"]["relevance"] == "referenced"
+    assert "امین بیات" in offer["highlight"]["teachers"]
+    assert data["course_badge"] == offer["highlight"]["title"]
+    assert [t["tier"] for t in offer["tiers"]] == ["best", "better", "good"]
+    assert all(c["url"].startswith("https://dadrose.com/") for c in data["related_courses"])
+    free_sample = offer["free_sample"]
+    assert free_sample["video_url"] == "https://www.aparat.com/v/nssk9vk"
+    assert offer["discount"] is None  # no real discount codes are seeded
+    # Books the research marks as «no course fits» get no offer.
+    empty = next(r["book_slug"] for r in BOOK_COURSES if not r["courses"])
+    assert api.get(f"/api/v1/catalog/books/{quote(empty)}/").json()["course_offer"] is None

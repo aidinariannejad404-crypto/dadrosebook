@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.catalog",
     "apps.content",
+    "apps.leads",
 ]
 
 MIDDLEWARE = [
@@ -154,6 +155,12 @@ REST_FRAMEWORK = {
     "UNAUTHENTICATED_USER": None,
     # ``?format=`` is a catalog filter (print/ebook/bundle), not DRF renderer selection.
     "URL_FORMAT_OVERRIDE": None,
+    # Only views that set ``throttle_scope`` are throttled (per client IP).
+    "DEFAULT_THROTTLE_RATES": {
+        "study_plan": env("STUDY_PLAN_THROTTLE_RATE", default="10/hour"),
+    },
+    # Set to the number of trusted reverse proxies in prod so the client IP is read correctly.
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
 }
 
 # --- CORS / CSRF --------------------------------------------------------------------------------

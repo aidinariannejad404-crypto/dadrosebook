@@ -75,6 +75,7 @@ dadrosebook/
 │       ├── core/               # normalize.py, slugs.py, jalali.py, money.py, storages, admin forms, TimeStamped
 │       ├── catalog/            # models, admin, api (serializers/filters/views), services/, seed command, tests
 │       ├── content/            # Banner, GuideVideo (homepage, admin-managed)
+│       ├── leads/              # Lead (study-plan lead magnet), study plan generator, CSV export
 │       ├── accounts/   (P3)    # User (phone), OTP, SmsProvider
 │       ├── cart/       (P2)
 │       ├── orders/     (P3)    # Order, OrderItem, Address, ShippingMethod, DiscountCode, StoreSettings

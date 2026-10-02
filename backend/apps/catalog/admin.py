@@ -12,6 +12,7 @@ from apps.core.money import format_toman, to_persian_digits
 
 from .models import (
     Book,
+    BookCourse,
     BookSamplePage,
     BookVariant,
     Category,
@@ -23,6 +24,7 @@ from .models import (
     StudyKitItem,
     StudyKitRecommendation,
     Subject,
+    SubjectCourseDiscount,
 )
 from .services.books import active_variants_qs
 from .services.completeness import (
@@ -31,6 +33,7 @@ from .services.completeness import (
     completeness_percent,
     missing_labels,
 )
+from .services.course_links import suggest_course_links
 from .services.editions import current_exam_year
 from .services.pricing import book_min_price
 from .services.search import search_books
@@ -85,13 +88,125 @@ class PublisherAdmin(ModelAdmin):
 
 @admin.register(RelatedCourse)
 class RelatedCourseAdmin(ModelAdmin):
-    list_display = ("title", "price_toman", "url", "order", "is_active")
-    list_editable = ("order", "is_active")
-    search_fields = ("title",)
+    list_display = (
+        "title",
+        "course_type",
+        "subject",
+        "teachers_list",
+        "price_toman",
+        "hours_display",
+        "students_count",
+        "status",
+        "is_active",
+    )
+    list_filter = ("course_type", "subject", "status", "exam_types", "is_free", "is_active")
+    list_editable = ("is_active",)
+    list_select_related = ("subject",)
+    search_fields = ("title", "url", "teachers")
+    autocomplete_fields = ("subject", "exam_types")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        (
+            "اطلاعات اصلی",
+            {"fields": ("title", "url", "course_type", "subject", "exam_types", "teachers")},
+        ),
+        (
+            "قیمت و حجم",
+            {
+                "fields": (
+                    "price",
+                    "sale_price",
+                    "is_free",
+                    "hours",
+                    "sessions",
+                    "students_count",
+                    "rating",
+                    "reviews_count",
+                )
+            },
+        ),
+        (
+            "محتوا",
+            {
+                "fields": (
+                    "short_description",
+                    "selling_points",
+                    "intro_video_url",
+                    "image",
+                    "image_source_url",
+                )
+            },
+        ),
+        (
+            "وضعیت",
+            {
+                "fields": (
+                    "status",
+                    "is_module",
+                    "is_active",
+                    "order",
+                    "source_url",
+                    "checked_on",
+                    "notes",
+                )
+            },
+        ),
+        ("زمان‌ها", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+    )
 
     @admin.display(description="قیمت", ordering="price")
     def price_toman(self, obj):
-        return format_toman(obj.price)
+        if obj.is_free:
+            return "رایگان"
+        return format_toman(obj.price) if obj.price is not None else "—"
+
+    @admin.display(description="ساعت", ordering="hours")
+    def hours_display(self, obj):
+        if obj.hours is None:
+            return "—"
+        return to_persian_digits(f"{obj.hours.normalize():f}")
+
+    @admin.display(description="مدرس")
+    def teachers_list(self, obj):
+        return "، ".join(obj.teachers or []) or "—"
+
+
+class SubjectCourseDiscountForm(forms.ModelForm):
+    expires_on = JalaliDateField(
+        label="تاریخ انقضا (شمسی)",
+        required=False,
+        help_text="مثلاً ۱۴۰۵/۰۸/۰۷. خالی یعنی تا تاریخ آزمون بعدی.",
+    )
+
+    class Meta:
+        model = SubjectCourseDiscount
+        fields = ("subject", "code", "percent", "label", "expires_on", "is_active")
+
+
+@admin.register(SubjectCourseDiscount)
+class SubjectCourseDiscountAdmin(ModelAdmin):
+    form = SubjectCourseDiscountForm
+    list_display = ("code", "subject", "percent", "jalali_expires_on", "is_active")
+    list_filter = ("subject", "is_active")
+    list_editable = ("is_active",)
+    list_select_related = ("subject",)
+    search_fields = ("code", "label")
+
+    @admin.display(description="انقضا", ordering="expires_on")
+    def jalali_expires_on(self, obj):
+        if obj.expires_on is None:
+            return "تا آزمون بعدی"
+        return to_jalali_str(obj.expires_on, persian_digits=True)
+
+
+class BookCourseInline(TabularInline):
+    model = BookCourse
+    extra = 0
+    fields = ("order", "course", "relevance", "reason")
+    autocomplete_fields = ("course",)
+    ordering = ("order", "id")
+    verbose_name = "دوره مرتبط"
+    verbose_name_plural = "دوره‌های مرتبط (فقط دوره‌های قابل خرید نمایش داده می‌شوند)"
 
 
 class BookVariantInline(TabularInline):
@@ -132,7 +247,8 @@ class CompletenessFilter(admin.SimpleListFilter):
 
 @admin.register(Book)
 class BookAdmin(ModelAdmin):
-    inlines = (BookVariantInline, BookSamplePageInline)
+    inlines = (BookVariantInline, BookSamplePageInline, BookCourseInline)
+    actions = ("suggest_courses",)
     list_display = (
         "cover_thumb",
         "title",
@@ -166,7 +282,6 @@ class BookAdmin(ModelAdmin):
         "subjects",
         "exam_types",
         "categories",
-        "related_courses",
     )
     readonly_fields = ("is_quick_review", "created_at", "updated_at")
     list_per_page = 50
@@ -201,7 +316,6 @@ class BookAdmin(ModelAdmin):
             "فروش و نمایش",
             {
                 "fields": (
-                    "related_courses",
                     "is_featured",
                     "is_quick_review",
                     "sales_count",
@@ -213,6 +327,16 @@ class BookAdmin(ModelAdmin):
         ),
         ("زمان‌ها", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
+
+    @admin.action(description="پیشنهاد خودکار دوره‌ها")
+    def suggest_courses(self, request, queryset):
+        result = suggest_course_links(queryset)
+        self.message_user(
+            request,
+            f"برای {to_persian_digits(result['books'])} کتاب بدون دوره، "
+            f"{to_persian_digits(result['links'])} پیوند «دوره همین درس» ساخته شد. "
+            "کتاب‌هایی که از قبل دوره داشتند تغییری نکردند.",
+        )
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "description":

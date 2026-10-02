@@ -5,6 +5,9 @@ Books and categories come from the old store (``seed_catalogue.json``,
 Leftovers of the earlier demo seed are deactivated (``is_active=False``), not deleted.
 """
 
+import datetime as dt
+from decimal import Decimal
+
 import jdatetime
 from django.db import transaction
 
@@ -14,6 +17,7 @@ from apps.core.slugs import persian_slugify
 from .. import seed_data as data
 from ..models import (
     Book,
+    BookCourse,
     BookVariant,
     Category,
     ExamEvent,
@@ -25,6 +29,7 @@ from ..models import (
     StudyKitRecommendation,
     Subject,
 )
+from .course_links import suggest_course_links
 from .legacy_import import (
     infer_resource_type,
     legacy_path,
@@ -54,26 +59,14 @@ def seed_catalog() -> dict[str, int]:
 
     categories = seed_categories()
 
-    course, _ = RelatedCourse.objects.update_or_create(
-        title=data.RELATED_COURSE["title"],
-        defaults={
-            "url": data.RELATED_COURSE["url"],
-            "price": data.RELATED_COURSE["price"],
-            "is_active": True,
-            "order": 0,
-        },
-    )
+    courses = seed_courses(exam_types, subjects)
 
     records = data.load_catalogue()
     ranks = sales_ranks(records)
     books: list[Book] = []
     for record in records:
-        book = _seed_book(record, ranks, exam_types, subjects, categories)
-        if data.RELATED_COURSE["subject"] in record["subjects"]:
-            book.related_courses.set([course])
-        else:
-            book.related_courses.clear()
-        books.append(book)
+        books.append(_seed_book(record, ranks, exam_types, subjects, categories))
+    links = seed_book_course_links(books, courses)
 
     real_slugs = {b.slug for b in books}
     demo_deactivated = (
@@ -122,6 +115,9 @@ def seed_catalog() -> dict[str, int]:
         "in_stock": sum(1 for r in records if stock_for(r) > 0),
         "variants": BookVariant.objects.filter(book__in=books).count(),
         "study_kits": kits,
+        "courses": len(courses),
+        "courses_open": RelatedCourse.objects.exposed().count(),
+        "course_links": links,
         "demo_books_deactivated": demo_deactivated,
     }
 
@@ -297,4 +293,87 @@ def _seed_study_kits(books, exam_types, subjects) -> int:
     StudyKitRecommendation.objects.exclude(pk__in=kept).filter(
         exam_type__slug__in=[persian_slugify(n) for n in data.KIT_EXAM_TYPES]
     ).update(is_active=False)
+    return count
+
+
+def _course_fields(row: dict, subjects: dict[str, Subject], order: int) -> dict:
+    hours = row.get("hours")
+    rating = row.get("rating")
+    checked = row.get("checked")
+    sources = row.get("sources") or {}
+    return {
+        "title": row["title"],
+        "course_type": row["course_type"],
+        "subject": subjects.get(row.get("subject") or ""),
+        "teachers": list(row.get("teachers") or []),
+        "price": row.get("price"),
+        "sale_price": row.get("sale_price"),
+        "is_free": bool(row.get("is_free")),
+        "hours": Decimal(str(hours)) if hours is not None else None,
+        "sessions": row.get("sessions"),
+        "students_count": row.get("students_count"),
+        "rating": Decimal(str(rating)) if rating is not None else None,
+        "reviews_count": row.get("reviews_count") or 0,
+        "image_source_url": row.get("image_url") or "",
+        "intro_video_url": row.get("intro_video_url") or "",
+        "short_description": (row.get("description") or "")[:300],
+        "selling_points": list(row.get("selling_points") or []),
+        "status": data.COURSE_STATUS_MAP[row["status"]],
+        "is_module": bool(row.get("is_module")),
+        "source_url": sources.get("course_page") or row["url"],
+        "checked_on": dt.date.fromisoformat(checked) if checked else None,
+        "notes": row.get("notes") or "",
+        "is_active": True,
+        "order": order,
+    }
+
+
+def seed_courses(exam_types: dict, subjects: dict) -> dict[str, RelatedCourse]:
+    """Load every academy course (keyed by URL); the old placeholder course is removed."""
+    RelatedCourse.objects.filter(url=data.PLACEHOLDER_COURSE_URL).delete()
+    courses: dict[str, RelatedCourse] = {}
+    for order, row in enumerate(data.load_courses()):
+        course, _ = RelatedCourse.objects.update_or_create(
+            url=row["url"], defaults=_course_fields(row, subjects, order)
+        )
+        course.exam_types.set(
+            [exam_types[n] for n in row.get("exam_types") or [] if n in exam_types]
+        )
+        courses[row["url"]] = course
+    return courses
+
+
+def seed_book_course_links(books: list[Book], courses: dict[str, RelatedCourse]) -> int:
+    """Replace the course links of every book listed in ``seed_book_courses.json``.
+
+    Books not listed there get automatic same-subject suggestions (only if they have no links).
+    """
+    by_slug = {b.slug: b for b in books}
+    by_path = {b.legacy_path: b for b in books if b.legacy_path}
+    listed: set[int] = set()
+    count = 0
+    for row in data.load_book_courses():
+        book = by_slug.get(row["book_slug"]) or by_path.get(row.get("book_old_url") or "")
+        if book is None:
+            continue
+        listed.add(book.pk)
+        wanted = [
+            (courses[link["course_url"]], link)
+            for link in row["courses"]
+            if link["course_url"] in courses
+        ]
+        BookCourse.objects.filter(book=book).exclude(course__in=[c for c, _ in wanted]).delete()
+        for order, (course, link) in enumerate(wanted):
+            BookCourse.objects.update_or_create(
+                book=book,
+                course=course,
+                defaults={
+                    "relevance": link["relevance"],
+                    "order": order,
+                    "reason": (link.get("reason") or "")[:500],
+                },
+            )
+            count += 1
+    others = Book.objects.filter(pk__in=[b.pk for b in books]).exclude(pk__in=listed)
+    count += suggest_course_links(others)["links"]
     return count

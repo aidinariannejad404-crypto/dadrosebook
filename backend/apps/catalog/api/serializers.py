@@ -7,6 +7,7 @@ from apps.core.serializers import StoreSettingsSerializer
 
 from ..models import (
     Book,
+    BookCourse,
     BookSamplePage,
     BookVariant,
     Category,
@@ -19,6 +20,14 @@ from ..models import (
 )
 from ..services.books import sorted_variants
 from ..services.cards import card_extras
+from ..services.course_offer import build_course_offer
+from ..services.courses import (
+    course_links_queryset,
+    hours_int,
+    price_per_hour,
+    rating_shown,
+    students_shown,
+)
 from ..services.editions import current_exam_year
 from ..services.pricing import book_card_variant, book_min_price, bundle_saving
 
@@ -222,11 +231,110 @@ class BookCardWithVariantsSerializer(BookCardSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """``Course`` (full shape). Social proof is honest: small numbers become ``null``."""
+
+    course_type_label = serializers.CharField(source="get_course_type_display", read_only=True)
+    subject = SubjectMiniSerializer(read_only=True, allow_null=True)
+    exam_types = ExamTypeMiniSerializer(many=True, read_only=True)
+    price = serializers.SerializerMethodField()
+    effective_price = serializers.IntegerField(read_only=True)
+    hours = serializers.SerializerMethodField()
+    price_per_hour = serializers.SerializerMethodField()
+    students_count = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
     image = serializers.ImageField(read_only=True)
 
     class Meta:
         model = RelatedCourse
-        fields = ["id", "title", "url", "price", "image"]
+        fields = [
+            "id",
+            "title",
+            "url",
+            "course_type",
+            "course_type_label",
+            "subject",
+            "exam_types",
+            "teachers",
+            "price",
+            "sale_price",
+            "effective_price",
+            "is_free",
+            "hours",
+            "sessions",
+            "price_per_hour",
+            "students_count",
+            "rating",
+            "reviews_count",
+            "image",
+            "intro_video_url",
+            "short_description",
+            "selling_points",
+        ]
+
+    def get_price(self, obj: RelatedCourse) -> int:
+        return 0 if obj.is_free else (obj.price or 0)
+
+    def get_hours(self, obj: RelatedCourse) -> int | None:
+        return hours_int(obj)
+
+    def get_price_per_hour(self, obj: RelatedCourse) -> int | None:
+        return price_per_hour(obj)
+
+    def get_students_count(self, obj: RelatedCourse) -> int | None:
+        return students_shown(obj)
+
+    def get_rating(self, obj: RelatedCourse) -> float | None:
+        return rating_shown(obj)
+
+
+def serialize_offer_course(candidate, context: dict, *, with_tier: bool = False) -> dict:
+    data = dict(CourseSerializer(candidate.course, context=context).data)
+    data["relevance"] = candidate.relevance
+    data["relevance_label"] = BookCourse.Relevance(candidate.relevance).label
+    if with_tier:
+        data["tier"] = candidate.tier
+        data["is_recommended"] = candidate.is_recommended
+    return data
+
+
+def serialize_course_offer(offer, context: dict) -> dict | None:
+    if offer is None:
+        return None
+    return {
+        "subject": SubjectMiniSerializer(offer.subject).data if offer.subject else None,
+        "recommended_type": offer.recommended_type,
+        "recommended_reason": offer.recommended_reason,
+        "highlight": (
+            serialize_offer_course(offer.highlight, context) if offer.highlight else None
+        ),
+        "tiers": [serialize_offer_course(c, context, with_tier=True) for c in offer.tiers],
+        "more": [serialize_offer_course(c, context) for c in offer.more],
+        "free_sample": (
+            {
+                "course": serialize_offer_course(offer.free_sample, context),
+                "video_url": offer.free_sample.course.intro_video_url,
+            }
+            if offer.free_sample
+            else None
+        ),
+        "discount": (
+            {
+                **offer.discount,
+                "expires_on": _iso(offer.discount["expires_on"]),
+            }
+            if offer.discount
+            else None
+        ),
+        "exam_countdown": (
+            {**offer.exam_countdown, "date": _iso(offer.exam_countdown["date"])}
+            if offer.exam_countdown
+            else None
+        ),
+    }
+
+
+def _iso(value) -> str | None:
+    return value.isoformat() if value is not None else None
 
 
 class SamplePageSerializer(serializers.ModelSerializer):
@@ -252,6 +360,7 @@ class BookDetailSerializer(BookCardSerializer):
     sample_pages = SamplePageSerializer(many=True, read_only=True)
     variants = serializers.SerializerMethodField()
     related_courses = serializers.SerializerMethodField()
+    course_offer = serializers.SerializerMethodField()
     kit_placements = serializers.SerializerMethodField()
 
     class Meta(BookCardSerializer.Meta):
@@ -273,6 +382,7 @@ class BookDetailSerializer(BookCardSerializer):
             "intro_video_url",
             "variants",
             "related_courses",
+            "course_offer",
             "kit_placements",
             "is_featured",
             "updated_at",
@@ -285,9 +395,22 @@ class BookDetailSerializer(BookCardSerializer):
     def get_variants(self, obj: Book) -> list[dict]:
         return serialize_variants(_active_variants(obj), self.context)
 
+    def _course_links(self, obj: Book) -> list:
+        links = getattr(obj, "exposed_course_links", None)
+        if links is None:
+            links = list(course_links_queryset().filter(book=obj))
+            obj.exposed_course_links = links
+        return links
+
     def get_related_courses(self, obj: Book) -> list[dict]:
-        courses = [c for c in obj.related_courses.all() if c.is_active]
+        """Exposed courses linked to the book, in link order (compatibility field)."""
+        courses = [link.course for link in self._course_links(obj)]
         return CourseSerializer(courses, many=True, context=self.context).data
+
+    def get_course_offer(self, obj: Book) -> dict | None:
+        self._course_links(obj)
+        offer = build_course_offer(obj, exam_type=self.context.get("exam_type"))
+        return serialize_course_offer(offer, self.context)
 
     def get_kit_placements(self, obj: Book) -> list[dict]:
         placements = self.context.get("kit_placements", [])

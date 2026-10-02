@@ -20,7 +20,8 @@ BOOK_DETAIL_KEYS = BOOK_CARD_KEYS | {
     "publisher", "translators", "categories", "edition", "publish_year", "pages", "isbn",
     "description", "table_of_contents", "study_plan_note", "study_days", "sample_pdf",
     "sample_pages",
-    "intro_video_url", "variants", "related_courses", "kit_placements", "is_featured",
+    "intro_video_url", "variants", "related_courses", "course_offer", "kit_placements",
+    "is_featured",
     "updated_at",
 }  # fmt: skip
 VARIANT_KEYS = {
@@ -30,7 +31,12 @@ VARIANT_KEYS = {
 SUBJECT_KEYS = {"id", "name", "slug", "color"}
 EXAM_TYPE_KEYS = {"id", "name", "slug", "short_name"}
 PERSON_KEYS = {"id", "name", "slug"}
-COURSE_KEYS = {"id", "title", "url", "price", "image"}
+COURSE_KEYS = {
+    "id", "title", "url", "course_type", "course_type_label", "subject", "exam_types", "teachers",
+    "price", "sale_price", "effective_price", "is_free", "hours", "sessions", "price_per_hour",
+    "students_count", "rating", "reviews_count", "image", "intro_video_url", "short_description",
+    "selling_points",
+}  # fmt: skip
 
 LIST = "/api/v1/catalog/books/"
 CIVIL = "حقوق مدنی دوجلدی"

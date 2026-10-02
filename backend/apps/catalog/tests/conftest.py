@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 
 from apps.catalog.models import (
     Book,
+    BookCourse,
     BookVariant,
     Category,
     ExamEvent,
@@ -102,9 +103,15 @@ def catalog(db):
         sales_count=999,
     )
     course = RelatedCourse.objects.create(
-        title="دوره جامع حقوق مدنی ۱ تا ۸", url="https://dadrose.com/", price=8_125_000
+        title="دوره جامع حقوق مدنی ۱ تا ۸",
+        url="https://dadrose.com/",
+        price=8_125_000,
+        course_type=RelatedCourse.CourseType.FULL,
+        subject=civil,
     )
-    civil_book.related_courses.set([course])
+    BookCourse.objects.create(
+        book=civil_book, course=course, relevance=BookCourse.Relevance.REFERENCED
+    )
     ExamEvent.objects.create(name="آزمون گذشته", exam_type=kanoon, date=dt.date(2020, 1, 1))
     ExamEvent.objects.create(
         name="آزمون کانون وکلا ۱۴۰۵", exam_type=kanoon, date=dt.date(2099, 11, 5)

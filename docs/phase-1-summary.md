@@ -69,6 +69,18 @@ Screenshots against the real API: `docs/screenshots/`.
   links, resource types, honest social proof, SEO titles, admin completeness score, store settings page.
 - **Decisions applied:** print price on cards, `#3F6B6B` for «قوانین خاص», Umami for analytics (Phase 5).
 
+## Academy courses on book pages (2026-10-02)
+
+- **Course catalogue.** All 53 open courses on dadrose.com (78 rows incl. archived) are in the admin with type
+  (جامع / امهات / نکته و تست / …), subject, teacher, hours, price and students; 278 book↔course links ranked
+  «based on this book» > «taught by the author» > «same subject». Analysis: `docs/research/dadrose-courses-analysis.md`.
+- **Cross-sell section on every book page:** author/referenced course first, good-better-best tiers with the tier
+  that fits the days left to the exam marked «پیشنهاد ما», price per hour, honest student counts, free first-session
+  video, other courses of the subject, and a per-subject discount code (admin «کد تخفیف دوره»; none seeded until the
+  academy creates real codes). Purchase links out to dadrose.com with UTM tracking; shared cart planned for Phase 3.
+- **Study-plan lead magnet:** a mobile number + exam + subjects gives a day-by-day plan to the exam with review days
+  and matching courses, printable / save as PDF. Leads are listed and exportable (CSV) in the admin.
+
 ## Skipped / deferred on purpose
 
 - Add to cart and "notify me" are visible but say the feature is coming (cart and back-in-stock requests are Phase 2).
