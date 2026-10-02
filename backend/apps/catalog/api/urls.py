@@ -8,6 +8,9 @@ app_name = "catalog"
 urlpatterns = [
     path("home/", views.HomeView.as_view(), name="home"),
     path("books/", views.BookListView.as_view(), name="book-list"),
+    # Before ``books/<str:slug>/`` so "facets" is not read as a slug.
+    path("books/facets/", views.BookFacetsView.as_view(), name="book-facets"),
+    path("search/suggest/", views.SearchSuggestView.as_view(), name="search-suggest"),
     path("books/<str:slug>/", views.BookDetailView.as_view(), name="book-detail"),
     path("books/<str:slug>/related/", views.RelatedBooksView.as_view(), name="book-related"),
     path("subjects/", views.SubjectListView.as_view(), name="subject-list"),

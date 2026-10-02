@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 
@@ -36,6 +37,8 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.content",
     "apps.leads",
+    "apps.cart",
+    "apps.engagement",
 ]
 
 MIDDLEWARE = [
@@ -158,6 +161,7 @@ REST_FRAMEWORK = {
     # Only views that set ``throttle_scope`` are throttled (per client IP).
     "DEFAULT_THROTTLE_RATES": {
         "study_plan": env("STUDY_PLAN_THROTTLE_RATE", default="10/hour"),
+        "back_in_stock": env("BACK_IN_STOCK_THROTTLE_RATE", default="10/hour"),
     },
     # Set to the number of trusted reverse proxies in prod so the client IP is read correctly.
     "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
@@ -165,6 +169,8 @@ REST_FRAMEWORK = {
 
 # --- CORS / CSRF --------------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"])
+CORS_ALLOW_HEADERS = (*default_headers, "x-cart-token")
+CORS_EXPOSE_HEADERS = ["X-Search-Relaxed"]
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000", "http://localhost:3000"]
 )
@@ -178,6 +184,12 @@ CELERY_ACCEPT_CONTENT = ["json"]
 
 # --- integrations -------------------------------------------------------------------------------
 SMS_PROVIDER = env("SMS_PROVIDER", default="console")
+# Public storefront origin, used in SMS links (e.g. back-in-stock → {SITE_URL}/product/<slug>).
+SITE_URL = env("SITE_URL", default="http://localhost:3000")
+
+# --- cart ---------------------------------------------------------------------------------------
+CART_MAX_QUANTITY = env.int("CART_MAX_QUANTITY", default=10)
+CART_TTL_DAYS = env.int("CART_TTL_DAYS", default=60)
 
 # --- caching knobs ------------------------------------------------------------------------------
 HOME_CACHE_SECONDS = env.int("HOME_CACHE_SECONDS", default=60)
@@ -291,6 +303,22 @@ UNFOLD = {
                         "title": "ویدیوهای راهنما",
                         "icon": "smart_display",
                         "link": reverse_lazy("admin:content_guidevideo_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "فروش",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "سبدهای خرید",
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:cart_cart_changelist"),
+                    },
+                    {
+                        "title": "موجود شد خبرم کن",
+                        "icon": "notifications_active",
+                        "link": reverse_lazy("admin:engagement_backinstockrequest_changelist"),
                     },
                 ],
             },

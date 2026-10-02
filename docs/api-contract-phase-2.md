@@ -106,7 +106,11 @@ and per-variant pending counts.
 
 ## Search and category discovery
 
-### `GET /catalog/books/` (unchanged, Phase 1) is the result list for `/category/<slug>` and `/search`.
+### `GET /catalog/books/` is the result list for `/category/<slug>` and `/search`.
+Phase 1 params unchanged. **Relaxed fallback (Phase 2):** when `q` has more than one word and the strict
+search (every word must match) finds nothing, the list returns books matching *any* word (other filters
+kept), ranked by words matched, and sets the response header `X-Search-Relaxed: 1` (exposed via CORS).
+`/catalog/books/facets/` applies the same fallback so its `count` agrees.
 
 ### `GET /catalog/books/facets/` — same query params as the list (except `page`, `page_size`, `ordering`)
 Counts are computed on the result set with **that facet's own filter removed** (so a user can switch
@@ -127,7 +131,7 @@ within a facet), all other filters applied.
 `q` normalised like the list; fewer than 2 characters → all lists empty. Cached 60s per query.
 ```jsonc
 {
-  "q": "مدنی",
+  "q": "مدنی",                                  // the normalised query
   "books": [{ "id": 1, "title": "…", "slug": "…", "cover": null, "subjects": [SubjectMini], "authors": [PersonMini], "card_price": 2200000 }], // ≤ 6, by sales_count
   "subjects": [SubjectMini],                    // ≤ 4, name contains the query
   "categories": [{ "id": 1, "name": "…", "slug": "…" }], // ≤ 4
