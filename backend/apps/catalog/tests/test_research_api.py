@@ -156,6 +156,9 @@ def test_edition_badge(api, catalog):
 def test_course_badge_social_proof_and_badges(api, catalog):
     Book.objects.filter(pk=catalog["civil_book"].pk).update(season_sales_count=42)
     Book.objects.filter(pk=catalog["commerce_book"].pk).update(season_sales_count=19)
+    Book.objects.filter(pk__in=[catalog["tests_book"].pk, catalog["quick_book"].pk]).update(
+        season_sales_count=1
+    )
     all_cards = cards(api)
     civil = all_cards[CIVIL]
     assert civil["course_badge"] == "دوره جامع حقوق مدنی ۱ تا ۸"
@@ -175,6 +178,12 @@ def test_course_badge_ignores_inactive_course(api, catalog):
     catalog["course"].is_active = False
     catalog["course"].save()
     assert cards(api)[CIVIL]["course_badge"] is None
+
+
+def test_no_rank_from_editorial_sales_count_alone(api, catalog):
+    # Seeded/editorial sales_count orders rails but never produces a "bestseller" claim.
+    Book.objects.update(season_sales_count=0)
+    assert all(c["social_proof"]["subject_rank"] is None for c in cards(api).values())
 
 
 def test_no_rank_without_sales(api, catalog):

@@ -60,7 +60,12 @@ def book_social_proof(book) -> dict:
     """``{"subject_rank": int|None, "season_buyers": int|None}`` for a card-queryset book."""
     ahead = getattr(book, "books_ahead_in_subject", None)
     has_subject = getattr(book, "first_subject_id", None) is not None
+    # ``sales_count`` can be seeded/editorial ordering; only claim a rank once real sales
+    # this season exist (``season_sales_count`` is filled from orders in Phase 3).
+    has_real_sales = book.season_sales_count > 0
     return {
-        "subject_rank": subject_rank(book.sales_count, ahead) if has_subject else None,
+        "subject_rank": (
+            subject_rank(book.sales_count, ahead) if has_subject and has_real_sales else None
+        ),
         "season_buyers": season_buyers(book.season_sales_count),
     }

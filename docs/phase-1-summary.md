@@ -16,8 +16,8 @@ On first start the backend migrates and runs `seed_catalog` (idempotent, safe on
 Checks (all passing):
 
 ```bash
-cd backend  && ruff check . && ruff format --check . && pytest      # 183 tests
-cd frontend && npm run lint && npm run typecheck && npm test         # 23 tests
+cd backend  && ruff check . && ruff format --check . && pytest      # ~280 tests
+cd frontend && npm run lint && npm run typecheck && npm test         # 52 tests
 ```
 
 ## What was built
@@ -50,6 +50,24 @@ services healthy, homepage and product page 200, unknown product 404, admin RTL,
 - Analytics `track()` stub already fires `view_item`, `notify_me_requested`, `course_cross_sell_click`.
 
 Screenshots against the real API: `docs/screenshots/`.
+
+## Additions after the first review (2026-10-02)
+
+- **Real catalogue.** All 78 books from dadrosebook.com (42 in stock, 36 out of stock) with their own descriptions,
+  specs and the **same URLs** (`/product/<old slug>`, `/category/<old slug>`), so SEO carries over. Data:
+  `backend/apps/catalog/seed_catalogue.json`. `seed_catalog --if-empty` runs on start and never overwrites admin edits.
+- **Prices.** dadrosebook's live prices are kept; six books that were cheaper than the publisher's current price
+  (Chatr Danesh store) were raised to it, with the source in the variant's «منبع قیمت» note (admin).
+- **Covers.** `python manage.py fetch_covers` downloads each book's cover from the old store's image host. It could not
+  run in the build sandbox (host blocked) but runs automatically on `docker compose up` on a machine that can reach
+  oss.sazito.com. Until then books show the generated subject-colour cover.
+- **3D books.** Every cover (real or generated) is shown as a CSS-only 3D book: spine, page block, two-volume sets,
+  pointer tilt on the product page. Lighthouse mobile stays 95–98.
+- **Competitor research** (`docs/research/competitor-analysis.md`) and its 18 Phase 1 quick wins, built on backend and
+  storefront: edition badge, exam-fit table, persistent «آزمون من», sample buttons above the fold, kit role,
+  countdown and delivery promise on the product page, bundle saving, sold-out fallbacks, subject weights, consult
+  links, resource types, honest social proof, SEO titles, admin completeness score, store settings page.
+- **Decisions applied:** print price on cards, `#3F6B6B` for «قوانین خاص», Umami for analytics (Phase 5).
 
 ## Skipped / deferred on purpose
 

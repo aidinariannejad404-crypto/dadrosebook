@@ -200,6 +200,12 @@ class Book(SluggedModel):
         help_text="حدود چند روز مطالعه لازم است؛ خالی یعنی نامشخص.",
     )
     cover = models.ImageField("جلد", upload_to="covers/", blank=True)
+    cover_source_url = models.URLField(
+        "نشانی منبع جلد",
+        max_length=1000,
+        blank=True,
+        help_text="تصویر جلد با دستور fetch_covers از این نشانی دریافت می‌شود (اگر جلد خالی باشد).",
+    )
     sample_pdf = models.FileField("نمونه PDF", upload_to="samples/", blank=True)
     intro_video_url = models.URLField("ویدیوی معرفی", blank=True)
     related_courses = models.ManyToManyField(
@@ -215,6 +221,13 @@ class Book(SluggedModel):
         "فقط وقتی ۲۰ یا بیشتر باشد روی سایت نمایش داده می‌شود.",
     )
     is_active = models.BooleanField("فعال", default=True)
+    legacy_path = models.CharField(
+        "نشانی در سایت قبلی",
+        max_length=500,
+        blank=True,
+        db_index=True,
+        help_text="مسیر این کتاب در فروشگاه قبلی (مثلاً /product/…)؛ برای ریدایرکت ۳۰۱.",
+    )
     search_text = models.TextField("متن جستجو", blank=True, editable=False)
 
     class Meta:
@@ -284,6 +297,9 @@ class BookVariant(TimeStampedModel):
     is_active = models.BooleanField("فعال", default=True)
     price_is_placeholder = models.BooleanField(
         "قیمت موقت است", default=False, help_text="قیمت هنوز توسط فروشگاه تأیید نشده است."
+    )
+    price_note = models.CharField(
+        "منبع قیمت", max_length=250, blank=True, help_text="منبع/توضیح قیمت"
     )
 
     class Meta:

@@ -98,7 +98,15 @@ class BookVariantInline(TabularInline):
     model = BookVariant
     extra = 0
     max_num = 3
-    fields = ("type", "price", "sale_price", "stock", "is_active", "price_is_placeholder")
+    fields = (
+        "type",
+        "price",
+        "sale_price",
+        "stock",
+        "is_active",
+        "price_is_placeholder",
+        "price_note",
+    )
 
 
 class BookSamplePageInline(TabularInline):
@@ -188,7 +196,7 @@ class BookAdmin(ModelAdmin):
             "محتوا",
             {"fields": ("description", "table_of_contents", "study_plan_note", "study_days")},
         ),
-        ("رسانه", {"fields": ("cover", "sample_pdf", "intro_video_url")}),
+        ("رسانه", {"fields": ("cover", "cover_source_url", "sample_pdf", "intro_video_url")}),
         (
             "فروش و نمایش",
             {
@@ -199,6 +207,7 @@ class BookAdmin(ModelAdmin):
                     "sales_count",
                     "season_sales_count",
                     "is_active",
+                    "legacy_path",
                 )
             },
         ),

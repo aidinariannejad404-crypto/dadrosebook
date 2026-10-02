@@ -2,6 +2,7 @@
 
 python manage.py seed_catalog                    # exam types, subjects, categories, books…
 python manage.py seed_catalog --with-superuser   # also admin 09120000000 / "admin" (DEBUG only)
+python manage.py seed_catalog --if-empty         # skip when books exist (keeps admin edits)
 """
 
 from django.conf import settings
@@ -25,10 +26,21 @@ class Command(BaseCommand):
             ),
         )
 
+        parser.add_argument(
+            "--if-empty",
+            action="store_true",
+            help="Skip when the catalogue already has books, so admin edits survive restarts.",
+        )
+
     def handle(self, *args, **options):
-        counts = seed_catalog()
-        summary = ", ".join(f"{k}={v}" for k, v in counts.items())
-        self.stdout.write(self.style.SUCCESS(f"Catalogue seeded: {summary}"))
+        from apps.catalog.models import Book
+
+        if options["if_empty"] and Book.objects.exists():
+            self.stdout.write("Catalogue already has books; seeding skipped (--if-empty).")
+        else:
+            counts = seed_catalog()
+            summary = ", ".join(f"{k}={v}" for k, v in counts.items())
+            self.stdout.write(self.style.SUCCESS(f"Catalogue seeded: {summary}"))
 
         if options["with_superuser"]:
             self._create_superuser()

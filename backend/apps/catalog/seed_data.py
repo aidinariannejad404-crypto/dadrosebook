@@ -1,11 +1,15 @@
-"""Seed catalogue for Phase 1 (used by ``manage.py seed_catalog``).
+"""Seed data for ``manage.py seed_catalog``.
 
-Real prices for PRINT variants come from the current store. EBOOK/BUNDLE prices and the
-سریع‌خوان prices are placeholders (``price_is_placeholder=True``) until the owner confirms them.
-Publishers are unknown, so books have no publisher yet.
+The books and categories are the REAL catalogue of the current store (dadrosebook.com, Sazito),
+scraped into ``seed_catalogue.json`` (78 books) and ``seed_old_categories.json`` (18 categories).
+Old slugs are kept exactly so ``/product/<slug>`` and ``/category/<slug>`` URLs stay identical.
+Exam types, subjects, exam dates, the Dadrose course, kit weights, banners and guide videos are
+defined here.
 """
 
 import datetime as dt
+import json
+from pathlib import Path
 
 EXAM_TYPES = [
     # name, short_name
@@ -30,267 +34,94 @@ SUBJECTS = [
     ("قوانین خاص", "#3F6B6B"),
 ]
 
-BAR_EXAM_CATEGORY = "آزمون وکالت"
-QUICK_REVIEW_CATEGORY = "سریع‌خوان"
-CATEGORIES = [
-    # (name, children). Children of «آزمون وکالت» are one per subject.
-    (BAR_EXAM_CATEGORY, [name for name, _ in SUBJECTS]),
-    ("ارشد و دکتری", ["حقوق خصوصی", "حقوق جزا و جرم‌شناسی", "حقوق عمومی"]),
-    (QUICK_REVIEW_CATEGORY, []),
-]
-
 KANOON = "کانون وکلا"
 MARKAZ = "مرکز وکلا"
-DEFAULT_EXAM_TYPES = [KANOON, MARKAZ]
 
-_TOC_CIVIL = """بخش اول: اموال و مالکیت
-بخش دوم: حق انتفاع و ارتفاق
-بخش سوم: قواعد عمومی قراردادها
-بخش چهارم: عقود معین
-بخش پنجم: الزامات خارج از قرارداد
-بخش ششم: اشخاص و خانواده
-بخش هفتم: ارث و وصیت
-پیوست: تست‌های آزمون‌های سال‌های اخیر"""
+DATA_DIR = Path(__file__).resolve().parent
+CATALOGUE_FILE = DATA_DIR / "seed_catalogue.json"
+OLD_CATEGORIES_FILE = DATA_DIR / "seed_old_categories.json"
 
-_TOC_CIVIL_PROCEDURE = """فصل اول: صلاحیت دادگاه‌ها
-فصل دوم: دعوا و اقسام آن
-فصل سوم: دادخواست و جلسه دادرسی
-فصل چهارم: ادله اثبات دعوا
-فصل پنجم: رأی و طرق شکایت از آرا
-فصل ششم: دعاوی طاری و دستور موقت
-پیوست: تست‌های طبقه‌بندی‌شده"""
+OLD_SITE = "https://dadrosebook.com"
+OLD_SITE_HOSTS = {"dadrosebook.com", "www.dadrosebook.com"}
+# Links to other retailers are removed from imported descriptions (their text is kept).
+RETAILER_HOSTS = {
+    "hovalvakil.com",
+    "digikala.com",
+    "ketabrah.ir",
+    "taaghche.com",
+    "fidibo.com",
+    "iranketab.ir",
+    "30book.com",
+    "adinehbook.com",
+}
 
-_TOC_COMMERCIAL = """فصل اول: تاجر و اعمال تجاری
-فصل دوم: شرکت‌های تجاری
-فصل سوم: اسناد تجاری (برات، سفته، چک)
-فصل چهارم: ورشکستگی
-فصل پنجم: حق‌العمل‌کاری، حمل‌ونقل و قائم‌مقامی
-پیوست: پرسش‌های چهارگزینه‌ای"""
+# In stock on the old site but without a stock number.
+DEFAULT_STOCK = 10
 
-_TOC_USUL = """مباحث الفاظ: اوامر و نواهی
-عام و خاص، مطلق و مقید
-مفاهیم
-حجت و امارات
-اصول عملیه: برائت، احتیاط، تخییر، استصحاب
-تعارض ادله"""
+# --- categories --------------------------------------------------------------------------------
+# Old category slug → parent slug. Every other old category is a root. Order = old menu order.
+CATEGORY_PARENTS = {
+    "حقوق-تجارت": "آزمون-وکالت",
+    "حقوق-جزا": "آزمون-وکالت",
+    "آیین-دادرسی-کیفری": "آزمون-وکالت",
+    "فقه": "آزمون-وکالت",
+    "حقوق-اساسی": "آزمون-وکالت",
+    "حقوق-ثبت": "آزمون-وکالت",
+    "حقوق-مدنی-7710a": "آزمون-وکالت",
+    "آیین-دادرسی-مدنی": "آزمون-وکالت",
+    "حقوق-خصوصی": "ارشد-و-دکتری",
+    "جزا-و-جرم-شناسی": "ارشد-و-دکتری",
+    # A second, separate Sazito «قضاوت» category (one book); kept for its URL.
+    "قضاوت": "قضاوت-836ca",
+}
+# Roots to create when the old site has no such category (slug → name).
+EXTRA_ROOT_CATEGORIES = {"ارشد-و-دکتری": "ارشد و دکتری"}
+# Old categories that are not migrated (no books: disabled course products).
+SKIPPED_CATEGORIES = {"دوره-های-آموزشی"}
 
-_TOC_FIQH = """کتاب البیع و خیارات
-کتاب الاجاره
-کتاب النکاح و الطلاق
-کتاب الحدود و القصاص
-کتاب الدیات
-ترجمه و شرح عبارات دشوار"""
-
-_TOC_CRIMINAL_PROCEDURE = """فصل اول: کلیات و دعاوی ناشی از جرم
-فصل دوم: کشف جرم و تحقیقات مقدماتی
-فصل سوم: صلاحیت دادگاه‌های کیفری
-فصل چهارم: رسیدگی در دادگاه
-فصل پنجم: اعتراض به آرا و اجرای احکام"""
-
-_TOC_QUICK = """جمع‌بندی مواد پرتکرار
-نکات تستی هر فصل
-جدول‌های مقایسه‌ای
-تست‌های سال‌های اخیر با پاسخ کوتاه"""
-
-
-def _desc(*paragraphs: str) -> str:
-    return "".join(f"<p>{p}</p>" for p in paragraphs)
-
-
-BOOKS = [
-    {
-        "title": "حقوق مدنی دوجلدی",
-        "authors": ["دکتر شکری"],
-        "subjects": ["حقوق مدنی"],
-        "price": 2_200_000,
-        "stock": 24,
-        "volumes": 2,
-        "pages": 1240,
-        "is_featured": True,
-        "description": _desc(
-            "مجموعه دوجلدی حقوق مدنی برای داوطلبان آزمون وکالت؛ تمام مباحث قانون مدنی به زبان "
-            "ساده، همراه با نظریات مشورتی و آرای وحدت رویه.",
-            "در پایان هر فصل، تست‌های آزمون‌های کانون و مرکز وکلا با پاسخ تشریحی آمده است.",
-        ),
-        "table_of_contents": _TOC_CIVIL,
-        "study_plan_note": "منبع اصلی حقوق مدنی؛ از ماه‌های اول برنامه مطالعه شروع کنید و دو بار "
-        "به‌طور کامل مرور کنید.",
-    },
-    {
-        "title": "آیین دادرسی مدنی",
-        "authors": ["دکتر شکری"],
-        "subjects": ["آیین دادرسی مدنی"],
-        "price": 1_500_000,
-        "stock": 18,
-        "pages": 760,
-        "is_featured": True,
-        "description": _desc(
-            "شرح کاربردی قانون آیین دادرسی مدنی با تمرکز بر نکات پرتکرار آزمون وکالت و مثال‌های "
-            "عملی از رویه دادگاه‌ها."
-        ),
-        "table_of_contents": _TOC_CIVIL_PROCEDURE,
-        "study_plan_note": "بعد از دور اول حقوق مدنی بخوانید؛ فصل صلاحیت و طرق شکایت را با دقت "
-        "بیشتری مرور کنید.",
-    },
-    {
-        "title": "آیین دادرسی مدنی",
-        "authors": [],
-        "subjects": ["آیین دادرسی مدنی"],
-        "price": 1_750_000,
-        "stock": 12,
-        "pages": 840,
-        "description": _desc(
-            "درسنامه آیین دادرسی مدنی همراه با تست‌های طبقه‌بندی‌شده موضوعی و پاسخ‌نامه تشریحی."
-        ),
-        "table_of_contents": _TOC_CIVIL_PROCEDURE,
-        "study_plan_note": "برای مرور دوم و تست‌زنی موضوعی آیین دادرسی مدنی مناسب است.",
-    },
-    {
-        "title": "درسنامه جامع حقوق تجارت",
-        "authors": [],
-        "subjects": ["حقوق تجارت"],
-        "price": 1_495_000,
-        "sale_price": 1_345_000,
-        "stock": 30,
-        "pages": 690,
-        "description": _desc(
-            "درسنامه‌ای جامع برای حقوق تجارت؛ از تاجر و اعمال تجاری تا ورشکستگی، با جدول‌های "
-            "مقایسه‌ای شرکت‌های تجاری."
-        ),
-        "table_of_contents": _TOC_COMMERCIAL,
-        "study_plan_note": "حقوق تجارت را هم‌زمان با مرور دوم مدنی شروع کنید؛ اسناد تجاری "
-        "بیشترین سهم تست را دارد.",
-    },
-    {
-        "title": "آموزش جامع حقوق تجارت (۲ جلدی)",
-        "authors": [],
-        "subjects": ["حقوق تجارت"],
-        "price": 1_790_000,
-        "stock": 9,
-        "volumes": 2,
-        "pages": 1080,
-        "description": _desc(
-            "آموزش گام‌به‌گام حقوق تجارت در دو جلد، با تحلیل مواد قانون تجارت و لایحه اصلاحی "
-            "و تست‌های آزمون‌های سال‌های اخیر."
-        ),
-        "table_of_contents": _TOC_COMMERCIAL,
-        "study_plan_note": "اگر وقت بیشتری دارید، این مجموعه را به‌جای درسنامه به‌عنوان منبع "
-        "اصلی تجارت بخوانید.",
-    },
-    {
-        "title": "اصول فقه آزمونی",
-        "authors": ["دکتر شب‌خیز"],
-        "subjects": ["اصول فقه"],
-        "price": 850_000,
-        "stock": 21,
-        "pages": 430,
-        "description": _desc(
-            "اصول فقه به زبان ساده و با رویکرد آزمونی؛ مباحث الفاظ و اصول عملیه همراه با "
-            "مثال‌های حقوقی."
-        ),
-        "table_of_contents": _TOC_USUL,
-        "study_plan_note": "روزی یک ساعت در کنار درس‌های اصلی؛ تست‌های هر فصل را بلافاصله بزنید.",
-    },
-    {
-        "title": "متون فقه کانون وکلا",
-        "authors": ["محسن سینجلی"],
-        "subjects": ["متون فقه"],
-        "exam_types": [KANOON],
-        "price": 960_000,
-        "stock": 15,
-        "pages": 520,
-        "description": _desc(
-            "ترجمه و شرح متون فقه مطابق منابع آزمون کانون وکلا، با تمرکز بر عبارت‌های "
-            "پرتکرار در تست‌ها."
-        ),
-        "table_of_contents": _TOC_FIQH,
-        "study_plan_note": "مخصوص داوطلبان کانون وکلا؛ هم‌زمان با اصول فقه بخوانید.",
-    },
-    {
-        "title": "۱۱۰۰ تست برگزیده متون فقه",
-        "resource_type": "TESTS",
-        "authors": [],
-        "subjects": ["متون فقه"],
-        "price": 480_000,
-        "stock": 40,
-        "pages": 310,
-        "description": _desc(
-            "۱۱۰۰ تست برگزیده متون فقه از آزمون‌های سال‌های گذشته با پاسخ تشریحی و ارجاع به متن عربی."
-        ),
-        "table_of_contents": """تست‌های بیع و خیارات
-تست‌های اجاره و نکاح
-تست‌های حدود، قصاص و دیات
-پاسخ‌نامه تشریحی""",
-        "study_plan_note": "بعد از پایان دور اول متون فقه، برای تثبیت و سنجش خودتان.",
-    },
-    {
-        "title": "شرح آزمونی آیین دادرسی کیفری",
-        "authors": [],
-        "subjects": ["آیین دادرسی کیفری"],
-        "price": 900_000,
-        "stock": 5,
-        "pages": 560,
-        "description": _desc(
-            "شرح مواد قانون آیین دادرسی کیفری با رویکرد آزمونی، نمودارهای مراحل دادرسی و "
-            "تست‌های طبقه‌بندی‌شده."
-        ),
-        "table_of_contents": _TOC_CRIMINAL_PROCEDURE,
-        "study_plan_note": "بعد از حقوق جزا بخوانید؛ مراحل تحقیقات مقدماتی پرتکرارترین بخش است.",
-    },
-    # --- سریع‌خوان (out of stock, placeholder prices) -------------------------------------------
-    {
-        "title": "سریع‌خوان آیین دادرسی کیفری",
-        "authors": [],
-        "subjects": ["آیین دادرسی کیفری"],
-        "price": 390_000,
-        "stock": 0,
-        "quick_review": True,
-        "pages": 180,
-        "description": _desc("جمع‌بندی فشرده آیین دادرسی کیفری برای هفته‌های آخر قبل از آزمون."),
-        "table_of_contents": _TOC_QUICK,
-        "study_plan_note": "برای مرور نهایی در یک ماه آخر.",
-    },
-    {
-        "title": "سریع‌خوان متون فقه مرکز وکلا",
-        "authors": [],
-        "subjects": ["متون فقه"],
-        "exam_types": [MARKAZ],
-        "price": 390_000,
-        "stock": 0,
-        "quick_review": True,
-        "pages": 160,
-        "description": _desc("مرور سریع متون فقه مطابق منابع آزمون مرکز وکلا."),
-        "table_of_contents": _TOC_QUICK,
-        "study_plan_note": "برای مرور نهایی در یک ماه آخر.",
-    },
-    {
-        "title": "سریع‌خوان جزای عمومی",
-        "authors": [],
-        "subjects": ["حقوق جزا"],
-        "price": 390_000,
-        "stock": 0,
-        "quick_review": True,
-        "pages": 170,
-        "description": _desc("نکات کلیدی حقوق جزای عمومی در قالب جدول و خلاصه."),
-        "table_of_contents": _TOC_QUICK,
-        "study_plan_note": "برای مرور نهایی در یک ماه آخر.",
-    },
-    {
-        "title": "سریع‌خوان قوانین خاص جزایی",
-        "authors": [],
-        "subjects": ["قوانین خاص"],
-        "price": 390_000,
-        "stock": 0,
-        "quick_review": True,
-        "pages": 150,
-        "description": _desc("خلاصه قوانین خاص جزایی پرتکرار در آزمون وکالت."),
-        "table_of_contents": _TOC_QUICK,
-        "study_plan_note": "برای مرور نهایی در یک ماه آخر.",
-    },
+# --- leftovers of the earlier demo seed --------------------------------------------------------
+# Demo books whose slug is not a real old-store slug are deactivated (is_active=False), never
+# deleted. Demo books whose slug matches a real book are updated in place.
+DEMO_BOOK_SLUGS = [
+    "حقوق-مدنی-دوجلدی-دکتر-شکری",
+    "آیین-دادرسی-مدنی-دکتر-شکری",
+    "آیین-دادرسی-مدنی",
+    "درسنامه-جامع-حقوق-تجارت",
+    "آموزش-جامع-حقوق-تجارت-2-جلدی",
+    "اصول-فقه-آزمونی-دکتر-شب-خیز",
+    "متون-فقه-کانون-وکلا-محسن-سینجلی",
+    "1100-تست-برگزیده-متون-فقه",
+    "شرح-آزمونی-آیین-دادرسی-کیفری",
+    "سریع-خوان-آیین-دادرسی-کیفری",
+    "سریع-خوان-متون-فقه-مرکز-وکلا",
+    "سریع-خوان-جزای-عمومی",
+    "سریع-خوان-قوانین-خاص-جزایی",
+]
+# Demo categories not on the old site are deactivated the same way.
+DEMO_CATEGORY_SLUGS = [
+    "حقوق-مدنی",
+    "اصول-فقه",
+    "متون-فقه",
+    "قوانین-خاص",
+    "حقوق-جزا-و-جرم-شناسی",
+    "حقوق-عمومی",
 ]
 
-SALES_COUNT_START = 180
-SALES_COUNT_STEP = 15
+# --- study kits --------------------------------------------------------------------------------
+KIT_MAX_ITEMS = 6
+
+
+def load_catalogue() -> list[dict]:
+    """Book records scraped from the old store, in the old store's order (by old id)."""
+    with CATALOGUE_FILE.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_old_categories() -> list[dict]:
+    """Old store categories in old menu order (plus an uncategorised pseudo-row, slug None)."""
+    with OLD_CATEGORIES_FILE.open(encoding="utf-8") as f:
+        return json.load(f)
+
 
 RELATED_COURSE = {
     "title": "دوره جامع حقوق مدنی ۱ تا ۸",
@@ -335,7 +166,7 @@ BANNERS = [
     {
         "placement": "COURSE",
         "title": "کتاب + دوره؛ مسیر کامل حقوق مدنی",
-        "subtitle": "حقوق مدنی دوجلدی را همراه با «دوره جامع حقوق مدنی ۱ تا ۸» دادرُز بخوانید و "
+        "subtitle": "کتاب‌های حقوق مدنی را همراه با «دوره جامع حقوق مدنی ۱ تا ۸» دادرُز بخوانید و "
         "هر مبحث را با ویدیو مرور کنید.",
         "link_url": "https://dadrose.com/",
         "link_label": "مشاهده دوره",

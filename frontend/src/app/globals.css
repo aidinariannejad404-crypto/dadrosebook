@@ -81,6 +81,24 @@
   .rich-text strong {
     font-weight: 800;
   }
+  .rich-text img {
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+    border-radius: 0.5rem;
+  }
+  .rich-text table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+  .rich-text th,
+  .rich-text td {
+    border: 1px solid var(--color-border);
+    padding: 0.25rem 0.75rem;
+    text-align: start;
+  }
   .rich-text blockquote {
     border-inline-start: 4px solid var(--color-accent);
     padding-inline-start: 1rem;

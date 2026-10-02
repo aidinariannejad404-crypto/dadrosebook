@@ -7,7 +7,6 @@ from apps.catalog.services.pricing import (
     effective_price,
     round_to,
 )
-from apps.catalog.services.seed import placeholder_prices
 
 
 @pytest.mark.parametrize(
@@ -29,11 +28,6 @@ def test_effective_price_and_discount(price, sale, eff, pct):
 def test_round_to():
     assert round_to(672_750) == 670_000
     assert round_to(2_237_500) == 2_240_000
-
-
-def test_placeholder_prices():
-    assert placeholder_prices(2_200_000) == (990_000, 2_750_000)
-    assert placeholder_prices(1_495_000) == (670_000, 1_870_000)
 
 
 def test_variant_in_stock_rules():

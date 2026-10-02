@@ -170,7 +170,9 @@ unknown values ignored, P1-11). A single `exam_type` slug also fills `kit_role` 
   "edition": "ویرایش سوم",        // free text, may be ""
   "publish_year": 1404,           // Jalali year int or null
   "pages": 820, "isbn": "",
-  "description": "<p>…</p>",      // sanitised HTML
+  "description": "<p>…</p>",      // sanitised HTML: p, br, strong/b, em/i, u, s, ul/ol/li, blockquote,
+                                  // h2–h4, a[href], span, hr, img[src alt width height] (http/https),
+                                  // table/thead/tbody/tr/th/td[colspan rowspan]
   "table_of_contents": "…",       // plain text, newline separated
   "study_plan_note": "…",         // plain text
   "study_days": 12,               // (added after research, P1-16) suggested study days, int or null

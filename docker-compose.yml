@@ -48,9 +48,11 @@ services:
 
   backend:
     <<: *backend
-    # Migrate and (idempotently) seed the demo catalogue, then serve.
+    # (Idempotently) seed the real catalogue, fetch missing covers (skips books that already have
+    # one; never blocks startup on failure), then serve.
     command: >
-      sh -c "python manage.py seed_catalog --with-superuser &&
+      sh -c "python manage.py seed_catalog --if-empty --with-superuser &&
+             (python manage.py fetch_covers || true) &&
              python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"

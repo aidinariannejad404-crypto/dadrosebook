@@ -2,9 +2,16 @@ import nh3
 
 ALLOWED_TAGS = {
     "p", "br", "strong", "b", "em", "i", "u", "s", "ul", "ol", "li", "blockquote",
-    "h2", "h3", "h4", "a", "span", "hr",
+    "h2", "h3", "h4", "a", "span", "hr", "img",
+    "table", "thead", "tbody", "tr", "th", "td",
 }  # fmt: skip
-ALLOWED_ATTRIBUTES = {"a": {"href", "title"}}
+ALLOWED_ATTRIBUTES = {
+    "a": {"href", "title"},
+    # Description images (product photos in imported descriptions); http(s) only, see url_schemes.
+    "img": {"src", "alt", "width", "height"},
+    "th": {"colspan", "rowspan"},
+    "td": {"colspan", "rowspan"},
+}
 
 
 def sanitize_html(html: str | None) -> str:
