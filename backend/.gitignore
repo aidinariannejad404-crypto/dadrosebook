@@ -1,0 +1,7 @@
+.venv/
+.test-media/
+.test-private-media/
+media/
+private_media/
+staticfiles/
+.env

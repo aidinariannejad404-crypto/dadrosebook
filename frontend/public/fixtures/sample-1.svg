@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="850" viewBox="0 0 600 850">
+  <rect width="600" height="850" fill="#fffdf7"/>
+  <rect x="40" y="40" width="520" height="770" fill="none" stroke="#e7e1d2" stroke-width="2"/>
+  <text x="300" y="110" text-anchor="middle" font-family="Vazirmatn, Tahoma, sans-serif" font-size="30" font-weight="700" fill="#1F4E8C">نمونه صفحه ۱</text>
+  <rect x="380" y="150" width="140" height="10" rx="5" fill="#1F4E8C" opacity=".8"/>
+  <rect x="90" y="190" width="430" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="106" y="222" width="414" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="122" y="254" width="398" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="138" y="286" width="382" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="74" y="318" width="446" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="90" y="350" width="430" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="106" y="382" width="414" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="122" y="414" width="398" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="138" y="446" width="382" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="74" y="478" width="446" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="90" y="510" width="430" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="106" y="542" width="414" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="122" y="574" width="398" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="138" y="606" width="382" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="74" y="638" width="446" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="90" y="670" width="430" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="106" y="702" width="414" height="9" rx="4.5" fill="#cfd3db"/>
+<rect x="122" y="734" width="398" height="9" rx="4.5" fill="#cfd3db"/>
+  <text x="300" y="790" text-anchor="middle" font-family="Tahoma, sans-serif" font-size="18" fill="#8a8f99">۱</text>
+</svg>

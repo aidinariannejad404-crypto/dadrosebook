@@ -1,0 +1,1764 @@
+[
+  {
+    "id": 1,
+    "title": "حقوق مدنی دوجلدی",
+    "subtitle": "",
+    "slug": "حقوق-مدنی-دوجلدی-دکتر-شکری",
+    "cover": null,
+    "authors": [
+      {
+        "id": 1,
+        "name": "دکتر شکری",
+        "slug": "دکتر-شکری"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      }
+    ],
+    "min_price": 1400000,
+    "formats": [
+      "PRINT",
+      "EBOOK",
+      "BUNDLE"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 2,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 1,
+        "name": "آزمون وکالت",
+        "slug": "آزمون-وکالت"
+      },
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "ویرایش پنجم",
+    "publish_year": 1404,
+    "pages": 1240,
+    "isbn": "978-622-7710-12-4",
+    "description": "<p>کتاب <strong>حقوق مدنی دوجلدی</strong> جامع‌ترین منبع حقوق مدنی برای آزمون وکالت است که مباحث اموال، قراردادها، الزامات خارج از قرارداد، شفعه، وصیت، ارث و خانواده را در دو جلد پوشش می‌دهد.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "جلد اول — اموال و مالکیت\nجلد اول — کلیات قراردادها\nجلد اول — عقود معین\nجلد دوم — الزامات خارج از قرارداد\nجلد دوم — شفعه، وصیت و ارث\nجلد دوم — حقوق خانواده\nپیوست — تست‌های آزمون کانون وکلا ۱۴۰۰ تا ۱۴۰۴",
+    "study_plan_note": "این کتاب منبع اصلی حقوق مدنی است. آن را در ماه‌های اول برنامه، پیش از سریع‌خوان و تست‌زنی، کامل بخوانید و هر جلسه را با مرور نکته‌های کادردار ببندید.",
+    "sample_pdf": null,
+    "sample_pages": [
+      {
+        "id": 1,
+        "image": "/fixtures/sample-1.svg",
+        "order": 1
+      },
+      {
+        "id": 2,
+        "image": "/fixtures/sample-2.svg",
+        "order": 2
+      },
+      {
+        "id": 3,
+        "image": "/fixtures/sample-3.svg",
+        "order": 3
+      },
+      {
+        "id": 4,
+        "image": "/fixtures/sample-4.svg",
+        "order": 4
+      }
+    ],
+    "intro_video_url": "https://www.aparat.com/v/dadrose-civil-intro",
+    "variants": [
+      {
+        "id": 101,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 2200000,
+        "sale_price": null,
+        "effective_price": 2200000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 12,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 102,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 1400000,
+        "sale_price": null,
+        "effective_price": 1400000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 103,
+        "type": "BUNDLE",
+        "type_label": "چاپی + الکترونیک",
+        "price": 2750000,
+        "sale_price": 2450000,
+        "effective_price": 2450000,
+        "discount_percent": 11,
+        "in_stock": true,
+        "stock": 12,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [
+      {
+        "id": 1,
+        "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+        "url": "https://dadrose.com/courses/civil-law-complete",
+        "price": 8125000,
+        "image": null
+      }
+    ],
+    "kit_placements": [
+      {
+        "exam_type": {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "order": 1,
+        "is_essential": true
+      },
+      {
+        "exam_type": {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "order": 1,
+        "is_essential": true
+      }
+    ],
+    "is_featured": true,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 2,
+    "title": "آیین دادرسی مدنی کاربردی",
+    "subtitle": "",
+    "slug": "آیین-دادرسی-مدنی-کاربردی-دکتر-حسینی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 2,
+        "name": "دکتر حسینی",
+        "slug": "دکتر-حسینی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 2,
+        "name": "آیین دادرسی مدنی",
+        "slug": "آیین-دادرسی-مدنی",
+        "color": "#2E6F9E"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      }
+    ],
+    "min_price": 990000,
+    "formats": [
+      "PRINT",
+      "EBOOK",
+      "BUNDLE"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "ویرایش سوم",
+    "publish_year": 1404,
+    "pages": 760,
+    "isbn": "978-622-7710-20-9",
+    "description": "<p>کتاب <strong>آیین دادرسی مدنی کاربردی</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "بعد از حقوق مدنی شروع کنید؛ فصل‌های صلاحیت، دعاوی طاری و تجدیدنظر بیشترین سهم تست را دارند.",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 104,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 1650000,
+        "sale_price": 1480000,
+        "effective_price": 1480000,
+        "discount_percent": 10,
+        "in_stock": true,
+        "stock": 7,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 105,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 990000,
+        "sale_price": null,
+        "effective_price": 990000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 106,
+        "type": "BUNDLE",
+        "type_label": "چاپی + الکترونیک",
+        "price": 2050000,
+        "sale_price": null,
+        "effective_price": 2050000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 7,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [
+      {
+        "id": 2,
+        "title": "دوره آیین دادرسی مدنی کاربردی",
+        "url": "https://dadrose.com/courses/civil-procedure",
+        "price": 4900000,
+        "image": null
+      }
+    ],
+    "kit_placements": [
+      {
+        "exam_type": {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        "subject": {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        },
+        "order": 1,
+        "is_essential": true
+      }
+    ],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 3,
+    "title": "حقوق تجارت جامع",
+    "subtitle": "",
+    "slug": "حقوق-تجارت-جامع-دکتر-کریمی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 3,
+        "name": "دکتر کریمی",
+        "slug": "دکتر-کریمی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 3,
+        "name": "حقوق تجارت",
+        "slug": "حقوق-تجارت",
+        "color": "#1E7A5A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 5,
+        "name": "ارشد و دکتری",
+        "slug": "ارشد-و-دکتری",
+        "short_name": "ارشد"
+      }
+    ],
+    "min_price": 870000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 690,
+    "isbn": "978-622-7710-31-5",
+    "description": "<p>کتاب <strong>حقوق تجارت جامع</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 107,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 1450000,
+        "sale_price": null,
+        "effective_price": 1450000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 20,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 108,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 870000,
+        "sale_price": null,
+        "effective_price": 870000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [
+      {
+        "exam_type": {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        "subject": {
+          "id": 3,
+          "name": "حقوق تجارت",
+          "slug": "حقوق-تجارت",
+          "color": "#1E7A5A"
+        },
+        "order": 1,
+        "is_essential": true
+      }
+    ],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 4,
+    "title": "حقوق جزای عمومی",
+    "subtitle": "",
+    "slug": "حقوق-جزای-عمومی-دکتر-رضایی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 4,
+        "name": "دکتر رضایی",
+        "slug": "دکتر-رضایی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 4,
+        "name": "حقوق جزا",
+        "slug": "حقوق-جزا",
+        "color": "#A23B32"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      }
+    ],
+    "min_price": 760000,
+    "formats": [
+      "PRINT",
+      "EBOOK",
+      "BUNDLE"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 540,
+    "isbn": "",
+    "description": "<p>کتاب <strong>حقوق جزای عمومی</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 109,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 1280000,
+        "sale_price": null,
+        "effective_price": 1280000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 9,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 110,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 760000,
+        "sale_price": null,
+        "effective_price": 760000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 111,
+        "type": "BUNDLE",
+        "type_label": "چاپی + الکترونیک",
+        "price": 1690000,
+        "sale_price": null,
+        "effective_price": 1690000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 9,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [
+      {
+        "id": 3,
+        "title": "دوره جمع‌بندی حقوق جزا",
+        "url": "https://dadrose.com/courses/criminal-law-review",
+        "price": 3750000,
+        "image": null
+      }
+    ],
+    "kit_placements": [
+      {
+        "exam_type": {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        "subject": {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        },
+        "order": 1,
+        "is_essential": true
+      }
+    ],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 5,
+    "title": "حقوق جزای اختصاصی",
+    "subtitle": "",
+    "slug": "حقوق-جزای-اختصاصی-دکتر-رضایی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 4,
+        "name": "دکتر رضایی",
+        "slug": "دکتر-رضایی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 4,
+        "name": "حقوق جزا",
+        "slug": "حقوق-جزا",
+        "color": "#A23B32"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      }
+    ],
+    "min_price": 810000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 610,
+    "isbn": "",
+    "description": "<p>کتاب <strong>حقوق جزای اختصاصی</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 112,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 1350000,
+        "sale_price": null,
+        "effective_price": 1350000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 4,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 113,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 810000,
+        "sale_price": null,
+        "effective_price": 810000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [
+      {
+        "exam_type": {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        "subject": {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        },
+        "order": 2,
+        "is_essential": true
+      }
+    ],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 6,
+    "title": "آیین دادرسی کیفری",
+    "subtitle": "",
+    "slug": "آیین-دادرسی-کیفری-دکتر-موسوی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 5,
+        "name": "دکتر موسوی",
+        "slug": "دکتر-موسوی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 5,
+        "name": "آیین دادرسی کیفری",
+        "slug": "آیین-دادرسی-کیفری",
+        "color": "#7A2B3A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      }
+    ],
+    "min_price": 830000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 580,
+    "isbn": "",
+    "description": "<p>کتاب <strong>آیین دادرسی کیفری</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 114,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 1390000,
+        "sale_price": null,
+        "effective_price": 1390000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 15,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 115,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 830000,
+        "sale_price": null,
+        "effective_price": 830000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 7,
+    "title": "اصول فقه کاربردی",
+    "subtitle": "",
+    "slug": "اصول-فقه-کاربردی-استاد-محمدی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 6,
+        "name": "استاد محمدی",
+        "slug": "استاد-محمدی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 6,
+        "name": "اصول فقه",
+        "slug": "اصول-فقه",
+        "color": "#8A6A2E"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      },
+      {
+        "id": 5,
+        "name": "ارشد و دکتری",
+        "slug": "ارشد-و-دکتری",
+        "short_name": "ارشد"
+      }
+    ],
+    "min_price": 590000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 420,
+    "isbn": "",
+    "description": "<p>کتاب <strong>اصول فقه کاربردی</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 116,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 980000,
+        "sale_price": null,
+        "effective_price": 980000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 11,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 117,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 590000,
+        "sale_price": null,
+        "effective_price": 590000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 8,
+    "title": "متون فقه (شرح لمعه)",
+    "subtitle": "",
+    "slug": "متون-فقه-شرح-لمعه-استاد-محمدی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 6,
+        "name": "استاد محمدی",
+        "slug": "استاد-محمدی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 7,
+        "name": "متون فقه",
+        "slug": "متون-فقه",
+        "color": "#6B5A3A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      }
+    ],
+    "min_price": 1050000,
+    "formats": [
+      "PRINT"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 2,
+      "name": "انتشارات مجد",
+      "slug": "انتشارات-مجد"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 460,
+    "isbn": "",
+    "description": "<p>کتاب <strong>متون فقه (شرح لمعه)</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 118,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 1050000,
+        "sale_price": null,
+        "effective_price": 1050000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 6,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 9,
+    "title": "حقوق اساسی در نظم حقوقی ایران",
+    "subtitle": "",
+    "slug": "حقوق-اساسی-در-نظم-حقوقی-ایران-دکتر-نوری",
+    "cover": null,
+    "authors": [
+      {
+        "id": 7,
+        "name": "دکتر نوری",
+        "slug": "دکتر-نوری"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 8,
+        "name": "حقوق اساسی",
+        "slug": "حقوق-اساسی",
+        "color": "#5A3E8A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 5,
+        "name": "ارشد و دکتری",
+        "slug": "ارشد-و-دکتری",
+        "short_name": "ارشد"
+      }
+    ],
+    "min_price": 540000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 3,
+      "name": "انتشارات دوراندیشان",
+      "slug": "انتشارات-دوراندیشان"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 380,
+    "isbn": "",
+    "description": "<p>کتاب <strong>حقوق اساسی در نظم حقوقی ایران</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 119,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 890000,
+        "sale_price": null,
+        "effective_price": 890000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 8,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 120,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 540000,
+        "sale_price": null,
+        "effective_price": 540000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 10,
+    "title": "حقوق ثبت اسناد و املاک",
+    "subtitle": "",
+    "slug": "حقوق-ثبت-اسناد-و-املاک-دکتر-صادقی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 8,
+        "name": "دکتر صادقی",
+        "slug": "دکتر-صادقی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 9,
+        "name": "حقوق ثبت",
+        "slug": "حقوق-ثبت",
+        "color": "#4A5563"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 4,
+        "name": "سردفتری",
+        "slug": "سردفتری",
+        "short_name": "سردفتری"
+      }
+    ],
+    "min_price": 490000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 2,
+        "name": "منابع اصلی",
+        "slug": "منابع-اصلی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 350,
+    "isbn": "",
+    "description": "<p>کتاب <strong>حقوق ثبت اسناد و املاک</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 121,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 820000,
+        "sale_price": null,
+        "effective_price": 820000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 5,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 122,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 490000,
+        "sale_price": null,
+        "effective_price": 490000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 11,
+    "title": "مجموعه قوانین خاص آزمون وکالت",
+    "subtitle": "",
+    "slug": "مجموعه-قوانین-خاص-آزمون-وکالت-تیم-علمی-دادرُز",
+    "cover": null,
+    "authors": [
+      {
+        "id": 9,
+        "name": "تیم علمی دادرُز",
+        "slug": "تیم-علمی-دادرُز"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 10,
+        "name": "قوانین خاص",
+        "slug": "قوانین-خاص",
+        "color": "#3F6B6B"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      }
+    ],
+    "min_price": 760000,
+    "formats": [
+      "PRINT"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 1,
+        "name": "آزمون وکالت",
+        "slug": "آزمون-وکالت"
+      },
+      {
+        "id": 8,
+        "name": "مجموعه قوانین",
+        "slug": "مجموعه-قوانین"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 520,
+    "isbn": "",
+    "description": "<p>کتاب <strong>مجموعه قوانین خاص آزمون وکالت</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 123,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 760000,
+        "sale_price": null,
+        "effective_price": 760000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 30,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 12,
+    "title": "بانک تست طبقه‌بندی‌شده کانون وکلا",
+    "subtitle": "",
+    "slug": "بانک-تست-طبقه-بندی-شده-کانون-وکلا-تیم-علمی-دادرُز",
+    "cover": null,
+    "authors": [
+      {
+        "id": 9,
+        "name": "تیم علمی دادرُز",
+        "slug": "تیم-علمی-دادرُز"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      },
+      {
+        "id": 2,
+        "name": "آیین دادرسی مدنی",
+        "slug": "آیین-دادرسی-مدنی",
+        "color": "#2E6F9E"
+      },
+      {
+        "id": 3,
+        "name": "حقوق تجارت",
+        "slug": "حقوق-تجارت",
+        "color": "#1E7A5A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      }
+    ],
+    "min_price": 590000,
+    "formats": [
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": false,
+    "is_quick_review": false,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 4,
+        "name": "تست و نمونه سؤال",
+        "slug": "تست-و-نمونه-سؤال"
+      },
+      {
+        "id": 7,
+        "name": "کتاب الکترونیک",
+        "slug": "کتاب-الکترونیک"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 880,
+    "isbn": "",
+    "description": "<p>کتاب <strong>بانک تست طبقه‌بندی‌شده کانون وکلا</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 124,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 690000,
+        "sale_price": 590000,
+        "effective_price": 590000,
+        "discount_percent": 14,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 13,
+    "title": "سریع‌خوان حقوق مدنی",
+    "subtitle": "",
+    "slug": "سریع-خوان-حقوق-مدنی-دکتر-شکری",
+    "cover": null,
+    "authors": [
+      {
+        "id": 1,
+        "name": "دکتر شکری",
+        "slug": "دکتر-شکری"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      }
+    ],
+    "min_price": 420000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": false,
+    "is_quick_review": true,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 3,
+        "name": "سریع‌خوان و جمع‌بندی",
+        "slug": "سریع-خوان-و-جمع-بندی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 260,
+    "isbn": "",
+    "description": "<p>کتاب <strong>سریع‌خوان حقوق مدنی</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "در ماه آخر پیش از آزمون، پس از خواندن منبع اصلی، برای مرور سریع استفاده کنید.",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 125,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 690000,
+        "sale_price": null,
+        "effective_price": 690000,
+        "discount_percent": 0,
+        "in_stock": false,
+        "stock": 0,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 126,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 420000,
+        "sale_price": null,
+        "effective_price": 420000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [
+      {
+        "exam_type": {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "order": 2,
+        "is_essential": false
+      }
+    ],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 14,
+    "title": "سریع‌خوان آیین دادرسی مدنی",
+    "subtitle": "",
+    "slug": "سریع-خوان-آیین-دادرسی-مدنی-دکتر-حسینی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 2,
+        "name": "دکتر حسینی",
+        "slug": "دکتر-حسینی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 2,
+        "name": "آیین دادرسی مدنی",
+        "slug": "آیین-دادرسی-مدنی",
+        "color": "#2E6F9E"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      }
+    ],
+    "min_price": 590000,
+    "formats": [
+      "PRINT"
+    ],
+    "in_stock": false,
+    "print_in_stock": false,
+    "is_quick_review": true,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 3,
+        "name": "سریع‌خوان و جمع‌بندی",
+        "slug": "سریع-خوان-و-جمع-بندی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 210,
+    "isbn": "",
+    "description": "<p>کتاب <strong>سریع‌خوان آیین دادرسی مدنی</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 127,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 590000,
+        "sale_price": null,
+        "effective_price": 590000,
+        "discount_percent": 0,
+        "in_stock": false,
+        "stock": 0,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 15,
+    "title": "سریع‌خوان حقوق تجارت",
+    "subtitle": "",
+    "slug": "سریع-خوان-حقوق-تجارت-دکتر-کریمی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 3,
+        "name": "دکتر کریمی",
+        "slug": "دکتر-کریمی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 3,
+        "name": "حقوق تجارت",
+        "slug": "حقوق-تجارت",
+        "color": "#1E7A5A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      }
+    ],
+    "min_price": 350000,
+    "formats": [
+      "PRINT",
+      "EBOOK"
+    ],
+    "in_stock": true,
+    "print_in_stock": false,
+    "is_quick_review": true,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 3,
+        "name": "سریع‌خوان و جمع‌بندی",
+        "slug": "سریع-خوان-و-جمع-بندی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 190,
+    "isbn": "",
+    "description": "<p>کتاب <strong>سریع‌خوان حقوق تجارت</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 128,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 560000,
+        "sale_price": null,
+        "effective_price": 560000,
+        "discount_percent": 0,
+        "in_stock": false,
+        "stock": 0,
+        "price_is_placeholder": false
+      },
+      {
+        "id": 129,
+        "type": "EBOOK",
+        "type_label": "نسخه الکترونیک",
+        "price": 350000,
+        "sale_price": null,
+        "effective_price": 350000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": null,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  },
+  {
+    "id": 16,
+    "title": "سریع‌خوان حقوق جزا",
+    "subtitle": "",
+    "slug": "سریع-خوان-حقوق-جزا-دکتر-رضایی",
+    "cover": null,
+    "authors": [
+      {
+        "id": 4,
+        "name": "دکتر رضایی",
+        "slug": "دکتر-رضایی"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 4,
+        "name": "حقوق جزا",
+        "slug": "حقوق-جزا",
+        "color": "#A23B32"
+      },
+      {
+        "id": 5,
+        "name": "آیین دادرسی کیفری",
+        "slug": "آیین-دادرسی-کیفری",
+        "color": "#7A2B3A"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      }
+    ],
+    "min_price": 620000,
+    "formats": [
+      "PRINT"
+    ],
+    "in_stock": false,
+    "print_in_stock": false,
+    "is_quick_review": true,
+    "volumes": 1,
+    "publisher": {
+      "id": 1,
+      "name": "انتشارات دادرُز",
+      "slug": "انتشارات-دادرز"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 3,
+        "name": "سریع‌خوان و جمع‌بندی",
+        "slug": "سریع-خوان-و-جمع-بندی"
+      }
+    ],
+    "edition": "",
+    "publish_year": 1404,
+    "pages": 230,
+    "isbn": "",
+    "description": "<p>کتاب <strong>سریع‌خوان حقوق جزا</strong> یکی از منابع اصلی داوطلبان آزمون وکالت است و مباحث را با زبانی روشن و ساختاری منظم ارائه می‌کند.</p><p>متن کتاب بر اساس آخرین اصلاحات قوانین و رویه‌های قضایی به‌روز شده و در پایان هر فصل، تست‌های طبقه‌بندی‌شده آزمون‌های سال‌های اخیر همراه با پاسخ تشریحی آمده است.</p><ul><li>نکته‌های پرتکرار آزمون با کادر مشخص</li><li>جدول‌های مقایسه‌ای برای مرور سریع</li><li>ارجاع به مواد قانونی و آرای وحدت رویه</li></ul>",
+    "table_of_contents": "فصل اول: کلیات\nفصل دوم: مفاهیم پایه\nفصل سوم: احکام و آثار\nفصل چهارم: رویه قضایی\nفصل پنجم: تست‌های آزمون‌های اخیر",
+    "study_plan_note": "",
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 130,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 620000,
+        "sale_price": null,
+        "effective_price": 620000,
+        "discount_percent": 0,
+        "in_stock": false,
+        "stock": 0,
+        "price_is_placeholder": false
+      }
+    ],
+    "related_courses": [],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-01T09:30:00Z"
+  }
+]

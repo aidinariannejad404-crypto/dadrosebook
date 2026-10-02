@@ -1,0 +1,97 @@
+# Local development: `cp .env.example .env && docker compose up --build`
+# Storefront http://localhost:3000 · API http://localhost:8000/api/v1/ · Admin http://localhost:8000/admin/
+name: dadrosebook
+
+x-backend: &backend
+  image: dadrosebook-backend  # one image shared by backend and worker
+  build:
+    context: ./backend
+  env_file: .env
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.dev
+    DATABASE_URL: postgres://${POSTGRES_USER:-dadrose}:${POSTGRES_PASSWORD:-dadrose}@db:5432/${POSTGRES_DB:-dadrose}
+    REDIS_URL: redis://redis:6379/0
+  volumes:
+    - ./backend:/app
+    - media:/app/media
+    - private_media:/app/private_media
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dadrose}
+      POSTGRES_USER: ${POSTGRES_USER:-dadrose}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dadrose}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    <<: *backend
+    # Migrate and (idempotently) seed the demo catalogue, then serve.
+    command: >
+      sh -c "python manage.py seed_catalog --with-superuser &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  worker:
+    <<: *backend
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DATABASE_URL: postgres://${POSTGRES_USER:-dadrose}:${POSTGRES_PASSWORD:-dadrose}@db:5432/${POSTGRES_DB:-dadrose}
+      REDIS_URL: redis://redis:6379/0
+      RUN_MIGRATIONS: "0"
+    command: celery -A config worker -l info
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    image: dadrosebook-frontend
+    build:
+      context: ./frontend
+      target: dev
+    env_file: .env
+    environment:
+      API_INTERNAL_URL: http://backend:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:
+  private_media:

@@ -1,0 +1,37 @@
+/*
+ * Brand tokens — the ONLY place brand colours are defined.
+ * Change a hex here and the whole site restyles (tailwind.config.ts maps these variables).
+ * Derived tokens are computed with color-mix() from the base tokens.
+ */
+:root {
+  /* base brand */
+  --color-primary: #12264a; /* navy */
+  --color-accent: #c8a24b; /* gold — backgrounds/borders only, or text on primary */
+  --color-bg: #f5f6f9; /* page background */
+  --color-text: #10182b; /* ink */
+
+  /* derived */
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, #000);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 8%, #fff);
+  --color-primary-tint: color-mix(in srgb, var(--color-primary) 16%, #fff);
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 18%, #fff);
+  --color-accent-strong: color-mix(in srgb, var(--color-accent) 70%, #000); /* AA on white for large accents */
+  --color-surface: #ffffff;
+  --color-surface-muted: color-mix(in srgb, var(--color-bg) 60%, var(--color-primary-soft));
+  --color-text-muted: color-mix(in srgb, var(--color-text) 72%, #fff); /* ≥ 4.5:1 on surface and bg */
+  --color-border: color-mix(in srgb, var(--color-text) 12%, #fff);
+  --color-border-strong: color-mix(in srgb, var(--color-text) 28%, #fff);
+  --color-focus: var(--color-accent);
+
+  /* state */
+  --color-success: #17643f;
+  --color-success-soft: #e5f3ec;
+  --color-danger: #a12a2a;
+  --color-danger-soft: #fbeaea;
+
+  /* shape */
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+  --shadow-card: 0 1px 2px rgb(16 24 43 / 0.06), 0 4px 16px rgb(16 24 43 / 0.06);
+  --shadow-raised: 0 8px 28px rgb(16 24 43 / 0.14);
+}
