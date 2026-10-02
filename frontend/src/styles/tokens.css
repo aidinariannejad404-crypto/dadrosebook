@@ -28,6 +28,14 @@
   --color-success-soft: #e5f3ec;
   --color-danger: #a12a2a;
   --color-danger-soft: #fbeaea;
+  --color-warning: #8a4500; /* 6.4:1 on warning-soft, 7.2:1 on white */
+  --color-warning-soft: #fdf1e2;
+  --color-info: #1d5a80; /* 6.5:1 on info-soft */
+  --color-info-soft: #e7f1f8;
+
+  /* badge tones (P1-20) — text/background pairs are all ≥ 4.5:1 */
+  --color-accent-ink: color-mix(in srgb, var(--color-accent) 45%, #000); /* gold-brown text on accent-soft, ≈ 7.5:1 */
+  --color-neutral-soft: color-mix(in srgb, var(--color-text) 6%, #fff);
 
   /* shape */
   --radius-card: 0.875rem;

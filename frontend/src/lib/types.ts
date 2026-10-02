@@ -5,6 +5,47 @@
 
 export type VariantType = "PRINT" | "EBOOK" | "BUNDLE";
 
+/** (added after research, P1-11) */
+export type ResourceType = "TEXTBOOK" | "TESTS" | "LAWS" | "QUICK_REVIEW" | "COURSE_NOTES";
+
+/** (added after research, P1-5) role in the selected exam type's active study kits */
+export type KitRole = "essential" | "optional";
+
+/** (added after research, P1-20) */
+export type BadgeCode = "edition" | "kit_essential" | "bestseller" | "quick_review" | "bundle" | "sample" | "course";
+export type BadgeTone = "primary" | "success" | "accent" | "warning" | "info" | "neutral";
+
+/** Server-side card badge (P1-20): ordered, at most 2 — render as-is. */
+export interface Badge {
+  code: BadgeCode;
+  label: string;
+  tone: BadgeTone;
+}
+
+/** (added after research, P1-14) */
+export interface SocialProof {
+  /** 1..3 rank by sales within the book's first subject; null when > 3 or no sales */
+  subject_rank: number | null;
+  /** season sales when ≥ 20, else null */
+  season_buyers: number | null;
+}
+
+/** (added after research, P1-6) singleton store settings; "" / null = hide */
+export interface StoreSettings {
+  free_shipping_threshold: number | null;
+  print_dispatch_note: string;
+  delivery_tehran_note: string;
+  delivery_province_note: string;
+  /** international digits without "+" → https://wa.me/<n>?text=… */
+  consult_whatsapp: string;
+  /** username without "@" → https://t.me/<u> */
+  consult_telegram: string;
+  support_hours: string;
+  /** sanitised trust-seal snippet (only <a>/<img>, https) — render as HTML */
+  enamad_html: string;
+  students_count_claim: string;
+}
+
 export interface SubjectMini {
   id: number;
   name: string;
@@ -46,6 +87,8 @@ export interface Variant {
   in_stock: boolean;
   stock: number | null;
   price_is_placeholder: boolean;
+  /** (added after research, P1-7) BUNDLE only: PRINT + EBOOK − BUNDLE effective prices when > 0, else null */
+  bundle_saving: number | null;
 }
 
 export interface BookCard {
@@ -57,12 +100,34 @@ export interface BookCard {
   authors: PersonMini[];
   subjects: SubjectMini[];
   exam_types: ExamTypeMini[];
+  /** lowest effective price among active non-placeholder variants */
   min_price: number | null;
+  /** price shown on cards: PRINT effective price, else the cheapest (non-placeholder only; null → «قیمت به‌زودی») */
+  card_price: number | null;
+  /** variant type card_price belongs to, null if none */
+  card_format: VariantType | null;
   formats: VariantType[];
   in_stock: boolean;
   print_in_stock: boolean;
+  /** always equals resource_type === "QUICK_REVIEW" */
   is_quick_review: boolean;
   volumes: number;
+
+  // --- added after research ---
+  resource_type: ResourceType;
+  resource_type_label: string;
+  /** sample PDF or at least one sample page (P1-4) */
+  has_sample: boolean;
+  /** filled only when the request carries one exam_type slug (P1-5) */
+  kit_role: KitRole | null;
+  /** "ویرایش ۱۴۰۵" when publish_year ≥ the current exam year (P1-1) */
+  edition_badge: string | null;
+  /** free text; "" when unknown → «به‌روز تا: …» (P1-1) */
+  law_updated_until: string;
+  /** title of the first active related course (P1-13) */
+  course_badge: string | null;
+  social_proof: SocialProof;
+  badges: Badge[];
 }
 
 export interface Banner {
@@ -116,10 +181,15 @@ export interface ExamEvent {
   exam_type: ExamTypeMini;
 }
 
+/** Home subject tile: weight = ضریب for the selected exam type (P1-10), null otherwise. */
+export interface HomeSubject extends SubjectWithCount {
+  weight: number | null;
+}
+
 export interface HomePayload {
   next_exam: ExamEvent | null;
   exam_types: ExamTypeMini[];
-  subjects: SubjectWithCount[];
+  subjects: HomeSubject[];
   categories: CategoryNode[];
   hero_banners: Banner[];
   course_banners: Banner[];
@@ -127,6 +197,10 @@ export interface HomePayload {
   quick_review: BookCard[];
   featured_course: Course | null;
   guide_videos: GuideVideo[];
+  /** (added after research, P1-3) */
+  selected_exam_type: ExamTypeMini | null;
+  /** (added after research, P1-6) */
+  store: StoreSettings;
 }
 
 export interface Paginated<T> {
@@ -160,6 +234,8 @@ export interface BookDetail extends BookCard {
   description: string;
   table_of_contents: string;
   study_plan_note: string;
+  /** (added after research, P1-16) suggested study days */
+  study_days: number | null;
   sample_pdf: string | null;
   sample_pages: SamplePage[];
   intro_video_url: string;
@@ -180,6 +256,8 @@ export interface StudyKit {
   exam_type: ExamTypeMini;
   subject: SubjectMini;
   note: string;
+  /** (added after research, P1-10) «ضریب درس» */
+  weight: number | null;
   items: StudyKitItem[];
 }
 

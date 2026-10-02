@@ -2,9 +2,11 @@ import Link from "next/link";
 import type { BookCard as BookCardData } from "@/lib/types";
 import { formatToman } from "@/lib/format";
 import { routes } from "@/lib/config";
+import { PRICE_SOON, cardPriceLabel, cardStockNote } from "@/lib/variants";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { BookCover } from "./BookCover";
-import { FormatBadges } from "./FormatBadges";
+import { Badges } from "./Badges";
+import { formatSummary } from "./FormatBadges";
 import { SubjectTag } from "./SubjectTag";
 
 interface BookCardProps {
@@ -14,14 +16,26 @@ interface BookCardProps {
   priority?: boolean;
 }
 
+const MAX_EXAM_CHIPS = 3;
+
 /**
  * Catalog card. The title link is stretched over the whole card (after:inset-0), so the
  * card is one big link while the notify button can still sit on top of it.
+ * Badges come from the server (max 2, P1-20); the meta line carries the resource type and the
+ * exam fit (P1-2, P1-11).
  */
 export function BookCard({ book, showNotify = false, priority = false }: BookCardProps) {
-  const fromPrice = book.formats.length > 1;
+  const priceLabel = cardPriceLabel(book.card_format);
   const printOut = book.formats.includes("PRINT") && !book.print_in_stock;
+  const stockNote = cardStockNote(book);
   const author = book.authors.map((a) => a.name).join("، ");
+  const exams = book.exam_types.slice(0, MAX_EXAM_CHIPS);
+  const moreExams = book.exam_types.length - exams.length;
+  // the bundle badge already says «چاپی + الکترونیک»
+  // the quick-review badge already names the resource type
+  const typeLabel = book.badges.some((b) => b.code === "quick_review") ? "" : book.resource_type_label;
+  const meta = typeLabel || exams.length > 0;
+  const formats = book.badges.some((b) => b.code === "bundle") ? null : formatSummary(book.formats);
 
   return (
     <article className="group relative flex h-full flex-col rounded-card bg-surface p-2.5 shadow-card transition-shadow focus-within:shadow-raised hover:shadow-raised">
@@ -33,7 +47,7 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
           authors={book.authors}
           volumes={book.volumes}
           priority={priority}
-          sizes="(min-width: 1024px) 190px, (min-width: 768px) 22vw, 44vw"
+          sizes="(min-width: 1024px) 150px, (min-width: 768px) 18vw, 36vw"
           className={book.in_stock ? "" : "opacity-60 grayscale-[35%]"}
         />
         {!book.in_stock && (
@@ -41,14 +55,10 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             ناموجود
           </span>
         )}
-        {book.is_quick_review && book.in_stock && (
-          <span className="absolute bottom-2 end-2 rounded-md bg-accent px-1.5 py-0.5 text-[0.6875rem] font-extrabold text-ink">
-            سریع‌خوان
-          </span>
-        )}
       </div>
 
       <div className="mt-2.5 flex flex-1 flex-col gap-1.5">
+        <Badges badges={book.badges} />
         <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-bold leading-[1.375rem] text-ink">
           <Link
             href={routes.product(book.slug)}
@@ -63,25 +73,34 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             <SubjectTag key={s.id} subject={s} />
           ))}
         </div>
-        <div className="mt-auto flex flex-col gap-1.5 pt-1">
-          <FormatBadges formats={book.formats} />
-          {book.min_price != null ? (
+        {meta && (
+          <p className="text-[0.6875rem] leading-5 text-ink-muted">
+            {typeLabel}
+            {typeLabel && exams.length > 0 && " · "}
+            {exams.length > 0 && <span className="sr-only">مناسب آزمون: </span>}
+            {exams.map((e) => e.short_name).join("، ")}
+            {moreExams > 0 && " و …"}
+          </p>
+        )}
+        <div className="mt-auto flex flex-col gap-1 border-t border-line pt-2">
+          {book.card_price != null ? (
             <p className={`text-sm font-extrabold ${book.in_stock ? "text-ink" : "text-ink-muted"}`}>
-              {fromPrice && <span className="text-xs font-medium text-ink-muted">از </span>}
-              {formatToman(book.min_price)}
+              {formatToman(book.card_price)}
             </p>
           ) : (
-            <p className="text-sm text-ink-muted">قیمت به‌زودی</p>
+            <p className="text-sm font-bold text-ink-muted">{PRICE_SOON}</p>
           )}
-          {printOut && book.in_stock && (
-            <p className="text-xs font-medium text-danger">فقط نسخه الکترونیک موجود است</p>
+          {stockNote ? (
+            <p className="text-[0.6875rem] font-bold leading-5 text-warning">{stockNote}</p>
+          ) : (
+            (priceLabel ?? formats) && <p className="text-xs text-ink-muted">{priceLabel ?? formats}</p>
           )}
         </div>
         {showNotify && printOut && (
           <NotifyMeButton
             bookId={book.id}
             bookTitle={book.title}
-            ebookAvailable={book.formats.includes("EBOOK")}
+            ebookAvailable={book.formats.includes("EBOOK") && book.in_stock}
             size="sm"
             className="relative z-10 mt-1 w-full"
           />

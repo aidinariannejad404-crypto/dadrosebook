@@ -1,0 +1,223 @@
+/*
+ * Book3D — a CSS-only 3D book (no JS, no WebGL, no libraries).
+ *
+ * WHY PHYSICAL DIRECTIONS HERE: 3D transforms (rotateY, translateX, perspective-origin, and the
+ * left/top offsets that place each face before it is rotated into position) live in the physical
+ * coordinate space of the screen — there is no logical equivalent of rotateY(). Persian books bind
+ * on the right, so the spine face is deliberately the physical right face (+x) and the page block
+ * (fore-edge) the physical left face. The site is RTL-only, so this always matches the reading
+ * direction. Everything outside this file keeps using logical utilities.
+ *
+ * Geometry (all in container units of .scene, so the book scales with its card):
+ *   --w  book width          --h  book height (2:3)        --d  thickness
+ *   --b  board (cover) thickness used to frame the page block
+ * Colours derive from --book-color (the subject colour, set inline by the component).
+ *
+ * Performance: the scene has a fixed aspect ratio (2:3 book + shadow room) (CLS 0); only `transform` animates (GPU);
+ * shadows and sheens are gradients (no blur filters); cards have no JS — hover is pure CSS.
+ */
+
+.scene {
+  --book-color: #12264a;
+  --spine: color-mix(in srgb, var(--book-color) 72%, #000);
+  --spine-hi: color-mix(in srgb, var(--book-color) 82%, #fff);
+  --paper: #f6f1e4;
+  --paper-line: #e2d9c3;
+  --w: 78cqw;
+  --h: 117cqw;
+  --d: 10cqw;
+  --b: 0.7cqw;
+  /* resting pose (product/hero override); runtime tilt sets --rx/--ry on an ancestor */
+  --rx-rest: 0deg;
+  --ry-rest: -28deg;
+
+  position: relative;
+  width: 100%;
+  /* book (2:3) plus head-room for the ground shadow and the turned spine */
+  aspect-ratio: 100 / 136;
+  container-type: inline-size;
+}
+
+.thick {
+  --d: 13cqw;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  perspective: 300cqw;
+  /* camera slightly above and to the spine side: the top edge and spine read without tilting the book */
+  perspective-origin: 62% -10%;
+}
+
+.book {
+  position: absolute;
+  top: 5cqw;
+  left: 9cqw;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, var(--rx-rest))) rotateY(var(--ry, var(--ry-rest)));
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.face {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+/* ---------- front cover ---------- */
+.front {
+  inset: 0;
+  overflow: hidden;
+  /* outer (fore-edge, physical left) corners slightly rounder than the hinge side */
+  border-radius: 1.6cqw 0.6cqw 0.6cqw 1.6cqw;
+  background: var(--book-color);
+  transform: translateZ(calc(var(--d) / 2));
+  box-shadow: inset 0 0 0 0.25cqw rgb(0 0 0 / 0.06);
+}
+
+/* hinge groove near the spine + soft gloss sheen over the artwork (image or generated) */
+.front::before,
+.front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.front::before {
+  background: linear-gradient(
+    270deg,
+    rgb(0 0 0 / 0.28) 0,
+    rgb(255 255 255 / 0.22) 1.6%,
+    rgb(0 0 0 / 0.22) 3.2%,
+    rgb(255 255 255 / 0.1) 5%,
+    transparent 8.5%
+  );
+}
+.front::after {
+  background:
+    linear-gradient(115deg, rgb(255 255 255 / 0) 30%, rgb(255 255 255 / 0.2) 46%, rgb(255 255 255 / 0) 62%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent 30%, transparent 75%, rgb(0 0 0 / 0.12));
+  opacity: 0.85;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---------- back cover ---------- */
+.back {
+  inset: 0;
+  border-radius: 0.6cqw 1.6cqw 1.6cqw 0.6cqw;
+  background: var(--spine);
+  transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+}
+
+/* ---------- spine: physical right (+x) — Persian books bind on the right ---------- */
+.spine {
+  top: 0;
+  left: calc(50% - var(--d) / 2);
+  width: var(--d);
+  height: 100%;
+  border-radius: 0.6cqw;
+  background:
+    /* head and tail bands */
+    linear-gradient(180deg, transparent 7%, rgb(214 180 100 / 0.85) 7% 8.2%, transparent 8.2% 91.8%, rgb(214 180 100 / 0.85) 91.8% 93%, transparent 93%),
+    /* rounded-spine lighting */
+    linear-gradient(90deg, rgb(0 0 0 / 0.35), rgb(255 255 255 / 0.14) 35%, rgb(255 255 255 / 0.04) 60%, rgb(0 0 0 / 0.3)),
+    var(--spine);
+  transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
+}
+
+/* ---------- page block, fore-edge: physical left (-x) ---------- */
+.pages {
+  top: 1cqw;
+  left: calc(50% - var(--d) / 2);
+  width: var(--d);
+  height: calc(100% - 2cqw);
+  border-inline: var(--b) solid var(--spine);
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.12), transparent 25%, transparent 75%, rgb(0 0 0 / 0.12)),
+    repeating-linear-gradient(90deg, var(--paper) 0 0.35cqw, var(--paper-line) 0.35cqw 0.5cqw);
+  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2 - 0.9cqw));
+}
+
+/* ---------- top edge: pages framed by the two boards, spine at the right end ---------- */
+.top {
+  top: calc(50% - var(--d) / 2);
+  left: 0.9cqw;
+  width: calc(100% - 0.9cqw);
+  height: var(--d);
+  border-block: var(--b) solid var(--spine);
+  background:
+    linear-gradient(270deg, var(--spine) 0 2.2cqw, transparent 2.2cqw),
+    linear-gradient(90deg, rgb(0 0 0 / 0.08), transparent 40%),
+    repeating-linear-gradient(180deg, var(--paper) 0 0.35cqw, var(--paper-line) 0.35cqw 0.5cqw);
+  transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 0.3cqw));
+}
+
+/* ---------- ground shadow: a soft ellipse lying on the floor, rotating with the book ---------- */
+.ground {
+  left: -14cqw;
+  top: calc(100% - 26cqw);
+  width: calc(100% + 28cqw);
+  height: 52cqw;
+  background:
+    radial-gradient(closest-side, rgb(16 24 43 / 0.34), rgb(16 24 43 / 0.12) 55%, transparent),
+    radial-gradient(50% 18% at 50% 50%, rgb(16 24 43 / 0.35), transparent);
+  transform: rotateX(90deg) translateY(-6cqw);
+  backface-visibility: visible;
+}
+
+/* ---------- second volume (volumes ≥ 2): an identical book standing just behind ---------- */
+.vol2 {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translate3d(3.5cqw, -4cqw, calc(var(--d) * -1 - 1.2cqw)) rotateZ(1.5deg);
+}
+.vol2 .front {
+  filter: brightness(0.82);
+}
+
+/* Lift the front artwork above the hinge/gloss stacking context */
+.art {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- variants ---------- */
+.product {
+  --ry-rest: -26deg;
+  --rx-rest: 2deg;
+}
+.hero {
+  --ry-rest: -32deg;
+}
+
+/* ---------- interaction (pointer devices only, motion allowed) ---------- */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :global(.group):hover .book,
+  :global(.group):focus-within .book {
+    --ry: -9deg;
+    --rx: 3deg;
+    transform: rotateX(var(--rx)) rotateY(var(--ry)) translateZ(3cqw);
+  }
+  :global(.group):hover .front::after {
+    transform: translateX(-12%);
+  }
+  .tilting .book {
+    transition-duration: 0.18s;
+    transition-timing-function: linear;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene {
+    --rx-rest: 0deg;
+    --ry-rest: -10deg;
+  }
+  .book,
+  .front::after {
+    transition: none;
+  }
+}

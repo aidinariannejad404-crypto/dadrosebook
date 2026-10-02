@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { getCategories } from "@/lib/api";
-import type { CategoryNode } from "@/lib/types";
+import { getCategories, getStoreSettings } from "@/lib/api";
+import type { CategoryNode, StoreSettings } from "@/lib/types";
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/config";
 import { Header } from "@/components/layout/Header";
 import { CategoryNav } from "@/components/layout/CategoryNav";
@@ -50,8 +50,17 @@ async function loadCategories(): Promise<CategoryNode[]> {
   }
 }
 
+async function loadStore(): Promise<StoreSettings | null> {
+  try {
+    return await getStoreSettings();
+  } catch {
+    // Without settings the footer simply hides the store-driven parts (no placeholder claims).
+    return null;
+  }
+}
+
 export default async function RootLayout({ children, topbar }: { children: ReactNode; topbar: ReactNode }) {
-  const categories = await loadCategories();
+  const [categories, store] = await Promise.all([loadCategories(), loadStore()]);
   return (
     <html lang="fa" dir="rtl" className={vazirmatn.variable}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
@@ -67,7 +76,7 @@ export default async function RootLayout({ children, topbar }: { children: React
         <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
           {children}
         </main>
-        <Footer />
+        <Footer store={store} />
       </body>
     </html>
   );

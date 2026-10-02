@@ -1,4 +1,5 @@
 import type { BookDetail } from "./types";
+import { toPersianDigits } from "./format";
 
 const AVAILABILITY = {
   in: "https://schema.org/InStock",
@@ -11,12 +12,20 @@ const BOOK_FORMAT = {
   BUNDLE: "https://schema.org/Paperback",
 } as const;
 
+/** bookEdition: the edition text, else the edition badge / publish year (P1-15). */
+export function bookEdition(book: Pick<BookDetail, "edition" | "edition_badge" | "publish_year">): string | undefined {
+  if (book.edition.trim()) return book.edition.trim();
+  if (book.edition_badge) return book.edition_badge;
+  return book.publish_year ? `ویرایش ${toPersianDigits(book.publish_year)}` : undefined;
+}
+
 /**
- * schema.org Book + Product with one Offer per active variant.
+ * schema.org Book + Product with one Offer per active variant that has a real price
+ * (placeholder prices are never offered, P1-17).
  * Prices are shown in toman everywhere else; schema.org expects ISO 4217, so IRR = toman × 10 here only.
  */
 export function bookJsonLd(book: BookDetail, url: string): Record<string, unknown> {
-  const offers = book.variants.map((v) => ({
+  const offers = book.variants.filter((v) => !v.price_is_placeholder).map((v) => ({
     "@type": "Offer",
     name: v.type_label,
     sku: String(v.id),
@@ -37,7 +46,7 @@ export function bookJsonLd(book: BookDetail, url: string): Record<string, unknow
     bookFormat: book.variants[0] ? BOOK_FORMAT[book.variants[0].type] : undefined,
     numberOfPages: book.pages || undefined,
     isbn: book.isbn || undefined,
-    bookEdition: book.edition || undefined,
+    bookEdition: bookEdition(book),
     image: book.cover ?? undefined,
     description: stripHtml(book.description).slice(0, 500) || undefined,
     publisher: book.publisher ? { "@type": "Organization", name: book.publisher.name } : undefined,

@@ -16,6 +16,7 @@ const config: Config = {
           DEFAULT: "var(--color-accent)",
           soft: "var(--color-accent-soft)",
           strong: "var(--color-accent-strong)",
+          ink: "var(--color-accent-ink)",
         },
         bg: "var(--color-bg)",
         surface: {
@@ -32,6 +33,9 @@ const config: Config = {
         },
         success: { DEFAULT: "var(--color-success)", soft: "var(--color-success-soft)" },
         danger: { DEFAULT: "var(--color-danger)", soft: "var(--color-danger-soft)" },
+        warning: { DEFAULT: "var(--color-warning)", soft: "var(--color-warning-soft)" },
+        info: { DEFAULT: "var(--color-info)", soft: "var(--color-info-soft)" },
+        neutral: { soft: "var(--color-neutral-soft)" },
         focus: "var(--color-focus)",
       },
       fontFamily: {

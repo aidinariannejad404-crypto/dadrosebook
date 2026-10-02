@@ -15,13 +15,3 @@ export function formatSummary(formats: VariantType[]): string | null {
   if (ebook) return LABEL.EBOOK_ONLY;
   return null;
 }
-
-export function FormatBadges({ formats }: { formats: VariantType[] }) {
-  const label = formatSummary(formats);
-  if (!label) return null;
-  return (
-    <span className="inline-flex w-fit items-center self-start rounded-md bg-primary-soft px-1.5 py-0.5 text-[0.6875rem] font-bold text-primary">
-      {label}
-    </span>
-  );
-}

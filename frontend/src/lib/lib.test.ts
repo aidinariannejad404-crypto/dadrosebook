@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { examCountdown } from "./countdown";
-import { defaultVariant } from "./variants";
+import { cardPriceLabel, defaultVariant } from "./variants";
 import { videoEmbed } from "./video";
 import { bookJsonLd, serializeJsonLd } from "./jsonld";
 import { decodeSlug, slugSegment } from "./api";
 import { withCourseUtm } from "./config";
-import type { BookDetail, Variant } from "./types";
+import type { BookCard, BookDetail, HomePayload, Variant } from "./types";
 import books from "./__fixtures__/books.json";
+import home from "./__fixtures__/home.json";
+import related from "./__fixtures__/related.json";
 
 const v = (type: Variant["type"], in_stock: boolean, id = 1): Variant => ({
   id,
@@ -19,6 +21,7 @@ const v = (type: Variant["type"], in_stock: boolean, id = 1): Variant => ({
   in_stock,
   stock: type === "EBOOK" ? null : in_stock ? 3 : 0,
   price_is_placeholder: false,
+  bundle_saving: null,
 });
 
 describe("defaultVariant", () => {
@@ -90,5 +93,46 @@ describe("bookJsonLd", () => {
   });
   it("escapes < in serialised JSON-LD", () => {
     expect(serializeJsonLd({ a: "</script>" })).not.toContain("</script>");
+  });
+});
+
+describe("card price", () => {
+  it("labels only non-print card prices", () => {
+    expect(cardPriceLabel("PRINT")).toBeNull();
+    expect(cardPriceLabel(null)).toBeNull();
+    expect(cardPriceLabel("EBOOK")).toBe("نسخه الکترونیک");
+    expect(cardPriceLabel("BUNDLE")).toContain("الکترونیک");
+  });
+
+  const details = books as unknown as BookDetail[];
+  it("fixtures: card_price is the PRINT price when print exists, else the cheapest (non-placeholder only)", () => {
+    for (const b of details) {
+      const real = b.variants.filter((x) => !x.price_is_placeholder);
+      const print = real.find((x) => x.type === "PRINT");
+      const cheapest = [...real].sort((a, c) => a.effective_price - c.effective_price)[0];
+      const expected = print ?? cheapest;
+      expect(b.card_format, b.slug).toBe(expected?.type ?? null);
+      expect(b.card_price, b.slug).toBe(expected?.effective_price ?? null);
+    }
+  });
+
+  it("fixtures: every BookCard copy agrees with its detail", () => {
+    const h = home as unknown as HomePayload;
+    const cards: BookCard[] = [
+      ...h.bestsellers,
+      ...h.quick_review,
+      ...Object.values(related as unknown as Record<string, BookCard[]>).flat(),
+    ];
+    const byId = new Map(details.map((b) => [b.id, b]));
+    for (const c of cards) {
+      const d = byId.get(c.id)!;
+      expect([c.card_price, c.card_format, c.cover, c.badges, c.resource_type]).toEqual([
+        d.card_price,
+        d.card_format,
+        d.cover,
+        d.badges,
+        d.resource_type,
+      ]);
+    }
   });
 });

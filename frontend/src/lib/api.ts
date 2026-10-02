@@ -1,4 +1,13 @@
-import type { BookCard, BookDetail, CategoryNode, ExamEvent, HomePayload } from "./types";
+import type {
+  BookCard,
+  BookDetail,
+  CategoryNode,
+  ExamEvent,
+  ExamTypeMini,
+  HomePayload,
+  KitRole,
+  StoreSettings,
+} from "./types";
 
 /**
  * API client for /api/v1/.
@@ -47,6 +56,14 @@ export function decodeSlug(param: string): string {
   }
 }
 
+/** "?a=1&b=2" from the defined values, "" when none. */
+export function queryString(params: Record<string, string | null | undefined | false>): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v);
+  const out = qs.toString();
+  return out ? `?${out}` : "";
+}
+
 async function apiGet<T>(path: string): Promise<T> {
   const url = `${apiBase()}${path}`;
   const res = await fetch(url, {
@@ -71,31 +88,80 @@ async function fixtureRelated(): Promise<Record<string, BookCard[]>> {
 async function fixtureExamEvents(): Promise<ExamEvent[]> {
   return (await import("./__fixtures__/exam-events.json")).default as unknown as ExamEvent[];
 }
+async function fixtureWeights(): Promise<Record<string, Record<string, number>>> {
+  return (await import("./__fixtures__/exam-weights.json")).default as Record<string, Record<string, number>>;
+}
+
+/** Fixture stand-in for the backend's `?exam_type=` handling: kit_role and the «ضروری کیت» badge. */
+async function fixtureWithExam<T extends BookCard>(card: T, exam: string | null): Promise<T> {
+  if (!exam) return card;
+  const detail = (await fixtureBooks()).find((b) => b.id === card.id);
+  const placement = detail?.kit_placements.find((k) => k.exam_type.slug === exam);
+  const kit_role: KitRole | null = placement ? (placement.is_essential ? "essential" : "optional") : null;
+  const badges = card.badges.filter((b) => b.code !== "kit_essential");
+  if (kit_role === "essential") {
+    const at = badges[0]?.code === "edition" ? 1 : 0;
+    badges.splice(at, 0, { code: "kit_essential", label: "ضروری کیت", tone: "success" });
+  }
+  return { ...card, kit_role, badges: badges.slice(0, 2) };
+}
+
+async function fixtureHomeFor(exam: string | null): Promise<HomePayload> {
+  const home = await fixtureHome();
+  const selected = exam ? (home.exam_types.find((e) => e.slug === exam) ?? null) : null;
+  if (!selected) return home;
+  const slug = selected.slug;
+  const fits = (b: BookCard) => b.exam_types.some((e) => e.slug === slug);
+  const weights = (await fixtureWeights())[slug] ?? {};
+  const events = await fixtureExamEvents();
+  // weight desc, unweighted last, then the original (Subject.order) position — Array.sort is stable
+  const subjects = home.subjects
+    .map((s) => ({ ...s, weight: weights[s.slug] ?? null }))
+    .sort((a, b) => (b.weight ?? -1) - (a.weight ?? -1));
+  return {
+    ...home,
+    selected_exam_type: selected,
+    next_exam: events.find((e) => e.exam_type.slug === slug) ?? home.next_exam,
+    subjects,
+    bestsellers: await Promise.all(home.bestsellers.filter(fits).map((b) => fixtureWithExam(b, slug))),
+    quick_review: await Promise.all(home.quick_review.filter(fits).map((b) => fixtureWithExam(b, slug))),
+  };
+}
 
 /* ---------- public API ---------- */
 
-export async function getHome(): Promise<HomePayload> {
-  if (fixturesEnabled()) return fixtureHome();
-  return apiGet<HomePayload>("/catalog/home/");
+/** Home payload; `examType` (one slug, P1-3) filters the rails and fills kit_role / subject weights. */
+export async function getHome(examType: string | null = null): Promise<HomePayload> {
+  if (fixturesEnabled()) return fixtureHomeFor(examType);
+  return apiGet<HomePayload>(`/catalog/home/${queryString({ exam_type: examType })}`);
 }
 
-/** Book detail, or null when the API answers 404 (unknown/inactive slug). */
-export async function getBook(slug: string): Promise<BookDetail | null> {
+/** Book detail, or null when the API answers 404 (unknown/inactive slug). `examType` fills kit_role. */
+export async function getBook(slug: string, examType: string | null = null): Promise<BookDetail | null> {
   if (fixturesEnabled()) {
-    return (await fixtureBooks()).find((b) => b.slug === slug) ?? null;
+    const book = (await fixtureBooks()).find((b) => b.slug === slug);
+    return book ? fixtureWithExam(book, examType) : null;
   }
   try {
-    return await apiGet<BookDetail>(`/catalog/books/${slugSegment(slug)}/`);
+    return await apiGet<BookDetail>(`/catalog/books/${slugSegment(slug)}/${queryString({ exam_type: examType })}`);
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return null;
     throw err;
   }
 }
 
-export async function getRelatedBooks(slug: string): Promise<BookCard[]> {
-  if (fixturesEnabled()) return (await fixtureRelated())[slug] ?? [];
+/** Related books; `inStock` keeps only books with an in-stock variant (alternatives for a sold-out book, P1-8). */
+export async function getRelatedBooks(
+  slug: string,
+  { inStock = false, examType = null }: { inStock?: boolean; examType?: string | null } = {},
+): Promise<BookCard[]> {
+  if (fixturesEnabled()) {
+    const cards = ((await fixtureRelated())[slug] ?? []).filter((b) => !inStock || b.in_stock);
+    return Promise.all(cards.map((b) => fixtureWithExam(b, examType)));
+  }
   try {
-    return await apiGet<BookCard[]>(`/catalog/books/${slugSegment(slug)}/related/`);
+    const qs = queryString({ in_stock: inStock && "true", exam_type: examType });
+    return await apiGet<BookCard[]>(`/catalog/books/${slugSegment(slug)}/related/${qs}`);
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return [];
     throw err;
@@ -110,4 +176,16 @@ export async function getCategories(): Promise<CategoryNode[]> {
 export async function getExamEvents(): Promise<ExamEvent[]> {
   if (fixturesEnabled()) return fixtureExamEvents();
   return apiGet<ExamEvent[]>("/catalog/exam-events/");
+}
+
+/** Active exam types (P1-2 exam-fit table). */
+export async function getExamTypes(): Promise<ExamTypeMini[]> {
+  if (fixturesEnabled()) return (await fixtureHome()).exam_types;
+  return apiGet<ExamTypeMini[]>("/catalog/exam-types/");
+}
+
+/** Store settings singleton (P1-6, P1-12, P1-18). */
+export async function getStoreSettings(): Promise<StoreSettings> {
+  if (fixturesEnabled()) return (await fixtureHome()).store;
+  return apiGet<StoreSettings>("/store/settings/");
 }

@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { decodeSlug, getBook, getRelatedBooks } from "@/lib/api";
+import { decodeSlug, getBook, getExamEvents, getExamTypes, getRelatedBooks, getStoreSettings } from "@/lib/api";
 import { formatNumber, toPersianDigits } from "@/lib/format";
 import { routes, siteUrl } from "@/lib/config";
-import { bookJsonLd, breadcrumbJsonLd, serializeJsonLd, stripHtml } from "@/lib/jsonld";
-import type { BookDetail } from "@/lib/types";
+import { bookJsonLd, breadcrumbJsonLd, serializeJsonLd } from "@/lib/jsonld";
+import { productDescription, productTitle } from "@/lib/product-meta";
+import { selectedExamSlug } from "@/lib/exam-server";
+import { daysLeft, isLowTime, needsQuickReviewHint, pickExamEvent } from "@/lib/exam-time";
+import type { ExamTypeMini } from "@/lib/types";
 import { BookCover } from "@/components/book/BookCover";
+import { BookTilt } from "@/components/book/BookTilt";
 import { SubjectTag } from "@/components/book/SubjectTag";
 import { BookRail } from "@/components/book/BookRail";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -16,26 +21,41 @@ import { IntroVideo } from "@/components/product/IntroVideo";
 import { PurchasePanel, PurchaseProvider, StickyBuyBar } from "@/components/product/PurchasePanel";
 import { ProductTabs, type TabDef } from "@/components/product/ProductTabs";
 import { ViewItemTracker } from "@/components/product/ViewItemTracker";
+import { ExamFit } from "@/components/product/ExamFit";
+import { ConsultCta } from "@/components/ui/ConsultCta";
+import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/components/ui/Icons";
 
 type Params = Promise<{ slug: string }>;
 
 // One fetch per request for metadata + page (fetch is also deduplicated in real mode).
-const loadBook = cache(async (rawSlug: string) => getBook(decodeSlug(rawSlug)));
+// The «آزمون من» cookie (P1-3) fills kit_role, so the page renders per request; API responses stay
+// cached per URL (60s).
+const loadBook = cache(async (rawSlug: string, exam: string | null) => getBook(decodeSlug(rawSlug), exam));
+
+/** Optional data: a failing call hides its feature instead of failing the page. */
+async function optional<T>(p: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await p;
+  } catch {
+    return fallback;
+  }
+}
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const book = await loadBook(slug);
+  const book = await loadBook(slug, await selectedExamSlug());
   if (!book) return { title: "کتاب پیدا نشد" };
-  const description = metaDescription(book);
+  const title = productTitle(book);
+  const description = productDescription(book);
   const path = `/product/${book.slug}`;
   return {
-    title: book.title,
+    title,
     description,
     alternates: { canonical: path },
     openGraph: {
       type: "book",
       locale: "fa_IR",
-      title: book.title,
+      title,
       description,
       url: path,
       authors: book.authors.map((a) => a.name),
@@ -45,17 +65,52 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-function metaDescription(book: BookDetail): string {
-  const authors = book.authors.map((a) => a.name).join("، ");
-  const lead = `${book.title}${book.subtitle ? ` — ${book.subtitle}` : ""}${authors ? `، اثر ${authors}` : ""}.`;
-  return `${lead} ${stripHtml(book.description)}`.slice(0, 160).trim();
-}
-
 export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const book = await loadBook(slug);
+  const exam = await selectedExamSlug();
+  const book = await loadBook(slug, exam);
   if (!book) notFound();
-  const related = await getRelatedBooks(book.slug).catch(() => []);
+
+  const printOut = book.formats.includes("PRINT") && !book.print_in_stock;
+  const [related, alternatives, events, examTypes, store] = await Promise.all([
+    optional(getRelatedBooks(book.slug, { examType: exam }), []),
+    printOut ? optional(getRelatedBooks(book.slug, { inStock: true, examType: exam }), []) : Promise.resolve([]),
+    optional(getExamEvents(), []),
+    optional(getExamTypes(), [] as ExamTypeMini[]),
+    optional(getStoreSettings(), null),
+  ]);
+  const altIds = new Set(alternatives.map((b) => b.id));
+  const relatedRest = related.filter((b) => !altIds.has(b.id));
+
+  // P1-6 / P1-16: countdown to the visitor's exam (else the book's earliest exam).
+  const now = Date.now();
+  const event = pickExamEvent(
+    events,
+    exam,
+    book.exam_types.map((e) => e.slug),
+    now,
+  );
+  const days = event ? daysLeft(event.date, now) : null;
+  const examLine = event && days != null && days > 0 ? `${toPersianDigits(days)} روز تا ${event.name}` : null;
+  const quickHint = needsQuickReviewHint(book.study_days, days, book.is_quick_review) && book.subjects[0];
+
+  // P1-5: role in the selected exam's kit (else the first placement when no exam is selected).
+  const placement = exam
+    ? book.kit_placements.find((k) => k.exam_type.slug === exam)
+    : book.kit_placements[0];
+  const essential = book.kit_role ? book.kit_role === "essential" : placement?.is_essential;
+  const selectedExamName =
+    examTypes.find((e) => e.slug === exam)?.name ?? book.exam_types.find((e) => e.slug === exam)?.name ?? null;
+
+  // P1-14
+  const proof = [
+    book.social_proof.subject_rank && book.subjects[0]
+      ? `پرفروش‌ترین #${toPersianDigits(book.social_proof.subject_rank)} ${book.subjects[0].name}`
+      : null,
+    book.social_proof.season_buyers
+      ? `${formatNumber(book.social_proof.season_buyers)} داوطلب این فصل خریده‌اند`
+      : null,
+  ].filter(Boolean);
 
   const url = `${siteUrl()}${routes.product(book.slug)}`;
   const category = book.categories[0];
@@ -143,40 +198,64 @@ export default async function ProductPage({ params }: { params: Params }) {
     },
   ];
 
+  const consult = <ConsultCta store={store} exam={selectedExamName} book={book.title} />;
+  const samplePages = book.sample_pages.length;
+  const studyParts = [
+    book.study_days ? `حدود ${toPersianDigits(book.study_days)} روز مطالعه` : null,
+    book.pages ? `${formatNumber(book.pages)} صفحه` : null,
+  ].filter(Boolean);
+  const kitLine = placement
+    ? `${essential ? "ضروری" : "تکمیلی"} در بسته مطالعاتی ${placement.exam_type.name} · ${placement.subject.name}`
+    : null;
+
   return (
-    <PurchaseProvider bookId={book.id} bookTitle={book.title} variants={book.variants} course={book.related_courses[0]}>
+    <PurchaseProvider
+      bookId={book.id}
+      bookTitle={book.title}
+      variants={book.variants}
+      course={book.related_courses[0]}
+      store={store}
+      examLine={examLine}
+      lowTime={isLowTime(days)}
+    >
       <div className="mx-auto max-w-site px-4 pt-2 md:pt-4">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
         <ViewItemTracker id={book.id} name={book.title} price={book.min_price} />
         <Breadcrumb items={crumbs} />
 
         <div className="mt-2 grid gap-6 md:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] md:gap-8 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,22rem)]">
-          {/* media */}
+          {/* media + sample CTA (above the fold on mobile, P1-4) */}
           <div className="flex flex-col gap-3">
-            <div className="mx-auto w-full max-w-[12.5rem] md:max-w-none">
+            <BookTilt className="mx-auto w-full max-w-[12rem] md:max-w-none">
               <BookCover
                 title={book.title}
                 cover={book.cover}
                 subjects={book.subjects}
                 authors={book.authors}
                 volumes={book.volumes}
+                variant="product"
                 priority
-                sizes="(min-width: 1024px) 304px, (min-width: 768px) 272px, 240px"
+                sizes="(min-width: 1024px) 240px, (min-width: 768px) 212px, 150px"
               />
-            </div>
-            {book.sample_pages.length > 0 ? (
-              <SamplePagesViewer pages={book.sample_pages} title={book.title} />
-            ) : (
-              book.sample_pdf && (
-                <a
-                  href={book.sample_pdf}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex min-h-11 items-center justify-center rounded-control border-2 border-primary px-4 font-bold text-primary hover:bg-primary-soft"
-                >
-                  ورق بزنید (نمونه PDF)
-                </a>
-              )
+            </BookTilt>
+            {(samplePages > 0 || book.sample_pdf) && (
+              <div className="flex flex-col gap-2">
+                {samplePages > 0 && <SamplePagesViewer pages={book.sample_pages} title={book.title} />}
+                {book.sample_pdf && (
+                  <a
+                    href={book.sample_pdf}
+                    target="_blank"
+                    rel="noopener"
+                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-4 text-sm font-bold text-primary hover:bg-primary-soft ${
+                      samplePages > 0 ? "" : "border-2 border-primary bg-surface"
+                    }`}
+                  >
+                    {samplePages > 0 ? <DownloadIcon size={18} /> : <BookOpenIcon size={20} />}
+                    {samplePages > 0 ? "دانلود نمونه PDF" : "ورق بزنید (نمونه PDF)"}
+                    <span className="sr-only">(در زبانه جدید باز می‌شود)</span>
+                  </a>
+                )}
+              </div>
             )}
             {book.intro_video_url && (
               <div className="hidden md:block">
@@ -187,6 +266,16 @@ export default async function ProductPage({ params }: { params: Params }) {
 
           {/* info */}
           <div className="min-w-0">
+            {(book.edition_badge || book.law_updated_until) && (
+              <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                {book.edition_badge && (
+                  <span className="rounded-md bg-primary-soft px-2 py-0.5 font-bold text-primary">{book.edition_badge}</span>
+                )}
+                {book.law_updated_until && (
+                  <span className="text-ink-muted">به‌روز تا: {book.law_updated_until}</span>
+                )}
+              </p>
+            )}
             <h1 className="text-xl font-black leading-9 text-ink md:text-2xl md:leading-[2.75rem]">{book.title}</h1>
             {book.subtitle && <p className="mt-1 text-ink-muted">{book.subtitle}</p>}
             <dl className="mt-3 space-y-1 text-sm">
@@ -203,34 +292,62 @@ export default async function ProductPage({ params }: { params: Params }) {
                 </div>
               )}
             </dl>
+            {proof.length > 0 && (
+              <p className="mt-2 text-sm font-bold text-accent-ink">{proof.join(" · ")}</p>
+            )}
 
             <div className="mt-4 flex flex-wrap gap-2">
               {book.subjects.map((s) => (
                 <SubjectTag key={s.id} subject={s} link size="md" />
               ))}
             </div>
-            {book.exam_types.length > 0 && (
-              <p className="mt-3 rounded-control bg-primary-soft px-3 py-2 text-sm leading-7 text-ink">
-                <span className="font-bold text-primary">مناسب آزمون: </span>
-                {book.exam_types.map((e) => e.name).join("، ")}
-              </p>
-            )}
 
-            {book.kit_placements[0] && (
-              <p className="mt-3 flex items-start gap-2 rounded-control border border-accent bg-accent-soft px-3 py-2 text-sm leading-7 text-ink">
-                <span aria-hidden="true" className="mt-2 size-2 shrink-0 rounded-full bg-accent-strong" />
-                <span>
-                  اولویت {toPersianDigits(book.kit_placements[0].order)} در بسته مطالعاتی{" "}
-                  <strong>{book.kit_placements[0].exam_type.name}</strong> › {book.kit_placements[0].subject.name}
-                  {book.kit_placements[0].is_essential && " (منبع ضروری)"}
-                </span>
+            <ExamFit all={examTypes} fits={book.exam_types} className="mt-4" />
+
+            {(kitLine || book.course_badge || studyParts.length > 0) && (
+              <ul className="mt-4 space-y-2 text-sm leading-7 text-ink">
+                {kitLine && (
+                  <li className="flex items-start gap-2">
+                    <CheckIcon
+                      size={18}
+                      strokeWidth={2.4}
+                      className={`mt-1 shrink-0 ${essential ? "text-success" : "text-ink-muted"}`}
+                    />
+                    <span className={essential ? "font-bold" : ""}>{kitLine}</span>
+                  </li>
+                )}
+                {book.course_badge && (
+                  <li className="flex items-start gap-2">
+                    <PlayIcon size={18} className="mt-1 shrink-0 text-primary" />
+                    <span>تدریس‌شده در دوره «{book.course_badge}»</span>
+                  </li>
+                )}
+                {studyParts.length > 0 && (
+                  <li className="flex items-start gap-2">
+                    <ClockIcon size={18} className="mt-1 shrink-0 text-primary" />
+                    <span>{studyParts.join(" · ")}</span>
+                  </li>
+                )}
+              </ul>
+            )}
+            {quickHint && days != null && (
+              <p className="mt-3 rounded-control bg-warning-soft px-3 py-2 text-sm leading-7 text-warning">
+                با {toPersianDigits(days)} روز مانده،{" "}
+                <Link
+                  prefetch={false}
+                  href={routes.search({ subject: quickHint.slug, resource_type: "QUICK_REVIEW" })}
+                  className="font-bold underline underline-offset-4"
+                >
+                  نسخه سریع‌خوان این درس
+                </Link>{" "}
+                را هم ببینید.
               </p>
             )}
 
             {facts.length > 0 && (
               <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line text-sm sm:grid-cols-3">
                 {facts.map(([k, v]) => (
-                  <div key={k} className="bg-surface px-3 py-2.5">
+                  <div key={k} className="bg-surface px-3 py-2.5 last:odd:col-span-2 sm:last:odd:col-span-1">
                     <dt className="text-xs text-ink-muted">{k}</dt>
                     <dd className="mt-0.5 font-bold text-ink">
                       <bdi>{v}</bdi>
@@ -242,7 +359,7 @@ export default async function ProductPage({ params }: { params: Params }) {
 
             {/* buy box sits in the info column on tablet, in its own column on desktop */}
             <div className="mt-6 lg:hidden">
-              <PurchasePanel />
+              <PurchasePanel footer={consult} />
             </div>
             {book.intro_video_url && (
               <div className="mt-6 md:hidden">
@@ -253,19 +370,30 @@ export default async function ProductPage({ params }: { params: Params }) {
 
           <aside className="hidden lg:block" aria-label="خرید">
             <div className="sticky top-4">
-              <PurchasePanel />
+              <PurchasePanel footer={consult} />
             </div>
           </aside>
         </div>
+
+        {alternatives.length > 0 && (
+          <section aria-labelledby="alternatives-title" className="mt-10">
+            <SectionHeader
+              id="alternatives-title"
+              title="جایگزین‌های موجود همین درس"
+              subtitle="تا موجود شدن نسخه چاپی، این منابع همین حالا آماده ارسال یا مطالعه‌اند"
+            />
+            <BookRail books={alternatives} labelledBy="alternatives-title" />
+          </section>
+        )}
 
         <section className="mt-10" aria-label="جزئیات کتاب">
           <ProductTabs tabs={tabs} />
         </section>
 
-        {related.length > 0 && (
+        {relatedRest.length > 0 && (
           <section aria-labelledby="related-title" className="mt-10">
             <SectionHeader id="related-title" title="دانشجویان این کتاب‌ها را هم خریدند" />
-            <BookRail books={related} labelledBy="related-title" />
+            <BookRail books={relatedRest} labelledBy="related-title" />
           </section>
         )}
 
