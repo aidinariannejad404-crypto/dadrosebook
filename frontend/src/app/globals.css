@@ -117,3 +117,53 @@
     display: none;
   }
 }
+
+/* Study plan print / «ذخیره PDF» (A4, black on white, no site chrome, one week per page) */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  body:has(.plan-print) > :not(main) {
+    display: none !important;
+  }
+  body:has(.plan-print) {
+    background: #fff;
+  }
+  .plan-print {
+    max-width: none;
+    padding: 0;
+    font-size: 11pt;
+  }
+  .plan-print,
+  .plan-print * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .plan-print .plan-hero {
+    border: 1.5pt solid #000;
+    border-radius: 0;
+    padding: 10pt 12pt;
+  }
+  .plan-print .plan-hero * {
+    border-color: #000 !important;
+  }
+  .plan-print .plan-week + .plan-week {
+    break-before: page;
+  }
+  .plan-print .plan-day {
+    break-inside: avoid;
+  }
+  .plan-print ol,
+  .plan-print dl {
+    border-color: #000 !important;
+    border-radius: 0;
+  }
+  .plan-print .plan-dot {
+    background: var(--dot, #000) !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    border: 0.75pt solid #000;
+  }
+}

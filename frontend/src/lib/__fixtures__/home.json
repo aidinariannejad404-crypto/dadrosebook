@@ -1322,9 +1322,66 @@
   "featured_course": {
     "id": 1,
     "title": "دوره جامع حقوق مدنی ۱ تا ۸",
-    "url": "https://dadrose.com/courses/civil-law-complete",
+    "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+    "course_type": "FULL",
+    "course_type_label": "دوره جامع",
+    "subject": {
+      "id": 1,
+      "name": "حقوق مدنی",
+      "slug": "حقوق-مدنی",
+      "color": "#1F4E8C"
+    },
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      },
+      {
+        "id": 4,
+        "name": "سردفتری",
+        "slug": "سردفتری",
+        "short_name": "سردفتری"
+      }
+    ],
+    "teachers": [
+      "سجاد یوسفی"
+    ],
     "price": 8125000,
-    "image": null
+    "sale_price": null,
+    "effective_price": 8125000,
+    "is_free": false,
+    "hours": 50,
+    "sessions": null,
+    "price_per_hour": 162500,
+    "students_count": 283,
+    "rating": null,
+    "reviews_count": 0,
+    "image": null,
+    "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+    "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+    "selling_points": [
+      "تدریس ماده به ماده",
+      "همراه مثال‌های متعدد",
+      "نکات آزمونی",
+      "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+      "تدریس نموداری",
+      "جزوه کلاسی",
+      "دسترسی مادام‌العمر"
+    ]
   },
   "guide_videos": [
     {

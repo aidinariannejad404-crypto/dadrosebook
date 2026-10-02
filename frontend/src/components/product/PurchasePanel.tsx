@@ -11,7 +11,7 @@ import {
   hasDiscount,
   purchasableEbook,
 } from "@/lib/variants";
-import { withCourseUtm } from "@/lib/config";
+import { courseLink } from "@/lib/courses";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { TrackedLink } from "@/components/ui/TrackedLink";
 import {
@@ -21,6 +21,7 @@ import {
   CheckIcon,
   ClockIcon,
   ExternalIcon,
+  PlayIcon,
   TruckIcon,
 } from "@/components/ui/Icons";
 
@@ -29,6 +30,12 @@ interface PurchaseProviderProps {
   bookTitle: string;
   variants: Variant[];
   course?: Course;
+  /** book slug for the course link's utm_content */
+  bookSlug?: string;
+  /** the page has a course cross-sell section (#courses): show a teaser link instead of the course add-on */
+  courseTeaser?: boolean;
+  /** short second line under the teaser, e.g. «جلسه اول رایگان · ۱۵٪ تخفیف دوره‌ها» */
+  courseTeaserNote?: string | null;
   store?: StoreSettings | null;
   /** «۳۴ روز تا آزمون کانون وکلا ۱۴۰۵» (P1-6), rendered next to the price */
   examLine?: string | null;
@@ -128,7 +135,7 @@ function tilePrice(v: Variant): { text: string; cls: string } {
  */
 export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const uid = useId();
-  const { bookId, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut } =
+  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut } =
     usePurchase();
 
   if (variants.length === 0) {
@@ -277,7 +284,21 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
         </div>
       )}
 
-      {course && (
+      {courseTeaser && (
+        <a
+          href="#courses"
+          className="mt-4 flex min-h-11 items-center gap-2 rounded-control bg-primary-soft px-3 py-2 text-sm font-bold text-primary hover:bg-primary-tint"
+        >
+          <PlayIcon size={16} className="shrink-0" />
+          <span className="flex-1">
+            این درس را با دوره‌های دادرُز کامل کنید
+            {courseTeaserNote && <span className="block text-xs font-medium text-ink-muted">{courseTeaserNote}</span>}
+          </span>
+          <span aria-hidden="true">↓</span>
+        </a>
+      )}
+
+      {course && !courseTeaser && (
         <div className="mt-4 rounded-control border border-line p-3">
           <label className="flex min-h-11 cursor-pointer items-start gap-3">
             <input
@@ -307,12 +328,12 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
             {placeholder ? PRICE_SOON_NOTE : CART_SOON}
           </p>
         )}
-        {course && wantsCourse && (
+        {course && wantsCourse && !courseTeaser && (
           <TrackedLink
-            href={withCourseUtm(course.url, "product_course")}
+            href={courseLink(course.url, bookSlug ?? "")}
             external
             event="course_cross_sell_click"
-            params={{ course_id: course.id, course_name: course.title, item_id: bookId, placement: "product" }}
+            params={{ course: course.id, course_name: course.title, book: bookSlug ?? null, item_id: bookId, tier: "buy_box" }}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border-2 border-primary px-4 text-sm font-bold text-primary hover:bg-primary-soft"
           >
             خرید دوره «{course.title}» در دادرُز

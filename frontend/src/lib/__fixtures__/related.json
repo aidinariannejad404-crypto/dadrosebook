@@ -1881,5 +1881,224 @@
         }
       ]
     }
+  ],
+  "حقوق-مدنی-نموداری": [
+    {
+      "id": 1,
+      "title": "حقوق مدنی دوجلدی",
+      "subtitle": "",
+      "slug": "حقوق-مدنی-دوجلدی-دکتر-شکری",
+      "cover": "/fixtures/covers/hoghoogh-madani.jpg",
+      "authors": [
+        {
+          "id": 1,
+          "name": "دکتر شکری",
+          "slug": "دکتر-شکری"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 1400000,
+      "card_price": 2200000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK",
+        "BUNDLE"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 2,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": true,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "اصلاحات قانون مدنی و قانون حمایت خانواده ۱۴۰۴",
+      "course_badge": "دوره جامع حقوق مدنی ۱ تا ۸",
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": 64
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق مدنی",
+          "tone": "accent"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "سریع‌خوان حقوق مدنی",
+      "subtitle": "",
+      "slug": "سریع-خوان-حقوق-مدنی-دکتر-شکری",
+      "cover": null,
+      "authors": [
+        {
+          "id": 1,
+          "name": "دکتر شکری",
+          "slug": "دکتر-شکری"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": 420000,
+      "card_price": 690000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": false,
+      "is_quick_review": true,
+      "volumes": 1,
+      "resource_type": "QUICK_REVIEW",
+      "resource_type_label": "سریع‌خوان",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "اصلاحات قانون مدنی ۱۴۰۴",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 3,
+        "season_buyers": 27
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۳ حقوق مدنی",
+          "tone": "accent"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "بانک تست طبقه‌بندی‌شده کانون وکلا",
+      "subtitle": "",
+      "slug": "بانک-تست-طبقه-بندی-شده-کانون-وکلا-تیم-علمی-دادرُز",
+      "cover": null,
+      "authors": [
+        {
+          "id": 9,
+          "name": "تیم علمی دادرُز",
+          "slug": "تیم-علمی-دادرُز"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        },
+        {
+          "id": 3,
+          "name": "حقوق تجارت",
+          "slug": "حقوق-تجارت",
+          "color": "#1E7A5A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        }
+      ],
+      "min_price": 590000,
+      "card_price": 590000,
+      "card_format": "EBOOK",
+      "formats": [
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": false,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TESTS",
+      "resource_type_label": "تست و مجموعه سؤالات",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 2,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۲ حقوق مدنی",
+          "tone": "accent"
+        }
+      ]
+    }
   ]
 }

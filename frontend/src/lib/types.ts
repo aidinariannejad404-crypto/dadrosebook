@@ -139,12 +139,135 @@ export interface Banner {
   link_label: string;
 }
 
+/* ---------- academy courses (docs/api-contract.md › «Course cross-sell and study-plan lead magnet») ---------- */
+
+export type CourseType =
+  | "FULL"
+  | "ESSENTIALS"
+  | "TIPS_TESTS"
+  | "REVIEW"
+  | "WORKSHOP_ADVICE"
+  | "MOCK"
+  | "PACKAGE"
+  | "OTHER";
+
+/** Why a course is offered on a book page (only inside `course_offer`). */
+export type CourseRelevance = "referenced" | "same_author" | "same_subject" | "general";
+
 export interface Course {
   id: number;
   title: string;
+  /** dadrose.com course page; the frontend adds UTM params */
   url: string;
+  course_type: CourseType;
+  course_type_label: string;
+  subject: SubjectMini | null;
+  exam_types: ExamTypeMini[];
+  teachers: string[];
+  /** toman; 0 for free */
   price: number;
+  sale_price: number | null;
+  effective_price: number;
+  is_free: boolean;
+  hours: number | null;
+  sessions: number | null;
+  /** effective_price / hours; null if unknown or free */
+  price_per_hour: number | null;
+  /** null unless ≥ 100 (honest social proof) */
+  students_count: number | null;
+  /** null unless reviews_count ≥ 3 and rating ≥ 4.5 */
+  rating: number | null;
+  reviews_count: number;
   image: string | null;
+  /** "" when none */
+  intro_video_url: string;
+  short_description: string;
+  selling_points: string[];
+  /** only inside a book's course_offer */
+  relevance?: CourseRelevance;
+  relevance_label?: string;
+}
+
+export type CourseTier = "best" | "better" | "good";
+
+export interface TierCourse extends Course {
+  tier: CourseTier;
+  is_recommended: boolean;
+}
+
+export interface CourseDiscount {
+  code: string;
+  percent: number | null;
+  label: string;
+  /** ISO date; defaults to the next exam date */
+  expires_on: string;
+  days_left: number;
+}
+
+export interface ExamCountdownInfo {
+  exam_name: string;
+  date: string;
+  days_left: number;
+}
+
+export interface CourseOffer {
+  subject: SubjectMini | null;
+  /** by days to the selected/next exam: >60 FULL, 15–60 ESSENTIALS, <15 TIPS_TESTS/REVIEW */
+  recommended_type: CourseType;
+  recommended_reason: string;
+  /** referenced or same_author course, shown first and big */
+  highlight: Course | null;
+  /** good-better-best, max 3, order: best, better, good */
+  tiers: TierCourse[];
+  /** other relevant open courses, max 4 */
+  more: Course[];
+  free_sample: { course: Course; video_url: string } | null;
+  discount: CourseDiscount | null;
+  exam_countdown: ExamCountdownInfo | null;
+}
+
+/* ---------- study-plan lead magnet ---------- */
+
+export interface StudyPlanRequest {
+  /** normalised 09xxxxxxxxx */
+  phone: string;
+  exam_type: string;
+  subjects: string[];
+  books: string[];
+  hours_per_day: number;
+  consent: boolean;
+}
+
+export interface StudyPlanCreated {
+  token: string;
+  plan_url: string;
+}
+
+export interface StudyPlanItem {
+  subject: SubjectMini;
+  book_title: string;
+  book_slug: string;
+  pages_from: number;
+  pages_to: number;
+  task: string;
+}
+
+export interface StudyPlanDay {
+  date: string;
+  items: StudyPlanItem[];
+}
+
+export interface StudyPlan {
+  token: string;
+  created_at: string;
+  phone_masked: string;
+  exam: { name: string; date: string; days_left: number } | null;
+  hours_per_day: number;
+  summary: { total_pages: number; study_days: number; review_days: number; pages_per_day: number };
+  days: StudyPlanDay[];
+  review: { date: string; task: string }[];
+  /** max 3, by the same timing rule */
+  recommended_courses: Course[];
 }
 
 export interface GuideVideo {
@@ -241,6 +364,8 @@ export interface BookDetail extends BookCard {
   intro_video_url: string;
   variants: Variant[];
   related_courses: Course[];
+  /** academy cross-sell block; null when no open course is relevant */
+  course_offer: CourseOffer | null;
   kit_placements: KitPlacement[];
   is_featured: boolean;
   updated_at: string;

@@ -1,4 +1,4 @@
-import { getHome } from "@/lib/api";
+import { fixturesEnabled, getHome } from "@/lib/api";
 import { routes } from "@/lib/config";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { daysLeft, quickReviewFirst } from "@/lib/exam-time";
@@ -11,6 +11,7 @@ import { GuideVideos } from "@/components/home/GuideVideos";
 import { TrustRow } from "@/components/home/TrustRow";
 import { BookRail } from "@/components/book/BookRail";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 
 // SSR on each request (the «آزمون من» cookie picks the variant); the API response itself is cached
 // per URL — so per exam type — for 60s (fetch revalidate) and does not need the backend at build time.
@@ -62,6 +63,17 @@ export default async function HomePage() {
       <ExamChips examTypes={home.exam_types} selected={selected} />
 
       <SubjectTiles subjects={home.subjects} examName={selected?.name} />
+
+      <StudyPlanCta
+        layout="banner"
+        examTypes={home.exam_types}
+        subjects={home.subjects}
+        defaultExam={selected?.slug ?? exam ?? home.next_exam?.exam_type.slug ?? null}
+        defaultSubjects={[]}
+        book={null}
+        fixtures={fixturesEnabled()}
+        examLine={days != null && days > 0 && home.next_exam ? `${toPersianDigits(days)} روز تا ${home.next_exam.name}` : null}
+      />
 
       {quickFirst ? [quickReview, bestsellers] : [bestsellers, quickReview]}
 

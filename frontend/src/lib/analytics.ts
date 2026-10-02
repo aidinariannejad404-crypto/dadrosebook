@@ -11,7 +11,8 @@ export type AnalyticsEvent =
   | "purchase"
   | "kit_built"
   | "notify_me_requested"
-  | "course_cross_sell_click";
+  | "course_cross_sell_click"
+  | "study_plan_requested";
 
 export type AnalyticsParams = Record<string, string | number | boolean | null | undefined>;
 

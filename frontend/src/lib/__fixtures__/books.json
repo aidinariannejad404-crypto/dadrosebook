@@ -170,9 +170,66 @@
       {
         "id": 1,
         "title": "دوره جامع حقوق مدنی ۱ تا ۸",
-        "url": "https://dadrose.com/courses/civil-law-complete",
+        "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+        "course_type": "FULL",
+        "course_type_label": "دوره جامع",
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          },
+          {
+            "id": 3,
+            "name": "قضاوت",
+            "slug": "قضاوت",
+            "short_name": "قضاوت"
+          },
+          {
+            "id": 4,
+            "name": "سردفتری",
+            "slug": "سردفتری",
+            "short_name": "سردفتری"
+          }
+        ],
+        "teachers": [
+          "سجاد یوسفی"
+        ],
         "price": 8125000,
-        "image": null
+        "sale_price": null,
+        "effective_price": 8125000,
+        "is_free": false,
+        "hours": 50,
+        "sessions": null,
+        "price_per_hour": 162500,
+        "students_count": 283,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+        "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+        "selling_points": [
+          "تدریس ماده به ماده",
+          "همراه مثال‌های متعدد",
+          "نکات آزمونی",
+          "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+          "تدریس نموداری",
+          "جزوه کلاسی",
+          "دسترسی مادام‌العمر"
+        ]
       }
     ],
     "kit_placements": [
@@ -210,7 +267,563 @@
       }
     ],
     "is_featured": true,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": {
+      "subject": {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      },
+      "recommended_type": "ESSENTIALS",
+      "recommended_reason": "۳۳ روز تا آزمون کانون وکلا؛ وقت جمع‌بندی و امهات است",
+      "highlight": null,
+      "tiers": [
+        {
+          "id": 1,
+          "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+          "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 8125000,
+          "sale_price": null,
+          "effective_price": 8125000,
+          "is_free": false,
+          "hours": 50,
+          "sessions": null,
+          "price_per_hour": 162500,
+          "students_count": 283,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+          "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+          "selling_points": [
+            "تدریس ماده به ماده",
+            "همراه مثال‌های متعدد",
+            "نکات آزمونی",
+            "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+            "تدریس نموداری",
+            "جزوه کلاسی",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "best",
+          "is_recommended": false
+        },
+        {
+          "id": 13,
+          "title": "دوره امهات حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d8%af%d9%88%d8%b1%d9%87-%d8%a7%d9%85%d9%87%d8%a7%d8%aa-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "ESSENTIALS",
+          "course_type_label": "امهات",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 2980000,
+          "sale_price": null,
+          "effective_price": 2980000,
+          "is_free": false,
+          "hours": 30,
+          "sessions": null,
+          "price_per_hour": 99333,
+          "students_count": 588,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "دوره جمع بندی حقوق مدنی | تطبیق ۷۰ درصد مباحث مهم با آزمون وکالت | تدریس به صورت ماده به ماده همراه مثال و تمامی نکات آزمونی",
+          "selling_points": [
+            "طبقه‌بندی صحیح مطالب",
+            "رویکرد مبحث‌محور",
+            "استفاده از مثال‌های عملی",
+            "جمع‌بندی نکات کلیدی",
+            "امکان مشاهده چندباره",
+            "تضمین یادگیری",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "better",
+          "is_recommended": true
+        },
+        {
+          "id": 14,
+          "title": "نکته و تست حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d9%86%da%a9%d8%aa%d9%87-%d9%88-%d8%aa%d8%b3%d8%aa-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "TIPS_TESTS",
+          "course_type_label": "نکته و تست",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [],
+          "price": 1500000,
+          "sale_price": null,
+          "effective_price": 1500000,
+          "is_free": false,
+          "hours": 7,
+          "sessions": null,
+          "price_per_hour": 214285,
+          "students_count": 318,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "درس حقوق مدنی یکی از مهم‌ترین و تاثیرگذارترین درس‌ها در رشته حقوق به حساب می‌آید و پایه بسیاری از مباحث حقوقی بر همین درس استوار است.",
+          "selling_points": [
+            "آموزش با زبان ساده و روان",
+            "آموزش مفهومی (نه حفظی)",
+            "مثال‌های کاربردی",
+            "دسته‌بندی منظم",
+            "جزوه کامل و قابل مرور"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "good",
+          "is_recommended": false
+        }
+      ],
+      "more": [
+        {
+          "id": 3,
+          "title": "حقوق مدنی ۳ قواعد عمومی قراردادها",
+          "url": "https://dadrose.com/courses/civil-law-book-3-general-rules-contracts/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 2375000,
+          "sale_price": null,
+          "effective_price": 2375000,
+          "is_free": false,
+          "hours": 19,
+          "sessions": 19,
+          "price_per_hour": 125000,
+          "students_count": 206,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تدریس 0 تا 100 حقوق مدنی 3 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات. این دوره ویژه تمامی دانشجویان و داوطلبین آزمون های حقوقی می باشد اعم از ارشد ، وکالت،قضاوت. تدریس همراه با مثال و بسیار روان می باشد.",
+          "selling_points": [
+            "دوره‌ای کامل با پوشش کلیه مفاهیم برای داوطلبان آزمون وکالت",
+            "تدریس علمی و حرفه‌ای",
+            "ارائه نکات مهم و کاربردی",
+            "بیان جزئیات همراه با جامعیت بالا",
+            "آموزش معتبر و تضمین شده"
+          ],
+          "relevance": "referenced",
+          "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+        },
+        {
+          "id": 7,
+          "title": "حقوق مدنی ۶ عقود معین",
+          "url": "https://dadrose.com/courses/civil-law-book-6-nominate-contracts/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 1625000,
+          "sale_price": null,
+          "effective_price": 1625000,
+          "is_free": false,
+          "hours": 13,
+          "sessions": 27,
+          "price_per_hour": 125000,
+          "students_count": 187,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تدریس 0 تا 100 حقوق مدنی 6 عقود معین 1 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات",
+          "selling_points": [
+            "مبحث بیع و آثار آن در زمان انتقال مالکیت",
+            "اجاره و مباحث مربوط به تعهدات موجر و مستاجر",
+            "نکات مربوط به قرض و صلح",
+            "مبحث جعاله و اثر آن روی تعهدات",
+            "نکات مربوط به شرکت‌ها"
+          ],
+          "relevance": "referenced",
+          "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+        },
+        {
+          "id": 9,
+          "title": "حقوق مدنی ۸ شفعه وصیت ارث",
+          "url": "https://dadrose.com/courses/civil-law-book-8-preemption-will-inheritance/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 930000,
+          "sale_price": null,
+          "effective_price": 930000,
+          "is_free": false,
+          "hours": 7,
+          "sessions": 9,
+          "price_per_hour": 132857,
+          "students_count": 166,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "درس حقوق مدنی همیشه یکی از مهم‌ترین و تعیین‌کننده‌ترین دروس در آزمون‌های حقوقی بوده و تسلط بر مباحث تخصصی آن مثل شفعه، وصیت و ارث می‌تواند نقش بسیار مهمی در رتبه و نتیجه نهایی شما داشته باشد.",
+          "selling_points": [
+            "۷ ساعت آموزش ویدیویی فشرده و هدفمند",
+            "آخرین بروزرسانی (۱۴ اسفند ۱۴۰۴)",
+            "دسترسی مادام‌العمر بدون محدودیت زمانی",
+            "گواهی اتمام دوره",
+            "بیان شیوا، رسا و روان"
+          ],
+          "relevance": "same_author",
+          "relevance_label": "تدریس توسط مؤلف همین کتاب"
+        },
+        {
+          "id": 15,
+          "title": "تحلیل سوالات ۵ سال اخیر حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d8%aa%d8%ad%d9%84%db%8c%d9%84-%d8%b3%d9%88%d8%a7%d9%84%d8%a7%d8%aa-5-%d8%b3%d8%a7%d9%84-%d8%a7%d8%ae%db%8c%d8%b1-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "REVIEW",
+          "course_type_label": "جمع‌بندی",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 0,
+          "sale_price": null,
+          "effective_price": 0,
+          "is_free": true,
+          "hours": null,
+          "sessions": null,
+          "price_per_hour": null,
+          "students_count": 191,
+          "rating": null,
+          "reviews_count": 3,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تحلیل سوالات حقوق مدنی آزمون وکالت در پنج سال اخیر (دوره رایگان).",
+          "selling_points": [
+            "دسترسی مادام‌العمر",
+            "پشتیبانی و رفع اشکال",
+            "ثبت‌نام رایگان"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس"
+        }
+      ],
+      "free_sample": {
+        "course": {
+          "id": 1,
+          "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+          "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 8125000,
+          "sale_price": null,
+          "effective_price": 8125000,
+          "is_free": false,
+          "hours": 50,
+          "sessions": null,
+          "price_per_hour": 162500,
+          "students_count": 283,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+          "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+          "selling_points": [
+            "تدریس ماده به ماده",
+            "همراه مثال‌های متعدد",
+            "نکات آزمونی",
+            "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+            "تدریس نموداری",
+            "جزوه کلاسی",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس"
+        },
+        "video_url": "https://www.aparat.com/v/nssk9vk"
+      },
+      "discount": {
+        "code": "MADANI15",
+        "percent": 15,
+        "label": "۱۵٪ تخفیف دوره‌های حقوق مدنی برای خریداران این کتاب",
+        "expires_on": "2026-11-05",
+        "days_left": 33
+      },
+      "exam_countdown": {
+        "exam_name": "آزمون کانون وکلا ۱۴۰۵",
+        "date": "2026-11-05",
+        "days_left": 33
+      }
+    }
   },
   {
     "id": 2,
@@ -358,8 +971,43 @@
         "id": 2,
         "title": "دوره آیین دادرسی مدنی کاربردی",
         "url": "https://dadrose.com/courses/civil-procedure",
+        "course_type": "FULL",
+        "course_type_label": "دوره جامع",
+        "subject": {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          }
+        ],
+        "teachers": [],
         "price": 4900000,
-        "image": null
+        "sale_price": null,
+        "effective_price": 4900000,
+        "is_free": false,
+        "hours": null,
+        "sessions": null,
+        "price_per_hour": null,
+        "students_count": null,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "",
+        "short_description": "",
+        "selling_points": []
       }
     ],
     "kit_placements": [
@@ -381,7 +1029,8 @@
       }
     ],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 3,
@@ -525,7 +1174,8 @@
       }
     ],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 4,
@@ -673,8 +1323,43 @@
         "id": 3,
         "title": "دوره جمع‌بندی حقوق جزا",
         "url": "https://dadrose.com/courses/criminal-law-review",
+        "course_type": "ESSENTIALS",
+        "course_type_label": "امهات",
+        "subject": {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          }
+        ],
+        "teachers": [],
         "price": 3750000,
-        "image": null
+        "sale_price": null,
+        "effective_price": 3750000,
+        "is_free": false,
+        "hours": null,
+        "sessions": null,
+        "price_per_hour": null,
+        "students_count": null,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "",
+        "short_description": "",
+        "selling_points": []
       }
     ],
     "kit_placements": [
@@ -696,7 +1381,8 @@
       }
     ],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 5,
@@ -834,7 +1520,8 @@
       }
     ],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 6,
@@ -961,7 +1648,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 7,
@@ -1088,7 +1776,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 8,
@@ -1195,7 +1884,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 9,
@@ -1316,7 +2006,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 10,
@@ -1437,7 +2128,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 11,
@@ -1554,7 +2246,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 12,
@@ -1672,7 +2365,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 13,
@@ -1815,7 +2509,563 @@
       }
     ],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": {
+      "subject": {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      },
+      "recommended_type": "ESSENTIALS",
+      "recommended_reason": "۳۳ روز تا آزمون کانون وکلا؛ وقت جمع‌بندی و امهات است",
+      "highlight": null,
+      "tiers": [
+        {
+          "id": 1,
+          "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+          "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 8125000,
+          "sale_price": null,
+          "effective_price": 8125000,
+          "is_free": false,
+          "hours": 50,
+          "sessions": null,
+          "price_per_hour": 162500,
+          "students_count": 283,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+          "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+          "selling_points": [
+            "تدریس ماده به ماده",
+            "همراه مثال‌های متعدد",
+            "نکات آزمونی",
+            "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+            "تدریس نموداری",
+            "جزوه کلاسی",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "best",
+          "is_recommended": false
+        },
+        {
+          "id": 13,
+          "title": "دوره امهات حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d8%af%d9%88%d8%b1%d9%87-%d8%a7%d9%85%d9%87%d8%a7%d8%aa-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "ESSENTIALS",
+          "course_type_label": "امهات",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 2980000,
+          "sale_price": null,
+          "effective_price": 2980000,
+          "is_free": false,
+          "hours": 30,
+          "sessions": null,
+          "price_per_hour": 99333,
+          "students_count": 588,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "دوره جمع بندی حقوق مدنی | تطبیق ۷۰ درصد مباحث مهم با آزمون وکالت | تدریس به صورت ماده به ماده همراه مثال و تمامی نکات آزمونی",
+          "selling_points": [
+            "طبقه‌بندی صحیح مطالب",
+            "رویکرد مبحث‌محور",
+            "استفاده از مثال‌های عملی",
+            "جمع‌بندی نکات کلیدی",
+            "امکان مشاهده چندباره",
+            "تضمین یادگیری",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "better",
+          "is_recommended": true
+        },
+        {
+          "id": 14,
+          "title": "نکته و تست حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d9%86%da%a9%d8%aa%d9%87-%d9%88-%d8%aa%d8%b3%d8%aa-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "TIPS_TESTS",
+          "course_type_label": "نکته و تست",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [],
+          "price": 1500000,
+          "sale_price": null,
+          "effective_price": 1500000,
+          "is_free": false,
+          "hours": 7,
+          "sessions": null,
+          "price_per_hour": 214285,
+          "students_count": 318,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "درس حقوق مدنی یکی از مهم‌ترین و تاثیرگذارترین درس‌ها در رشته حقوق به حساب می‌آید و پایه بسیاری از مباحث حقوقی بر همین درس استوار است.",
+          "selling_points": [
+            "آموزش با زبان ساده و روان",
+            "آموزش مفهومی (نه حفظی)",
+            "مثال‌های کاربردی",
+            "دسته‌بندی منظم",
+            "جزوه کامل و قابل مرور"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "good",
+          "is_recommended": false
+        }
+      ],
+      "more": [
+        {
+          "id": 3,
+          "title": "حقوق مدنی ۳ قواعد عمومی قراردادها",
+          "url": "https://dadrose.com/courses/civil-law-book-3-general-rules-contracts/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 2375000,
+          "sale_price": null,
+          "effective_price": 2375000,
+          "is_free": false,
+          "hours": 19,
+          "sessions": 19,
+          "price_per_hour": 125000,
+          "students_count": 206,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تدریس 0 تا 100 حقوق مدنی 3 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات. این دوره ویژه تمامی دانشجویان و داوطلبین آزمون های حقوقی می باشد اعم از ارشد ، وکالت،قضاوت. تدریس همراه با مثال و بسیار روان می باشد.",
+          "selling_points": [
+            "دوره‌ای کامل با پوشش کلیه مفاهیم برای داوطلبان آزمون وکالت",
+            "تدریس علمی و حرفه‌ای",
+            "ارائه نکات مهم و کاربردی",
+            "بیان جزئیات همراه با جامعیت بالا",
+            "آموزش معتبر و تضمین شده"
+          ],
+          "relevance": "referenced",
+          "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+        },
+        {
+          "id": 7,
+          "title": "حقوق مدنی ۶ عقود معین",
+          "url": "https://dadrose.com/courses/civil-law-book-6-nominate-contracts/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 1625000,
+          "sale_price": null,
+          "effective_price": 1625000,
+          "is_free": false,
+          "hours": 13,
+          "sessions": 27,
+          "price_per_hour": 125000,
+          "students_count": 187,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تدریس 0 تا 100 حقوق مدنی 6 عقود معین 1 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات",
+          "selling_points": [
+            "مبحث بیع و آثار آن در زمان انتقال مالکیت",
+            "اجاره و مباحث مربوط به تعهدات موجر و مستاجر",
+            "نکات مربوط به قرض و صلح",
+            "مبحث جعاله و اثر آن روی تعهدات",
+            "نکات مربوط به شرکت‌ها"
+          ],
+          "relevance": "referenced",
+          "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+        },
+        {
+          "id": 9,
+          "title": "حقوق مدنی ۸ شفعه وصیت ارث",
+          "url": "https://dadrose.com/courses/civil-law-book-8-preemption-will-inheritance/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 930000,
+          "sale_price": null,
+          "effective_price": 930000,
+          "is_free": false,
+          "hours": 7,
+          "sessions": 9,
+          "price_per_hour": 132857,
+          "students_count": 166,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "درس حقوق مدنی همیشه یکی از مهم‌ترین و تعیین‌کننده‌ترین دروس در آزمون‌های حقوقی بوده و تسلط بر مباحث تخصصی آن مثل شفعه، وصیت و ارث می‌تواند نقش بسیار مهمی در رتبه و نتیجه نهایی شما داشته باشد.",
+          "selling_points": [
+            "۷ ساعت آموزش ویدیویی فشرده و هدفمند",
+            "آخرین بروزرسانی (۱۴ اسفند ۱۴۰۴)",
+            "دسترسی مادام‌العمر بدون محدودیت زمانی",
+            "گواهی اتمام دوره",
+            "بیان شیوا، رسا و روان"
+          ],
+          "relevance": "same_author",
+          "relevance_label": "تدریس توسط مؤلف همین کتاب"
+        },
+        {
+          "id": 15,
+          "title": "تحلیل سوالات ۵ سال اخیر حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d8%aa%d8%ad%d9%84%db%8c%d9%84-%d8%b3%d9%88%d8%a7%d9%84%d8%a7%d8%aa-5-%d8%b3%d8%a7%d9%84-%d8%a7%d8%ae%db%8c%d8%b1-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "REVIEW",
+          "course_type_label": "جمع‌بندی",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 0,
+          "sale_price": null,
+          "effective_price": 0,
+          "is_free": true,
+          "hours": null,
+          "sessions": null,
+          "price_per_hour": null,
+          "students_count": 191,
+          "rating": null,
+          "reviews_count": 3,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تحلیل سوالات حقوق مدنی آزمون وکالت در پنج سال اخیر (دوره رایگان).",
+          "selling_points": [
+            "دسترسی مادام‌العمر",
+            "پشتیبانی و رفع اشکال",
+            "ثبت‌نام رایگان"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس"
+        }
+      ],
+      "free_sample": {
+        "course": {
+          "id": 1,
+          "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+          "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 8125000,
+          "sale_price": null,
+          "effective_price": 8125000,
+          "is_free": false,
+          "hours": 50,
+          "sessions": null,
+          "price_per_hour": 162500,
+          "students_count": 283,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+          "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+          "selling_points": [
+            "تدریس ماده به ماده",
+            "همراه مثال‌های متعدد",
+            "نکات آزمونی",
+            "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+            "تدریس نموداری",
+            "جزوه کلاسی",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس"
+        },
+        "video_url": "https://www.aparat.com/v/nssk9vk"
+      },
+      "discount": {
+        "code": "MADANI15",
+        "percent": 15,
+        "label": "۱۵٪ تخفیف دوره‌های حقوق مدنی برای خریداران این کتاب",
+        "expires_on": "2026-11-05",
+        "days_left": 33
+      },
+      "exam_countdown": {
+        "exam_name": "آزمون کانون وکلا ۱۴۰۵",
+        "date": "2026-11-05",
+        "days_left": 33
+      }
+    }
   },
   {
     "id": 14,
@@ -1927,7 +3177,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 15,
@@ -2047,7 +3298,8 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
   },
   {
     "id": 16,
@@ -2165,6 +3417,894 @@
     "related_courses": [],
     "kit_placements": [],
     "is_featured": false,
-    "updated_at": "2026-10-01T09:30:00Z"
+    "updated_at": "2026-10-01T09:30:00Z",
+    "course_offer": null
+  },
+  {
+    "id": 17,
+    "title": "حقوق مدنی نموداری",
+    "subtitle": "همراه با قانون مدنی نموداری و قوانین خاص مرتبط",
+    "slug": "حقوق-مدنی-نموداری",
+    "cover": null,
+    "authors": [
+      {
+        "id": 20,
+        "name": "امین بیات",
+        "slug": "امین-بیات"
+      }
+    ],
+    "subjects": [
+      {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      }
+    ],
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      }
+    ],
+    "min_price": 395000,
+    "card_price": 395000,
+    "card_format": "PRINT",
+    "formats": [
+      "PRINT"
+    ],
+    "in_stock": true,
+    "print_in_stock": true,
+    "is_quick_review": false,
+    "volumes": 1,
+    "resource_type": "TEXTBOOK",
+    "resource_type_label": "درسنامه",
+    "has_sample": false,
+    "kit_role": null,
+    "edition_badge": null,
+    "law_updated_until": "",
+    "course_badge": "حقوق مدنی ۲ تا ۸",
+    "social_proof": {
+      "subject_rank": null,
+      "season_buyers": null
+    },
+    "badges": [
+      {
+        "code": "course",
+        "label": "منبع دوره دادرُز",
+        "tone": "info"
+      }
+    ],
+    "publisher": {
+      "id": 7,
+      "name": "چتر دانش",
+      "slug": "چتر-دانش"
+    },
+    "translators": [],
+    "categories": [
+      {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی"
+      }
+    ],
+    "edition": "دوم",
+    "publish_year": null,
+    "pages": 0,
+    "isbn": "",
+    "description": "<p>کتاب <strong>حقوق مدنی نموداری</strong> امین بیات را «انتشارات چتر دانش» چاپ کرده است. نویسنده برای تدوین این کتاب چهار سال زمان صرف کرده تا محتوای حقوق مدنی را به‌صورت مختصر، جامع و با تکنیک‌های نوین آموزشی گردآوری کند.</p><p>به‌جای مطالب حاشیه‌ای و دیدگاه‌های اختلافی، نظرهای مشهور و قوی آمده و نکات کلیدی آزمون‌های حقوقی در متن گنجانده شده است.</p><ul><li>مناسب داوطلبان آزمون وکالت، قضاوت و کارشناسی ارشد</li><li>همراه با قانون مدنی نموداری و قوانین خاص مرتبط</li></ul>",
+    "table_of_contents": "",
+    "study_plan_note": "متن درسی دوره‌های حقوق مدنی ۲ تا ۸ استاد امین بیات؛ هم‌زمان با دیدن هر جلسه، همان فصل کتاب را بخوانید.",
+    "study_days": 14,
+    "sample_pdf": null,
+    "sample_pages": [],
+    "intro_video_url": "",
+    "variants": [
+      {
+        "id": 170,
+        "type": "PRINT",
+        "type_label": "نسخه چاپی",
+        "price": 395000,
+        "sale_price": null,
+        "effective_price": 395000,
+        "discount_percent": 0,
+        "in_stock": true,
+        "stock": 9,
+        "price_is_placeholder": false,
+        "bundle_saving": null
+      }
+    ],
+    "related_courses": [
+      {
+        "id": 2,
+        "title": "حقوق مدنی ۲ تا ۸",
+        "url": "https://dadrose.com/courses/civil-law-books-2-to-8/",
+        "course_type": "FULL",
+        "course_type_label": "دوره جامع",
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          }
+        ],
+        "teachers": [
+          "امین بیات"
+        ],
+        "price": 8125000,
+        "sale_price": null,
+        "effective_price": 8125000,
+        "is_free": false,
+        "hours": 65,
+        "sessions": null,
+        "price_per_hour": 125000,
+        "students_count": null,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "",
+        "short_description": "تدریس حقوق مدنی 2 تا 8 | مدرس امین بیات وکیل پایه یک دادگستری | ویژه دانشجویان حقوق و داوطلبین آزمون وکالت | داوطلبینی که سطح علمی پایین در درس حقوق مدنی دارند می توانند از این درس استفاده کنند و پایه علمی خود را افزایش دهند.",
+        "selling_points": [
+          "۶۵ ساعت آموزش ویدیویی",
+          "دسترسی مادام‌العمر",
+          "پشتیبانی و رفع اشکال",
+          "مطابق کتاب حقوق مدنی نموداری"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "حقوق مدنی ۳ قواعد عمومی قراردادها",
+        "url": "https://dadrose.com/courses/civil-law-book-3-general-rules-contracts/",
+        "course_type": "FULL",
+        "course_type_label": "دوره جامع",
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          },
+          {
+            "id": 3,
+            "name": "قضاوت",
+            "slug": "قضاوت",
+            "short_name": "قضاوت"
+          },
+          {
+            "id": 5,
+            "name": "ارشد و دکتری",
+            "slug": "ارشد-و-دکتری",
+            "short_name": "ارشد"
+          }
+        ],
+        "teachers": [
+          "امین بیات"
+        ],
+        "price": 2375000,
+        "sale_price": null,
+        "effective_price": 2375000,
+        "is_free": false,
+        "hours": 19,
+        "sessions": 19,
+        "price_per_hour": 125000,
+        "students_count": 206,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "",
+        "short_description": "تدریس 0 تا 100 حقوق مدنی 3 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات. این دوره ویژه تمامی دانشجویان و داوطلبین آزمون های حقوقی می باشد اعم از ارشد ، وکالت،قضاوت. تدریس همراه با مثال و بسیار روان می باشد.",
+        "selling_points": [
+          "دوره‌ای کامل با پوشش کلیه مفاهیم برای داوطلبان آزمون وکالت",
+          "تدریس علمی و حرفه‌ای",
+          "ارائه نکات مهم و کاربردی",
+          "بیان جزئیات همراه با جامعیت بالا",
+          "آموزش معتبر و تضمین شده"
+        ]
+      },
+      {
+        "id": 7,
+        "title": "حقوق مدنی ۶ عقود معین",
+        "url": "https://dadrose.com/courses/civil-law-book-6-nominate-contracts/",
+        "course_type": "FULL",
+        "course_type_label": "دوره جامع",
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          },
+          {
+            "id": 3,
+            "name": "قضاوت",
+            "slug": "قضاوت",
+            "short_name": "قضاوت"
+          },
+          {
+            "id": 5,
+            "name": "ارشد و دکتری",
+            "slug": "ارشد-و-دکتری",
+            "short_name": "ارشد"
+          }
+        ],
+        "teachers": [
+          "امین بیات"
+        ],
+        "price": 1625000,
+        "sale_price": null,
+        "effective_price": 1625000,
+        "is_free": false,
+        "hours": 13,
+        "sessions": 27,
+        "price_per_hour": 125000,
+        "students_count": 187,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "",
+        "short_description": "تدریس 0 تا 100 حقوق مدنی 6 عقود معین 1 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات",
+        "selling_points": [
+          "مبحث بیع و آثار آن در زمان انتقال مالکیت",
+          "اجاره و مباحث مربوط به تعهدات موجر و مستاجر",
+          "نکات مربوط به قرض و صلح",
+          "مبحث جعاله و اثر آن روی تعهدات",
+          "نکات مربوط به شرکت‌ها"
+        ]
+      }
+    ],
+    "kit_placements": [],
+    "is_featured": false,
+    "updated_at": "2026-10-02T09:00:00Z",
+    "course_offer": {
+      "subject": {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      },
+      "recommended_type": "ESSENTIALS",
+      "recommended_reason": "۳۳ روز تا آزمون کانون وکلا؛ وقت جمع‌بندی و امهات است",
+      "highlight": {
+        "id": 2,
+        "title": "حقوق مدنی ۲ تا ۸",
+        "url": "https://dadrose.com/courses/civil-law-books-2-to-8/",
+        "course_type": "FULL",
+        "course_type_label": "دوره جامع",
+        "subject": {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        "exam_types": [
+          {
+            "id": 1,
+            "name": "کانون وکلا",
+            "slug": "کانون-وکلا",
+            "short_name": "کانون"
+          },
+          {
+            "id": 2,
+            "name": "مرکز وکلا",
+            "slug": "مرکز-وکلا",
+            "short_name": "مرکز"
+          }
+        ],
+        "teachers": [
+          "امین بیات"
+        ],
+        "price": 8125000,
+        "sale_price": null,
+        "effective_price": 8125000,
+        "is_free": false,
+        "hours": 65,
+        "sessions": null,
+        "price_per_hour": 125000,
+        "students_count": null,
+        "rating": null,
+        "reviews_count": 0,
+        "image": null,
+        "intro_video_url": "",
+        "short_description": "تدریس حقوق مدنی 2 تا 8 | مدرس امین بیات وکیل پایه یک دادگستری | ویژه دانشجویان حقوق و داوطلبین آزمون وکالت | داوطلبینی که سطح علمی پایین در درس حقوق مدنی دارند می توانند از این درس استفاده کنند و پایه علمی خود را افزایش دهند.",
+        "selling_points": [
+          "۶۵ ساعت آموزش ویدیویی",
+          "دسترسی مادام‌العمر",
+          "پشتیبانی و رفع اشکال",
+          "مطابق کتاب حقوق مدنی نموداری"
+        ],
+        "relevance": "referenced",
+        "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+      },
+      "tiers": [
+        {
+          "id": 1,
+          "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+          "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 8125000,
+          "sale_price": null,
+          "effective_price": 8125000,
+          "is_free": false,
+          "hours": 50,
+          "sessions": null,
+          "price_per_hour": 162500,
+          "students_count": 283,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+          "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+          "selling_points": [
+            "تدریس ماده به ماده",
+            "همراه مثال‌های متعدد",
+            "نکات آزمونی",
+            "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+            "تدریس نموداری",
+            "جزوه کلاسی",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "best",
+          "is_recommended": false
+        },
+        {
+          "id": 13,
+          "title": "دوره امهات حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d8%af%d9%88%d8%b1%d9%87-%d8%a7%d9%85%d9%87%d8%a7%d8%aa-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "ESSENTIALS",
+          "course_type_label": "امهات",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 2980000,
+          "sale_price": null,
+          "effective_price": 2980000,
+          "is_free": false,
+          "hours": 30,
+          "sessions": null,
+          "price_per_hour": 99333,
+          "students_count": 588,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "دوره جمع بندی حقوق مدنی | تطبیق ۷۰ درصد مباحث مهم با آزمون وکالت | تدریس به صورت ماده به ماده همراه مثال و تمامی نکات آزمونی",
+          "selling_points": [
+            "طبقه‌بندی صحیح مطالب",
+            "رویکرد مبحث‌محور",
+            "استفاده از مثال‌های عملی",
+            "جمع‌بندی نکات کلیدی",
+            "امکان مشاهده چندباره",
+            "تضمین یادگیری",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "better",
+          "is_recommended": true
+        },
+        {
+          "id": 14,
+          "title": "نکته و تست حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d9%86%da%a9%d8%aa%d9%87-%d9%88-%d8%aa%d8%b3%d8%aa-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "TIPS_TESTS",
+          "course_type_label": "نکته و تست",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [],
+          "price": 1500000,
+          "sale_price": null,
+          "effective_price": 1500000,
+          "is_free": false,
+          "hours": 7,
+          "sessions": null,
+          "price_per_hour": 214285,
+          "students_count": 318,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "درس حقوق مدنی یکی از مهم‌ترین و تاثیرگذارترین درس‌ها در رشته حقوق به حساب می‌آید و پایه بسیاری از مباحث حقوقی بر همین درس استوار است.",
+          "selling_points": [
+            "آموزش با زبان ساده و روان",
+            "آموزش مفهومی (نه حفظی)",
+            "مثال‌های کاربردی",
+            "دسته‌بندی منظم",
+            "جزوه کامل و قابل مرور"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس",
+          "tier": "good",
+          "is_recommended": false
+        }
+      ],
+      "more": [
+        {
+          "id": 3,
+          "title": "حقوق مدنی ۳ قواعد عمومی قراردادها",
+          "url": "https://dadrose.com/courses/civil-law-book-3-general-rules-contracts/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 2375000,
+          "sale_price": null,
+          "effective_price": 2375000,
+          "is_free": false,
+          "hours": 19,
+          "sessions": 19,
+          "price_per_hour": 125000,
+          "students_count": 206,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تدریس 0 تا 100 حقوق مدنی 3 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات. این دوره ویژه تمامی دانشجویان و داوطلبین آزمون های حقوقی می باشد اعم از ارشد ، وکالت،قضاوت. تدریس همراه با مثال و بسیار روان می باشد.",
+          "selling_points": [
+            "دوره‌ای کامل با پوشش کلیه مفاهیم برای داوطلبان آزمون وکالت",
+            "تدریس علمی و حرفه‌ای",
+            "ارائه نکات مهم و کاربردی",
+            "بیان جزئیات همراه با جامعیت بالا",
+            "آموزش معتبر و تضمین شده"
+          ],
+          "relevance": "referenced",
+          "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+        },
+        {
+          "id": 7,
+          "title": "حقوق مدنی ۶ عقود معین",
+          "url": "https://dadrose.com/courses/civil-law-book-6-nominate-contracts/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 1625000,
+          "sale_price": null,
+          "effective_price": 1625000,
+          "is_free": false,
+          "hours": 13,
+          "sessions": 27,
+          "price_per_hour": 125000,
+          "students_count": 187,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تدریس 0 تا 100 حقوق مدنی 6 عقود معین 1 به صورت کامل و ماده به ماده و مباحث مطابق با کتاب حقوق مدنی نموداری با تالیف استاد ممتاز امین بیات",
+          "selling_points": [
+            "مبحث بیع و آثار آن در زمان انتقال مالکیت",
+            "اجاره و مباحث مربوط به تعهدات موجر و مستاجر",
+            "نکات مربوط به قرض و صلح",
+            "مبحث جعاله و اثر آن روی تعهدات",
+            "نکات مربوط به شرکت‌ها"
+          ],
+          "relevance": "referenced",
+          "relevance_label": "تدریس‌شده بر اساس همین کتاب"
+        },
+        {
+          "id": 9,
+          "title": "حقوق مدنی ۸ شفعه وصیت ارث",
+          "url": "https://dadrose.com/courses/civil-law-book-8-preemption-will-inheritance/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            },
+            {
+              "id": 5,
+              "name": "ارشد و دکتری",
+              "slug": "ارشد-و-دکتری",
+              "short_name": "ارشد"
+            }
+          ],
+          "teachers": [
+            "امین بیات"
+          ],
+          "price": 930000,
+          "sale_price": null,
+          "effective_price": 930000,
+          "is_free": false,
+          "hours": 7,
+          "sessions": 9,
+          "price_per_hour": 132857,
+          "students_count": 166,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "درس حقوق مدنی همیشه یکی از مهم‌ترین و تعیین‌کننده‌ترین دروس در آزمون‌های حقوقی بوده و تسلط بر مباحث تخصصی آن مثل شفعه، وصیت و ارث می‌تواند نقش بسیار مهمی در رتبه و نتیجه نهایی شما داشته باشد.",
+          "selling_points": [
+            "۷ ساعت آموزش ویدیویی فشرده و هدفمند",
+            "آخرین بروزرسانی (۱۴ اسفند ۱۴۰۴)",
+            "دسترسی مادام‌العمر بدون محدودیت زمانی",
+            "گواهی اتمام دوره",
+            "بیان شیوا، رسا و روان"
+          ],
+          "relevance": "same_author",
+          "relevance_label": "تدریس توسط مؤلف همین کتاب"
+        },
+        {
+          "id": 15,
+          "title": "تحلیل سوالات ۵ سال اخیر حقوق مدنی",
+          "url": "https://dadrose.com/courses/%d8%aa%d8%ad%d9%84%db%8c%d9%84-%d8%b3%d9%88%d8%a7%d9%84%d8%a7%d8%aa-5-%d8%b3%d8%a7%d9%84-%d8%a7%d8%ae%db%8c%d8%b1-%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c/",
+          "course_type": "REVIEW",
+          "course_type_label": "جمع‌بندی",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 0,
+          "sale_price": null,
+          "effective_price": 0,
+          "is_free": true,
+          "hours": null,
+          "sessions": null,
+          "price_per_hour": null,
+          "students_count": 191,
+          "rating": null,
+          "reviews_count": 3,
+          "image": null,
+          "intro_video_url": "",
+          "short_description": "تحلیل سوالات حقوق مدنی آزمون وکالت در پنج سال اخیر (دوره رایگان).",
+          "selling_points": [
+            "دسترسی مادام‌العمر",
+            "پشتیبانی و رفع اشکال",
+            "ثبت‌نام رایگان"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس"
+        }
+      ],
+      "free_sample": {
+        "course": {
+          "id": 1,
+          "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+          "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+          "course_type": "FULL",
+          "course_type_label": "دوره جامع",
+          "subject": {
+            "id": 1,
+            "name": "حقوق مدنی",
+            "slug": "حقوق-مدنی",
+            "color": "#1F4E8C"
+          },
+          "exam_types": [
+            {
+              "id": 1,
+              "name": "کانون وکلا",
+              "slug": "کانون-وکلا",
+              "short_name": "کانون"
+            },
+            {
+              "id": 2,
+              "name": "مرکز وکلا",
+              "slug": "مرکز-وکلا",
+              "short_name": "مرکز"
+            },
+            {
+              "id": 3,
+              "name": "قضاوت",
+              "slug": "قضاوت",
+              "short_name": "قضاوت"
+            },
+            {
+              "id": 4,
+              "name": "سردفتری",
+              "slug": "سردفتری",
+              "short_name": "سردفتری"
+            }
+          ],
+          "teachers": [
+            "سجاد یوسفی"
+          ],
+          "price": 8125000,
+          "sale_price": null,
+          "effective_price": 8125000,
+          "is_free": false,
+          "hours": 50,
+          "sessions": null,
+          "price_per_hour": 162500,
+          "students_count": 283,
+          "rating": null,
+          "reviews_count": 0,
+          "image": null,
+          "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+          "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+          "selling_points": [
+            "تدریس ماده به ماده",
+            "همراه مثال‌های متعدد",
+            "نکات آزمونی",
+            "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+            "تدریس نموداری",
+            "جزوه کلاسی",
+            "دسترسی مادام‌العمر"
+          ],
+          "relevance": "same_subject",
+          "relevance_label": "دوره همین درس"
+        },
+        "video_url": "https://www.aparat.com/v/nssk9vk"
+      },
+      "discount": {
+        "code": "MADANI15",
+        "percent": 15,
+        "label": "۱۵٪ تخفیف دوره‌های حقوق مدنی برای خریداران این کتاب",
+        "expires_on": "2026-11-05",
+        "days_left": 33
+      },
+      "exam_countdown": {
+        "exam_name": "آزمون کانون وکلا ۱۴۰۵",
+        "date": "2026-11-05",
+        "days_left": 33
+      }
+    }
   }
 ]

@@ -2,14 +2,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { decodeSlug, getBook, getExamEvents, getExamTypes, getRelatedBooks, getStoreSettings } from "@/lib/api";
+import {
+  decodeSlug,
+  fixturesEnabled,
+  getBook,
+  getExamEvents,
+  getExamTypes,
+  getRelatedBooks,
+  getStoreSettings,
+  getSubjects,
+} from "@/lib/api";
 import { formatNumber, toPersianDigits } from "@/lib/format";
 import { routes, siteUrl } from "@/lib/config";
 import { bookJsonLd, breadcrumbJsonLd, serializeJsonLd } from "@/lib/jsonld";
 import { productDescription, productTitle } from "@/lib/product-meta";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { daysLeft, isLowTime, needsQuickReviewHint, pickExamEvent } from "@/lib/exam-time";
-import type { ExamTypeMini } from "@/lib/types";
+import type { ExamTypeMini, SubjectWithCount } from "@/lib/types";
+import { isEmptyOffer } from "@/lib/courses";
 import { BookCover } from "@/components/book/BookCover";
 import { BookTilt } from "@/components/book/BookTilt";
 import { SubjectTag } from "@/components/book/SubjectTag";
@@ -23,6 +33,8 @@ import { ProductTabs, type TabDef } from "@/components/product/ProductTabs";
 import { ViewItemTracker } from "@/components/product/ViewItemTracker";
 import { ExamFit } from "@/components/product/ExamFit";
 import { ConsultCta } from "@/components/ui/ConsultCta";
+import { CourseCrossSell } from "@/components/course/CourseCrossSell";
+import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/components/ui/Icons";
 
 type Params = Promise<{ slug: string }>;
@@ -72,12 +84,14 @@ export default async function ProductPage({ params }: { params: Params }) {
   if (!book) notFound();
 
   const printOut = book.formats.includes("PRINT") && !book.print_in_stock;
-  const [related, alternatives, events, examTypes, store] = await Promise.all([
+  const hasOffer = !isEmptyOffer(book.course_offer);
+  const [related, alternatives, events, examTypes, store, subjects] = await Promise.all([
     optional(getRelatedBooks(book.slug, { examType: exam }), []),
     printOut ? optional(getRelatedBooks(book.slug, { inStock: true, examType: exam }), []) : Promise.resolve([]),
     optional(getExamEvents(), []),
     optional(getExamTypes(), [] as ExamTypeMini[]),
     optional(getStoreSettings(), null),
+    hasOffer ? optional(getSubjects(), [] as SubjectWithCount[]) : Promise.resolve([] as SubjectWithCount[]),
   ]);
   const altIds = new Set(alternatives.map((b) => b.id));
   const relatedRest = related.filter((b) => !altIds.has(b.id));
@@ -198,6 +212,28 @@ export default async function ProductPage({ params }: { params: Params }) {
     },
   ];
 
+  const highlightLabel = book.course_offer?.highlight?.relevance_label || null;
+  const offer = book.course_offer;
+  const teaserNote =
+    [
+      offer?.free_sample ? "جلسه اول رایگان" : null,
+      offer?.discount?.percent ? `${toPersianDigits(offer.discount.percent)}٪ تخفیف دوره‌ها` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ") || null;
+  const offerSubjects = new Set(book.subjects.map((s) => s.slug));
+  const studyPlan = hasOffer ? (
+    <StudyPlanCta
+      examTypes={examTypes}
+      subjects={subjects}
+      defaultExam={exam ?? event?.exam_type.slug ?? null}
+      defaultSubjects={[...offerSubjects]}
+      book={{ slug: book.slug, title: book.title }}
+      fixtures={fixturesEnabled()}
+      examLine={examLine}
+    />
+  ) : null;
+
   const consult = <ConsultCta store={store} exam={selectedExamName} book={book.title} />;
   const samplePages = book.sample_pages.length;
   const studyParts = [
@@ -214,6 +250,9 @@ export default async function ProductPage({ params }: { params: Params }) {
       bookTitle={book.title}
       variants={book.variants}
       course={book.related_courses[0]}
+      bookSlug={book.slug}
+      courseTeaser={hasOffer}
+      courseTeaserNote={teaserNote}
       store={store}
       examLine={examLine}
       lowTime={isLowTime(days)}
@@ -266,8 +305,14 @@ export default async function ProductPage({ params }: { params: Params }) {
 
           {/* info */}
           <div className="min-w-0">
-            {(book.edition_badge || book.law_updated_until) && (
+            {(book.edition_badge || book.law_updated_until || highlightLabel) && (
               <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                {highlightLabel && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-accent-soft px-2 py-0.5 font-bold text-accent-ink">
+                    <PlayIcon size={12} className="shrink-0" />
+                    {highlightLabel}
+                  </span>
+                )}
                 {book.edition_badge && (
                   <span className="rounded-md bg-primary-soft px-2 py-0.5 font-bold text-primary">{book.edition_badge}</span>
                 )}
@@ -319,7 +364,13 @@ export default async function ProductPage({ params }: { params: Params }) {
                 {book.course_badge && (
                   <li className="flex items-start gap-2">
                     <PlayIcon size={18} className="mt-1 shrink-0 text-primary" />
-                    <span>تدریس‌شده در دوره «{book.course_badge}»</span>
+                    {hasOffer ? (
+                      <a href="#courses" className="underline decoration-line-strong underline-offset-4 hover:decoration-primary">
+                        تدریس‌شده در دوره «{book.course_badge}»
+                      </a>
+                    ) : (
+                      <span>تدریس‌شده در دوره «{book.course_badge}»</span>
+                    )}
                   </li>
                 )}
                 {studyParts.length > 0 && (
@@ -374,6 +425,12 @@ export default async function ProductPage({ params }: { params: Params }) {
             </div>
           </aside>
         </div>
+
+        {hasOffer && (
+          <div className="mt-8 md:mt-10">
+            <CourseCrossSell offer={book.course_offer} book={book} now={now} studyPlan={studyPlan} />
+          </div>
+        )}
 
         {alternatives.length > 0 && (
           <section aria-labelledby="alternatives-title" className="mt-10">

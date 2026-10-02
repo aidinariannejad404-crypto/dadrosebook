@@ -2,12 +2,19 @@ import type {
   BookCard,
   BookDetail,
   CategoryNode,
+  Course,
+  CourseType,
   ExamEvent,
   ExamTypeMini,
   HomePayload,
   KitRole,
   StoreSettings,
+  StudyPlan,
+  StudyPlanCreated,
+  StudyPlanRequest,
+  SubjectWithCount,
 } from "./types";
+import { fixtureStudyPlan, studyPlanErrors, type StudyPlanField } from "./study-plan";
 
 /**
  * API client for /api/v1/.
@@ -188,4 +195,98 @@ export async function getExamTypes(): Promise<ExamTypeMini[]> {
 export async function getStoreSettings(): Promise<StoreSettings> {
   if (fixturesEnabled()) return (await fixtureHome()).store;
   return apiGet<StoreSettings>("/store/settings/");
+}
+
+/** Subjects with book counts (study-plan form choices). */
+export async function getSubjects(): Promise<SubjectWithCount[]> {
+  if (fixturesEnabled()) return (await fixtureHome()).subjects;
+  return apiGet<SubjectWithCount[]>("/catalog/subjects/");
+}
+
+/* ---------- academy courses ---------- */
+
+/** Every open course in the fixtures (course_offer parts and related courses), deduplicated by id. */
+async function fixtureCourses(): Promise<Course[]> {
+  const byId = new Map<number, Course>();
+  for (const b of await fixtureBooks()) {
+    const o = b.course_offer;
+    const all = [
+      ...(o ? [o.highlight, ...o.tiers, ...o.more, o.free_sample?.course] : []),
+      ...b.related_courses,
+    ];
+    for (const c of all) {
+      if (!c || byId.has(c.id)) continue;
+      const course: Record<string, unknown> = { ...c };
+      for (const k of ["relevance", "relevance_label", "tier", "is_recommended"]) delete course[k];
+      byId.set(c.id, course as unknown as Course);
+    }
+  }
+  return [...byId.values()];
+}
+
+/** GET /catalog/courses/ — open courses, filtered by subject / course type / exam type slugs. */
+export async function getCourses(
+  filters: { subject?: string | null; courseType?: CourseType | null; examType?: string | null } = {},
+): Promise<Course[]> {
+  if (fixturesEnabled()) {
+    return (await fixtureCourses()).filter(
+      (c) =>
+        (!filters.subject || c.subject?.slug === filters.subject) &&
+        (!filters.courseType || c.course_type === filters.courseType) &&
+        (!filters.examType || c.exam_types.some((e) => e.slug === filters.examType)),
+    );
+  }
+  const qs = queryString({ subject: filters.subject, course_type: filters.courseType, exam_type: filters.examType });
+  return apiGet<Course[]>(`/catalog/courses/${qs}`);
+}
+
+/* ---------- study-plan lead magnet ---------- */
+
+export type StudyPlanResult =
+  | { ok: true; data: StudyPlanCreated }
+  | { ok: false; errors: Partial<Record<StudyPlanField, string>> };
+
+/**
+ * POST /leads/study-plan/ from the browser (NEXT_PUBLIC_API_URL). `fixtures` is passed down by the
+ * server component (USE_API_FIXTURES is not visible in the browser): it answers locally with a token.
+ */
+export async function submitStudyPlan(body: StudyPlanRequest, { fixtures = false } = {}): Promise<StudyPlanResult> {
+  if (fixtures) {
+    const token = globalThis.crypto?.randomUUID?.() ?? "8f1c2a4e-3b5d-4c6e-9f70-1a2b3c4d5e6f";
+    return { ok: true, data: { token, plan_url: `/plan/${token}` } };
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${apiBase()}/leads/study-plan/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return { ok: false, errors: { form: "اتصال برقرار نشد. اینترنت خود را بررسی کنید و دوباره تلاش کنید." } };
+  }
+  const json: unknown = await res.json().catch(() => null);
+  if (res.ok && json && typeof json === "object" && "token" in json) {
+    const data = json as StudyPlanCreated;
+    return { ok: true, data: { token: data.token, plan_url: data.plan_url || `/plan/${data.token}` } };
+  }
+  return { ok: false, errors: studyPlanErrors(res.status, json) };
+}
+
+/** GET /leads/study-plan/<token>/ (personal: never cached), or null on 404. */
+export async function getStudyPlan(token: string): Promise<StudyPlan | null> {
+  if (fixturesEnabled()) {
+    const now = Date.now();
+    const books = (await fixtureBooks()).filter((b) => b.subjects[0]?.slug === "حقوق-مدنی" || b.id === 14);
+    const exam = (await fixtureExamEvents())[0] ?? null;
+    const courses = (await fixtureCourses()).filter((c) => c.subject?.slug === "حقوق-مدنی");
+    const order: CourseType[] = ["ESSENTIALS", "TIPS_TESTS", "REVIEW"];
+    const recommended = order.flatMap((t) => courses.filter((c) => c.course_type === t).slice(0, 1));
+    return fixtureStudyPlan(token, now, books, exam, recommended);
+  }
+  const url = `${apiBase()}/leads/study-plan/${slugSegment(token)}/`;
+  const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+  if (res.status === 404 || res.status === 400) return null;
+  if (!res.ok) throw new ApiError(res.status, url);
+  return (await res.json()) as StudyPlan;
 }
