@@ -16,8 +16,20 @@ if (mediaHost) {
   remotePatterns.push({ protocol: "https", hostname: mediaHost });
 }
 
+/** Django API as seen from the Next.js server (rewrite target for same-origin /api/v1 calls). */
+const apiInternal = (process.env.API_INTERNAL_URL || "http://localhost:8000/api/v1").replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Django URLs end with "/"; keep it (no 308 to the slash-less URL) for the /api/v1 proxy.
+  skipTrailingSlashRedirect: true,
+  // Phase 3: browser calls go same-origin to /api/v1/* so the httpOnly auth cookies are first-party.
+  async rewrites() {
+    return [
+      { source: "/api/v1/:path*/", destination: `${apiInternal}/:path*/` },
+      { source: "/api/v1/:path*", destination: `${apiInternal}/:path*` },
+    ];
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   // Always render <title>/<meta>/Open Graph inside <head> (no metadata streaming): link previews in
