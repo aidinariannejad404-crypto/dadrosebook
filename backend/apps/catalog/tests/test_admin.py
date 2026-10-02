@@ -79,8 +79,10 @@ def test_book_created_in_admin_gets_search_text(admin_client, catalog):
         "slug": "",
         "authors": [catalog["shokri"].pk],
         "subjects": [catalog["civil"].pk],
+        "resource_type": "TEXTBOOK",
         "volumes": 1,
         "sales_count": 0,
+        "season_sales_count": 0,
         "is_active": "on",
         "description": "<p>متن</p><script>x</script>",
         "variants-TOTAL_FORMS": 1,
@@ -99,3 +101,25 @@ def test_book_created_in_admin_gets_search_text(admin_client, catalog):
     assert "شکری" in book.search_text
     assert "<script" not in book.description
     assert book.variants.get().price == 100000
+
+
+def test_book_changelist_completeness_and_edition(admin_client, catalog):
+    url = reverse("admin:catalog_book_changelist")
+    html = admin_client.get(url).content.decode()
+    assert "کامل‌بودن" in html and "ویرایش جاری؟" in html and "نوع منبع" in html
+    assert "۱۲٪" in html  # civil book: only a confirmed price (1/8, floored)
+    incomplete = admin_client.get(url + "?complete=no").content.decode()
+    assert "حقوق مدنی دوجلدی" in incomplete
+    complete = admin_client.get(url + "?complete=yes").content.decode()
+    assert "حقوق مدنی دوجلدی" not in complete
+    filtered = admin_client.get(url + "?resource_type__exact=QUICK_REVIEW").content.decode()
+    assert "سریع‌خوان متون فقه مرکز وکلا" in filtered and "حقوق مدنی دوجلدی" not in filtered
+
+
+def test_study_kit_admin_shows_weight(admin_client, catalog):
+    html = admin_client.get(reverse("admin:catalog_studykitrecommendation_changelist"))
+    assert "ضریب درس" in html.content.decode()
+    change = admin_client.get(
+        reverse("admin:catalog_studykitrecommendation_change", args=[catalog["rec"].pk])
+    ).content.decode()
+    assert "دفترچه رسمی آزمون" in change

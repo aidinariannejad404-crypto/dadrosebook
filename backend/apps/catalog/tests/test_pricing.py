@@ -65,3 +65,16 @@ def test_unique_book_type(catalog):
 
     with pytest.raises(IntegrityError):
         BookVariant.objects.create(book=catalog["commerce_book"], type="PRINT", price=1)
+
+
+def test_card_variant_prefers_print_then_cheapest():
+    from types import SimpleNamespace as V
+
+    from apps.catalog.services.pricing import book_card_variant
+
+    ebook = V(type="EBOOK", effective_price=500)
+    bundle = V(type="BUNDLE", effective_price=900)
+    print_ = V(type="PRINT", effective_price=800)
+    assert book_card_variant([ebook, print_, bundle]) is print_
+    assert book_card_variant([bundle, ebook]) is ebook
+    assert book_card_variant([]) is None

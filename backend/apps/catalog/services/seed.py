@@ -129,6 +129,8 @@ def seed_catalog() -> dict[str, int]:
 
 def _seed_book(spec, index, exam_types, subjects, categories, bar_children) -> Book:
     quick = spec.get("quick_review", False)
+    resource_type = Book.ResourceType.QUICK_REVIEW if quick else Book.ResourceType.TEXTBOOK
+    resource_type = spec.get("resource_type", resource_type)
     sales = max(0, data.SALES_COUNT_START - index * data.SALES_COUNT_STEP)
     book, _ = Book.objects.update_or_create(
         slug=book_slug(spec),
@@ -141,6 +143,7 @@ def _seed_book(spec, index, exam_types, subjects, categories, bar_children) -> B
             "table_of_contents": spec["table_of_contents"],
             "study_plan_note": spec["study_plan_note"],
             "is_featured": spec.get("is_featured", False),
+            "resource_type": resource_type,
             "is_quick_review": quick,
             "sales_count": sales,
             "is_active": True,
@@ -208,6 +211,7 @@ def _seed_study_kits(books, exam_types, subjects) -> int:
     count = 0
     for exam_type_name in data.KIT_EXAM_TYPES:
         exam_type = exam_types[exam_type_name]
+        weights = data.SUBJECT_WEIGHTS.get(exam_type_name, {})
         for subject in subjects.values():
             candidates = [
                 b for b in books if subject in b.subjects.all() and exam_type in b.exam_types.all()
@@ -222,6 +226,7 @@ def _seed_study_kits(books, exam_types, subjects) -> int:
                 defaults={
                     "is_active": True,
                     "note": f"کتاب‌های پیشنهادی {subject.name} برای {exam_type.name}",
+                    "weight": weights.get(subject.name),
                 },
             )
             rec.items.exclude(book__in=candidates).delete()

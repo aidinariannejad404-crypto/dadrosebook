@@ -3,6 +3,9 @@ from django.db import connection
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .serializers import StoreSettingsSerializer
+from .services.store_settings import get_store_settings
+
 
 class HealthView(APIView):
     """Liveness: database and cache (Redis) reachable."""
@@ -23,3 +26,10 @@ class HealthView(APIView):
         if errors:
             return Response({"status": "error", "errors": errors}, status=503)
         return Response({"status": "ok"})
+
+
+class StoreSettingsView(APIView):
+    """Public store-wide settings (delivery texts, consult links, trust seal)."""
+
+    def get(self, request):
+        return Response(StoreSettingsSerializer(get_store_settings()).data)

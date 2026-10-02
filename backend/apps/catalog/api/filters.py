@@ -2,7 +2,7 @@ import django_filters
 from django.db.models import Exists, F, OuterRef
 
 from ..models import Book, BookVariant
-from ..services.books import category_descendant_ids
+from ..services.books import category_descendant_ids, has_sample_q
 from ..services.search import search_books
 
 TRUE_VALUES = {"true", "1", "yes"}
@@ -36,6 +36,8 @@ class BookFilter(django_filters.FilterSet):
     in_stock = django_filters.CharFilter(method="filter_in_stock")
     featured = django_filters.CharFilter(method="filter_featured")
     quick_review = django_filters.CharFilter(method="filter_quick_review")
+    has_sample = django_filters.CharFilter(method="filter_has_sample")
+    resource_type = django_filters.CharFilter(method="filter_resource_type")
     ordering = django_filters.CharFilter(method="filter_ordering")
 
     class Meta:
@@ -96,6 +98,14 @@ class BookFilter(django_filters.FilterSet):
 
     def filter_quick_review(self, queryset, name, value):
         return queryset.filter(is_quick_review=True) if value.lower() in TRUE_VALUES else queryset
+
+    def filter_has_sample(self, queryset, name, value):
+        return queryset.filter(has_sample_q()) if value.lower() in TRUE_VALUES else queryset
+
+    def filter_resource_type(self, queryset, name, value):
+        valid = set(Book.ResourceType.values)
+        types = [v.upper() for v in _multi(self.data, name) if v.upper() in valid]
+        return queryset.filter(resource_type__in=types) if types else queryset
 
     def filter_ordering(self, queryset, name, value):
         return queryset.order_by(*ORDERING_MAP.get(value, ORDERING_MAP[DEFAULT_ORDERING]))

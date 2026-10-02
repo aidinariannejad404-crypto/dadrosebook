@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from apps.content.models import Banner, GuideVideo
+from apps.core.serializers import StoreSettingsSerializer
 
 from ..models import (
     Book,
@@ -17,7 +18,9 @@ from ..models import (
     Subject,
 )
 from ..services.books import sorted_variants
-from ..services.pricing import book_min_price
+from ..services.cards import card_extras
+from ..services.editions import current_exam_year
+from ..services.pricing import book_card_variant, book_min_price, bundle_saving
 
 
 class SubjectMiniSerializer(serializers.ModelSerializer):
@@ -63,6 +66,7 @@ class VariantSerializer(serializers.ModelSerializer):
     discount_percent = serializers.IntegerField()
     in_stock = serializers.BooleanField()
     stock = serializers.SerializerMethodField()
+    bundle_saving = serializers.SerializerMethodField()
 
     class Meta:
         model = BookVariant
@@ -77,10 +81,24 @@ class VariantSerializer(serializers.ModelSerializer):
             "in_stock",
             "stock",
             "price_is_placeholder",
+            "bundle_saving",
         ]
 
     def get_stock(self, obj: BookVariant) -> int | None:
         return None if obj.type == BookVariant.Type.EBOOK else obj.stock
+
+    def get_bundle_saving(self, obj: BookVariant) -> int | None:
+        """Set by ``serialize_variants`` (needs the sibling variants); BUNDLE only."""
+        if obj.type != BookVariant.Type.BUNDLE:
+            return None
+        return getattr(obj, "bundle_saving", None)
+
+
+def serialize_variants(variants: list[BookVariant], context: dict) -> list[dict]:
+    saving = bundle_saving(variants)
+    for variant in variants:
+        variant.bundle_saving = saving if variant.type == BookVariant.Type.BUNDLE else None
+    return VariantSerializer(variants, many=True, context=context).data
 
 
 def _active_variants(book: Book) -> list[BookVariant]:
@@ -96,9 +114,18 @@ class BookCardSerializer(serializers.ModelSerializer):
     subjects = SubjectMiniSerializer(many=True, read_only=True)
     exam_types = ExamTypeMiniSerializer(many=True, read_only=True)
     min_price = serializers.SerializerMethodField()
+    card_price = serializers.SerializerMethodField()
+    card_format = serializers.SerializerMethodField()
     formats = serializers.SerializerMethodField()
     in_stock = serializers.SerializerMethodField()
     print_in_stock = serializers.SerializerMethodField()
+    resource_type_label = serializers.CharField(source="get_resource_type_display", read_only=True)
+    has_sample = serializers.SerializerMethodField()
+    kit_role = serializers.SerializerMethodField()
+    edition_badge = serializers.SerializerMethodField()
+    course_badge = serializers.SerializerMethodField()
+    social_proof = serializers.SerializerMethodField()
+    badges = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -112,15 +139,67 @@ class BookCardSerializer(serializers.ModelSerializer):
             "subjects",
             "exam_types",
             "min_price",
+            "card_price",
+            "card_format",
             "formats",
             "in_stock",
             "print_in_stock",
             "is_quick_review",
             "volumes",
+            # Added after research (docs/research/competitor-analysis.md, P1-*).
+            "resource_type",
+            "resource_type_label",
+            "has_sample",
+            "kit_role",
+            "edition_badge",
+            "law_updated_until",
+            "course_badge",
+            "social_proof",
+            "badges",
         ]
+
+    def _exam_year(self) -> int:
+        """Computed once per response and shared through the root serializer's context."""
+        context = self.context
+        if "current_exam_year" not in context:
+            context["current_exam_year"] = current_exam_year()
+        return context["current_exam_year"]
+
+    def _extras(self, obj: Book) -> dict:
+        extras = getattr(obj, "_card_extras", None)
+        if extras is None:
+            extras = card_extras(obj, _active_variants(obj), exam_year=self._exam_year())
+            obj._card_extras = extras
+        return extras
+
+    def get_has_sample(self, obj: Book) -> bool:
+        return self._extras(obj)["has_sample"]
+
+    def get_kit_role(self, obj: Book) -> str | None:
+        return self._extras(obj)["kit_role"]
+
+    def get_edition_badge(self, obj: Book) -> str | None:
+        return self._extras(obj)["edition_badge"]
+
+    def get_course_badge(self, obj: Book) -> str | None:
+        return self._extras(obj)["course_badge"]
+
+    def get_social_proof(self, obj: Book) -> dict:
+        return self._extras(obj)["social_proof"]
+
+    def get_badges(self, obj: Book) -> list[dict]:
+        return self._extras(obj)["badges"]
 
     def get_min_price(self, obj: Book) -> int | None:
         return book_min_price(_active_variants(obj))
+
+    def get_card_price(self, obj: Book) -> int | None:
+        variant = book_card_variant(_active_variants(obj))
+        return variant.effective_price if variant else None
+
+    def get_card_format(self, obj: Book) -> str | None:
+        variant = book_card_variant(_active_variants(obj))
+        return variant.type if variant else None
 
     def get_formats(self, obj: Book) -> list[str]:
         return [v.type for v in _active_variants(obj)]
@@ -139,7 +218,7 @@ class BookCardWithVariantsSerializer(BookCardSerializer):
         fields = [*BookCardSerializer.Meta.fields, "variants"]
 
     def get_variants(self, obj: Book) -> list[dict]:
-        return VariantSerializer(_active_variants(obj), many=True, context=self.context).data
+        return serialize_variants(_active_variants(obj), self.context)
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -188,6 +267,7 @@ class BookDetailSerializer(BookCardSerializer):
             "description",
             "table_of_contents",
             "study_plan_note",
+            "study_days",
             "sample_pdf",
             "sample_pages",
             "intro_video_url",
@@ -203,7 +283,7 @@ class BookDetailSerializer(BookCardSerializer):
         return CategoryMiniSerializer(cats, many=True).data
 
     def get_variants(self, obj: Book) -> list[dict]:
-        return VariantSerializer(_active_variants(obj), many=True, context=self.context).data
+        return serialize_variants(_active_variants(obj), self.context)
 
     def get_related_courses(self, obj: Book) -> list[dict]:
         courses = [c for c in obj.related_courses.all() if c.is_active]
@@ -262,10 +342,17 @@ class GuideVideoSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "video_url", "thumbnail", "subject", "exam_type"]
 
 
+class HomeSubjectSerializer(SubjectWithCountSerializer):
+    weight = serializers.IntegerField(read_only=True, allow_null=True)
+
+    class Meta(SubjectWithCountSerializer.Meta):
+        fields = [*SubjectWithCountSerializer.Meta.fields, "weight"]
+
+
 class HomeSerializer(serializers.Serializer):
     next_exam = ExamEventSerializer(allow_null=True)
     exam_types = ExamTypeMiniSerializer(many=True)
-    subjects = SubjectWithCountSerializer(many=True)
+    subjects = HomeSubjectSerializer(many=True)
     categories = CategoryNodeSerializer(many=True)
     hero_banners = BannerSerializer(many=True)
     course_banners = BannerSerializer(many=True)
@@ -273,6 +360,8 @@ class HomeSerializer(serializers.Serializer):
     quick_review = BookCardSerializer(many=True)
     featured_course = CourseSerializer(allow_null=True)
     guide_videos = GuideVideoSerializer(many=True)
+    selected_exam_type = ExamTypeMiniSerializer(allow_null=True)
+    store = StoreSettingsSerializer()
 
 
 class StudyKitItemSerializer(serializers.Serializer):
@@ -285,4 +374,5 @@ class StudyKitSerializer(serializers.Serializer):
     exam_type = ExamTypeMiniSerializer()
     subject = SubjectMiniSerializer()
     note = serializers.CharField()
+    weight = serializers.IntegerField(allow_null=True)
     items = StudyKitItemSerializer(many=True, source="kit_items")

@@ -3,10 +3,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from apps.core.views import HealthView
+from apps.core.views import HealthView, StoreSettingsView
 
 api_v1 = [
     path("health/", HealthView.as_view(), name="health"),
+    path("store/settings/", StoreSettingsView.as_view(), name="store-settings"),
     path("catalog/", include("apps.catalog.api.urls")),
 ]
 

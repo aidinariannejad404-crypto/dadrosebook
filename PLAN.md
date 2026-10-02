@@ -180,12 +180,16 @@ progress & highlights CRUD.
 ## 6. Analytics events (Phase 5, names fixed now)
 
 `view_item`, `add_to_cart`, `begin_checkout`, `purchase`, `kit_built`, `notify_me_requested`,
-`course_cross_sell_click`. A thin `track()` wrapper in `frontend/src/lib/analytics.ts` will dispatch to the
-chosen analytics tool (needs a decision, see open questions). Course links already carry UTM params.
+`course_cross_sell_click`. A thin `track()` wrapper in `frontend/src/lib/analytics.ts` will dispatch to a
+self-hosted Umami instance (decided). Course links already carry UTM params.
 
-## 7. Open questions for the owner
+## 7. Decisions and open questions
 
-1. Analytics tool (self-hosted Umami/Matomo vs. Google Analytics, which is unreliable in Iran).
-2. Production hosting (ArvanCloud cloud server + object storage assumed).
-3. Real publisher names, cover scans, ISBNs and ebook prices for the seed catalogue.
-4. Colour for «قوانین خاص» (brief gave none; placeholder `#3F6B6B`).
+Decided by the owner on 2026-10-02 (accepted the recommendations):
+- Book cards show the **print price** (`card_price`); other formats appear on the product page.
+- «قوانین خاص» colour is `#3F6B6B`.
+- Analytics: **self-hosted Umami** (Phase 5), no Google Analytics.
+
+Still open:
+1. Production hosting (ArvanCloud cloud server + object storage assumed).
+2. Real ebook prices (currently placeholders flagged `price_is_placeholder`).

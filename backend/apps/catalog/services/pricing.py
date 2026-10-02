@@ -24,7 +24,10 @@ def round_to(value: float, step: int = 10_000) -> int:
 
 
 def min_effective_price_expression(prefix: str = "variants__"):
-    """``Min`` aggregate of active variants' effective price, for annotating a Book queryset."""
+    """``Min`` aggregate of active, non-placeholder variants' effective price (Book queryset).
+
+    Placeholder prices are never sold, so they never feed price filters or ordering.
+    """
     return Min(
         Case(
             When(
@@ -35,11 +38,45 @@ def min_effective_price_expression(prefix: str = "variants__"):
             default=F(f"{prefix}price"),
             output_field=IntegerField(),
         ),
-        filter=Q(**{f"{prefix}is_active": True}),
+        filter=Q(**{f"{prefix}is_active": True, f"{prefix}price_is_placeholder": False}),
     )
 
 
+def sellable(variants) -> list:
+    """Variants whose price is confirmed (``price_is_placeholder`` is false)."""
+    return [v for v in variants if not getattr(v, "price_is_placeholder", False)]
+
+
 def book_min_price(variants) -> int | None:
-    """Lowest effective price among (already filtered, active) variant objects."""
-    prices = [v.effective_price for v in variants]
+    """Lowest effective price among (already filtered, active) non-placeholder variants."""
+    prices = [v.effective_price for v in sellable(variants)]
     return min(prices) if prices else None
+
+
+def book_card_variant(variants):
+    """Variant whose price a book card shows: the print edition when sold, else the cheapest.
+
+    Cards lead with the print price because that is what most buyers compare; ebook and bundle
+    prices are shown on the product page's format switcher. Placeholder prices are ignored, so a
+    book with only placeholder prices has no card variant (the card shows «قیمت به‌زودی»).
+    """
+    variants = sellable(variants)
+    for variant in variants:
+        if variant.type == "PRINT":
+            return variant
+    return min(variants, key=lambda v: v.effective_price, default=None)
+
+
+def bundle_saving(variants) -> int | None:
+    """Toman saved by buying the BUNDLE instead of PRINT + EBOOK separately.
+
+    ``PRINT.effective + EBOOK.effective − BUNDLE.effective`` when all three exist, none has a
+    placeholder price and the result is positive; otherwise ``None``.
+    """
+    by_type = {v.type: v for v in variants}
+    trio = [by_type.get(t) for t in ("PRINT", "EBOOK", "BUNDLE")]
+    if any(v is None or v.price_is_placeholder for v in trio):
+        return None
+    print_, ebook, bundle = trio
+    saving = print_.effective_price + ebook.effective_price - bundle.effective_price
+    return saving if saving > 0 else None

@@ -133,6 +133,13 @@ class RelatedCourse(TimeStampedModel):
 
 
 class Book(SluggedModel):
+    class ResourceType(models.TextChoices):
+        TEXTBOOK = "TEXTBOOK", "درسنامه"
+        TESTS = "TESTS", "تست و مجموعه سؤالات"
+        LAWS = "LAWS", "مجموعه قوانین"
+        QUICK_REVIEW = "QUICK_REVIEW", "سریع‌خوان"
+        COURSE_NOTES = "COURSE_NOTES", "جزوه دوره"
+
     slug_source = "title"
 
     title = models.CharField("عنوان", max_length=250)
@@ -167,12 +174,31 @@ class Book(SluggedModel):
         blank=True,
         validators=[MinValueValidator(1300), MaxValueValidator(1500)],
     )
+    law_updated_until = models.CharField(
+        "به‌روز تا (اصلاحات قانون)",
+        max_length=200,
+        blank=True,
+        help_text="مثلاً «اصلاحات قانون حمایت خانواده ۱۴۰۴». زیر نشان ویرایش نمایش داده می‌شود.",
+    )
+    resource_type = models.CharField(
+        "نوع منبع",
+        max_length=20,
+        choices=ResourceType.choices,
+        default=ResourceType.TEXTBOOK,
+        help_text="«سریع‌خوان» با گزینه سریع‌خوان همگام می‌شود.",
+    )
     volumes = models.PositiveSmallIntegerField("تعداد جلد", default=1)
     pages = models.PositiveIntegerField("تعداد صفحات", null=True, blank=True)
     isbn = models.CharField("شابک", max_length=20, blank=True)
     description = models.TextField("معرفی", blank=True)
     table_of_contents = models.TextField("فهرست مطالب", blank=True, help_text="هر سرفصل در یک خط.")
     study_plan_note = models.TextField("جایگاه در برنامه مطالعه", blank=True)
+    study_days = models.PositiveSmallIntegerField(
+        "زمان مطالعه پیشنهادی (روز)",
+        null=True,
+        blank=True,
+        help_text="حدود چند روز مطالعه لازم است؛ خالی یعنی نامشخص.",
+    )
     cover = models.ImageField("جلد", upload_to="covers/", blank=True)
     sample_pdf = models.FileField("نمونه PDF", upload_to="samples/", blank=True)
     intro_video_url = models.URLField("ویدیوی معرفی", blank=True)
@@ -182,6 +208,12 @@ class Book(SluggedModel):
     is_featured = models.BooleanField("ویژه", default=False)
     is_quick_review = models.BooleanField("سریع‌خوان", default=False)
     sales_count = models.PositiveIntegerField("تعداد فروش", default=0)
+    season_sales_count = models.PositiveIntegerField(
+        "خریداران این فصل",
+        default=0,
+        help_text="فعلاً دستی؛ از فاز ۳ از روی سفارش‌ها خودکار پر می‌شود. "
+        "فقط وقتی ۲۰ یا بیشتر باشد روی سایت نمایش داده می‌شود.",
+    )
     is_active = models.BooleanField("فعال", default=True)
     search_text = models.TextField("متن جستجو", blank=True, editable=False)
 
@@ -193,11 +225,25 @@ class Book(SluggedModel):
     def __str__(self) -> str:
         return self.title
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        instance._loaded_resource_type = instance.__dict__.get("resource_type")
+        return instance
+
     def save(self, *args, **kwargs):
+        from .services.resource_types import sync_quick_review
         from .services.search import refresh_search_text
         from .services.text import sanitize_html
 
         self.description = sanitize_html(self.description)
+        sync_quick_review(self, getattr(self, "_loaded_resource_type", None))
+        self._loaded_resource_type = self.resource_type
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and (
+            "resource_type" in update_fields or "is_quick_review" in update_fields
+        ):
+            kwargs["update_fields"] = {*update_fields, "resource_type", "is_quick_review"}
         super().save(*args, **kwargs)
         refresh_search_text(self)
 
@@ -293,6 +339,13 @@ class StudyKitRecommendation(TimeStampedModel):
         Subject, verbose_name="درس", related_name="kit_recommendations", on_delete=models.CASCADE
     )
     note = models.TextField("یادداشت", blank=True)
+    weight = models.PositiveSmallIntegerField(
+        "ضریب درس",
+        null=True,
+        blank=True,
+        help_text="ضریب این درس در این آزمون؛ کاشی‌های درس به ترتیب ضریب مرتب می‌شوند. "
+        "ضرایب اولیه باید با دفترچه رسمی آزمون تطبیق داده شوند.",
+    )
     is_active = models.BooleanField("فعال", default=True)
 
     class Meta:

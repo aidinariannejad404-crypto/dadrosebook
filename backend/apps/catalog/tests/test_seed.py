@@ -112,3 +112,26 @@ def test_search_on_seeded_data():
     assert search_books(Book.objects.all(), "سريع").count() == 4
     assert search_books(Book.objects.all(), "شب خیز").count() == 1
     assert search_books(Book.objects.all(), "شبخیز").count() == 1
+
+
+def test_seed_resource_types_and_weights():
+    call_command("seed_catalog")
+    call_command("seed_catalog")
+    assert Book.objects.get(title="۱۱۰۰ تست برگزیده متون فقه").resource_type == "TESTS"
+    quick = Book.objects.filter(resource_type="QUICK_REVIEW")
+    assert quick.count() == 4 and all(b.is_quick_review for b in quick)
+    assert Book.objects.filter(is_quick_review=True).count() == 4
+    assert Book.objects.filter(resource_type="TEXTBOOK").count() == 8
+
+    kanoon = {
+        r.subject.name: r.weight
+        for r in StudyKitRecommendation.objects.filter(exam_type__name="کانون وکلا")
+    }
+    expected = seed_data.SUBJECT_WEIGHTS["کانون وکلا"]
+    assert {name: kanoon[name] for name in expected} == expected
+    assert expected["حقوق مدنی"] == 4 and expected["حقوق جزا"] == 3
+    assert set(
+        StudyKitRecommendation.objects.filter(exam_type__name="مرکز وکلا").values_list(
+            "weight", flat=True
+        )
+    ) == {None}

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-from django.db.models import Prefetch
+from django.db.models import F, Prefetch
 
 from ..models import Book, StudyKitItem, StudyKitRecommendation
 from .books import book_card_queryset
@@ -12,7 +12,8 @@ def study_kits(
     """Active recommendations (optionally for one exam type / some subjects) with ordered items.
 
     Each recommendation gets ``kit_items``: ordered items whose books are active and carry card
-    prefetches.
+    prefetches. Within an exam type, kits are ordered by ``weight`` (ضریب, highest first,
+    unweighted last), then by subject order.
     """
     qs = StudyKitRecommendation.objects.filter(
         is_active=True, exam_type__is_active=True, subject__is_active=True
@@ -25,12 +26,14 @@ def study_kits(
     items_qs = (
         StudyKitItem.objects.filter(book__is_active=True)
         .order_by("order", "id")
-        .prefetch_related(Prefetch("book", queryset=book_card_queryset(Book.objects.all())))
+        .prefetch_related(
+            Prefetch("book", queryset=book_card_queryset(Book.objects.all(), exam_type=exam_type))
+        )
     )
     return list(
-        qs.order_by("exam_type__order", "subject__order", "id").prefetch_related(
-            Prefetch("items", queryset=items_qs, to_attr="kit_items")
-        )
+        qs.order_by(
+            "exam_type__order", F("weight").desc(nulls_last=True), "subject__order", "id"
+        ).prefetch_related(Prefetch("items", queryset=items_qs, to_attr="kit_items"))
     )
 
 

@@ -27,10 +27,22 @@ BOOK_NOT_FOUND = "کتاب پیدا نشد."
 CATEGORY_NOT_FOUND = "دسته‌بندی پیدا نشد."
 
 
+TRUE_VALUES = {"true", "1", "yes"}
+
+
+def selected_exam_type(request) -> str | None:
+    """The one ``?exam_type=`` slug that selects ``kit_role``; None when absent or several."""
+    slugs = _multi(request.query_params, "exam_type")
+    return slugs[0] if len(slugs) == 1 else None
+
+
+# cache_page keys on the full URL, so every ``?exam_type=`` value is cached separately.
 @method_decorator(cache_page(settings.HOME_CACHE_SECONDS), name="get")
 class HomeView(APIView):
     def get(self, request):
-        return Response(s.HomeSerializer(get_home_data(), context={"request": request}).data)
+        data = get_home_data(exam_type=selected_exam_type(request))
+        context = {"request": request, "current_exam_year": data["current_exam_year"]}
+        return Response(s.HomeSerializer(data, context=context).data)
 
 
 class BookListView(generics.ListAPIView):
@@ -38,7 +50,7 @@ class BookListView(generics.ListAPIView):
     filterset_class = BookFilter
 
     def get_queryset(self):
-        return book_card_queryset()
+        return book_card_queryset(exam_type=selected_exam_type(self.request))
 
 
 class BookDetailView(generics.RetrieveAPIView):
@@ -46,7 +58,9 @@ class BookDetailView(generics.RetrieveAPIView):
     lookup_field = "slug"
 
     def get_queryset(self):
-        return book_card_queryset(Book.objects.select_related("publisher")).prefetch_related(
+        return book_card_queryset(
+            Book.objects.select_related("publisher"), exam_type=selected_exam_type(self.request)
+        ).prefetch_related(
             "translators",
             "categories",
             Prefetch("sample_pages", queryset=BookSamplePage.objects.order_by("order", "id")),
@@ -70,7 +84,8 @@ class BookDetailView(generics.RetrieveAPIView):
 class RelatedBooksView(APIView):
     def get(self, request, slug):
         book = get_or_404(Book.objects.all(), BOOK_NOT_FOUND, slug=slug, is_active=True)
-        books = related_books(book)
+        in_stock = request.query_params.get("in_stock", "").lower() in TRUE_VALUES
+        books = related_books(book, in_stock=in_stock, exam_type=selected_exam_type(request))
         return Response(s.BookCardSerializer(books, many=True, context={"request": request}).data)
 
 

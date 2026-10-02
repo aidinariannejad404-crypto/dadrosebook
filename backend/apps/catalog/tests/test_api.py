@@ -10,17 +10,22 @@ pytestmark = pytest.mark.django_db
 
 BOOK_CARD_KEYS = {
     "id", "title", "subtitle", "slug", "cover", "authors", "subjects", "exam_types", "min_price",
-    "formats", "in_stock", "print_in_stock", "is_quick_review", "volumes",
+    "card_price", "card_format", "formats", "in_stock", "print_in_stock", "is_quick_review",
+    "volumes",
+    # added after research (P1-*)
+    "resource_type", "resource_type_label", "has_sample", "kit_role", "edition_badge",
+    "law_updated_until", "course_badge", "social_proof", "badges",
 }  # fmt: skip
 BOOK_DETAIL_KEYS = BOOK_CARD_KEYS | {
     "publisher", "translators", "categories", "edition", "publish_year", "pages", "isbn",
-    "description", "table_of_contents", "study_plan_note", "sample_pdf", "sample_pages",
+    "description", "table_of_contents", "study_plan_note", "study_days", "sample_pdf",
+    "sample_pages",
     "intro_video_url", "variants", "related_courses", "kit_placements", "is_featured",
     "updated_at",
 }  # fmt: skip
 VARIANT_KEYS = {
     "id", "type", "type_label", "price", "sale_price", "effective_price", "discount_percent",
-    "in_stock", "stock", "price_is_placeholder",
+    "in_stock", "stock", "price_is_placeholder", "bundle_saving",
 }  # fmt: skip
 SUBJECT_KEYS = {"id", "name", "slug", "color"}
 EXAM_TYPE_KEYS = {"id", "name", "slug", "short_name"}
@@ -52,6 +57,8 @@ def test_list_shape(api, catalog):
     assert set(card["exam_types"][0]) == EXAM_TYPE_KEYS
     assert card["formats"] == ["PRINT", "EBOOK", "BUNDLE"]
     assert card["min_price"] == 990_000
+    # Cards lead with the print price, not the cheaper ebook.
+    assert card["card_price"] == 2_200_000 and card["card_format"] == "PRINT"
     assert card["in_stock"] is True and card["print_in_stock"] is True
     assert card["cover"] is None
     assert card["volumes"] == 2
@@ -95,7 +102,7 @@ def test_list_query_count_is_bounded(api, catalog):
         ({"format": "ebook"}, {CIVIL}),
         ({"format": "bundle,ebook"}, {CIVIL}),
         ({"min_price": 1_000_000}, {COMMERCE}),
-        ({"max_price": 480_000}, {TESTS, QUICK}),
+        ({"max_price": 480_000}, {TESTS}),  # placeholder prices never match price filters
         ({"min_price": 400_000, "max_price": 1_000_000}, {CIVIL, TESTS}),
         ({"in_stock": "true"}, {CIVIL, COMMERCE, TESTS}),
         ({"featured": "true"}, {CIVIL}),
@@ -129,7 +136,7 @@ def test_multi_subject_no_duplicates(api, catalog):
     ("ordering", "first"),
     [
         ("-sales_count", CIVIL),
-        ("price", QUICK),
+        ("price", TESTS),  # QUICK has only a placeholder price: no min_price, sorted last
         ("-price", COMMERCE),
         ("-created_at", QUICK),
         ("bogus", CIVIL),
@@ -263,7 +270,7 @@ def test_study_kits(api, catalog):
     data = api.get("/api/v1/catalog/study-kits/", {"exam_type": "کانون-وکلا"}).json()
     assert len(data) == 1
     kit = data[0]
-    assert set(kit) == {"exam_type", "subject", "note", "items"}
+    assert set(kit) == {"exam_type", "subject", "note", "weight", "items"}
     assert [i["order"] for i in kit["items"]] == [1, 2]
     item = kit["items"][0]
     assert set(item) == {"order", "is_essential", "book"}

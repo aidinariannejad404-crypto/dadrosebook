@@ -2,10 +2,21 @@
 
 from collections.abc import Iterable
 
-from django.db.models import Exists, OuterRef, Prefetch, Q, QuerySet
+from django.db.models import Exists, OuterRef, Prefetch, Q, QuerySet, Subquery
 
-from ..models import Book, BookVariant, Category, ExamType, Person, Subject
+from ..models import (
+    Book,
+    BookSamplePage,
+    BookVariant,
+    Category,
+    ExamType,
+    Person,
+    RelatedCourse,
+    StudyKitItem,
+    Subject,
+)
 from .pricing import min_effective_price_expression
+from .social_proof import books_ahead_in_subject_expression, first_subject_expression
 
 
 def active_variants_qs() -> QuerySet:
@@ -30,14 +41,57 @@ def in_stock_expression():
     )
 
 
-def book_card_queryset(base: QuerySet | None = None) -> QuerySet:
-    """Active books annotated with ``min_price``/``has_stock`` and card prefetches."""
-    qs = base if base is not None else Book.objects.all()
-    return (
-        qs.filter(is_active=True)
-        .annotate(min_price=min_effective_price_expression(), has_stock=in_stock_expression())
-        .prefetch_related(*card_prefetches())
+def has_sample_pages_expression():
+    return Exists(BookSamplePage.objects.filter(book=OuterRef("pk")))
+
+
+def has_sample_q() -> Q:
+    """Books with a sample PDF or sample pages (needs the ``has_sample_pages`` annotation)."""
+    return Q(has_sample_pages=True) | ~Q(sample_pdf="")
+
+
+def first_course_title_expression():
+    return Subquery(
+        RelatedCourse.objects.filter(books=OuterRef("pk"), is_active=True)
+        .order_by("order", "id")
+        .values("title")[:1]
     )
+
+
+def kit_role_annotations(exam_type: str) -> dict:
+    """``kit_listed``/``kit_essential`` for the active study kits of one exam type (slug)."""
+    items = StudyKitItem.objects.filter(
+        book=OuterRef("pk"),
+        recommendation__is_active=True,
+        recommendation__exam_type__slug=exam_type,
+        recommendation__exam_type__is_active=True,
+        recommendation__subject__is_active=True,
+    )
+    return {"kit_listed": Exists(items), "kit_essential": Exists(items.filter(is_essential=True))}
+
+
+def book_card_queryset(base: QuerySet | None = None, *, exam_type: str | None = None) -> QuerySet:
+    """Active books with everything a ``BookCard`` needs, without per-book queries.
+
+    Annotations: ``min_price`` (non-placeholder), ``has_stock``, ``has_sample_pages``,
+    ``first_course_title``, ``first_subject_id``, ``books_ahead_in_subject`` and, when
+    ``exam_type`` (a slug) is given, ``kit_listed``/``kit_essential`` for that exam's kits.
+    """
+    qs = base if base is not None else Book.objects.all()
+    qs = (
+        qs.filter(is_active=True)
+        .annotate(
+            min_price=min_effective_price_expression(),
+            has_stock=in_stock_expression(),
+            has_sample_pages=has_sample_pages_expression(),
+            first_course_title=first_course_title_expression(),
+            first_subject_id=first_subject_expression(),
+        )
+        .annotate(books_ahead_in_subject=books_ahead_in_subject_expression())
+    )
+    if exam_type:
+        qs = qs.annotate(**kit_role_annotations(exam_type))
+    return qs.prefetch_related(*card_prefetches())
 
 
 def sorted_variants(variants: Iterable[BookVariant]) -> list[BookVariant]:

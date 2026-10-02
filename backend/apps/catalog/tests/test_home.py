@@ -8,6 +8,7 @@ pytestmark = pytest.mark.django_db
 HOME_KEYS = {
     "next_exam", "exam_types", "subjects", "categories", "hero_banners", "course_banners",
     "bestsellers", "quick_review", "featured_course", "guide_videos",
+    "selected_exam_type", "store",  # added after research
 }  # fmt: skip
 
 
@@ -52,7 +53,7 @@ def test_home_endpoint_shape(api, content):
     data = response.json()
     assert set(data) == HOME_KEYS
     assert set(data["next_exam"]) == {"id", "name", "date", "exam_type"}
-    assert set(data["subjects"][0]) == {"id", "name", "slug", "color", "book_count"}
+    assert set(data["subjects"][0]) == {"id", "name", "slug", "color", "book_count", "weight"}
     assert set(data["categories"][0]) == {"id", "name", "slug", "children"}
     assert set(data["hero_banners"][0]) == {
         "id", "title", "subtitle", "image", "link_url", "link_label",
@@ -72,4 +73,4 @@ def test_home_endpoint_query_count(api, content):
     cache.clear()
     with CaptureQueriesContext(connection) as ctx:
         api.get("/api/v1/catalog/home/")
-    assert len(ctx.captured_queries) <= 20
+    assert len(ctx.captured_queries) <= 20, len(ctx.captured_queries)

@@ -208,6 +208,7 @@ BOOKS = [
     },
     {
         "title": "۱۱۰۰ تست برگزیده متون فقه",
+        "resource_type": "TESTS",
         "authors": [],
         "subjects": ["متون فقه"],
         "price": 480_000,
@@ -305,6 +306,21 @@ EXAM_EVENTS = [
 ]
 
 KIT_EXAM_TYPES = [KANOON, MARKAZ]
+
+# ضریب دروس (StudyKitRecommendation.weight) per exam type.
+# TO BE VERIFIED against the official exam booklet (دفترچه آزمون) before launch: these values come
+# from public articles (iran-tahsil; see docs/research/competitor-analysis.md, P1-10).
+SUBJECT_WEIGHTS = {
+    KANOON: {
+        "حقوق مدنی": 4,
+        "حقوق جزا": 3,
+        "آیین دادرسی مدنی": 3,
+        "حقوق تجارت": 2,
+        "آیین دادرسی کیفری": 2,
+        "اصول فقه": 1,
+        "متون فقه": 1,
+    },
+}
 
 BANNERS = [
     {

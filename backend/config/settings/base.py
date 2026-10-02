@@ -288,6 +288,17 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "تنظیمات",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "تنظیمات فروشگاه",
+                        "icon": "storefront",
+                        "link": reverse_lazy("admin:core_storesettings_changelist"),
+                    },
+                ],
+            },
+            {
                 "title": "کاربران",
                 "separator": True,
                 "items": [

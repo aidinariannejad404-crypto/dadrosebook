@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from django.db.models import Count, Prefetch
+from django.db.models import BooleanField, Case, Count, Prefetch, Value, When
 from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.forms.widgets import WysiwygWidget
@@ -8,7 +8,7 @@ from unfold.decorators import display
 
 from apps.core.forms import JalaliDateField
 from apps.core.jalali import to_jalali_str
-from apps.core.money import format_toman
+from apps.core.money import format_toman, to_persian_digits
 
 from .models import (
     Book,
@@ -25,6 +25,13 @@ from .models import (
     Subject,
 )
 from .services.books import active_variants_qs
+from .services.completeness import (
+    annotate_completeness,
+    complete_q,
+    completeness_percent,
+    missing_labels,
+)
+from .services.editions import current_exam_year
 from .services.pricing import book_min_price
 from .services.search import search_books
 
@@ -100,6 +107,21 @@ class BookSamplePageInline(TabularInline):
     fields = ("image", "order")
 
 
+class CompletenessFilter(admin.SimpleListFilter):
+    title = "کامل‌بودن"
+    parameter_name = "complete"
+
+    def lookups(self, request, model_admin):
+        return (("no", "ناقص"), ("yes", "کامل"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(complete_q())
+        if self.value() == "no":
+            return queryset.exclude(complete_q())
+        return queryset
+
+
 @admin.register(Book)
 class BookAdmin(ModelAdmin):
     inlines = (BookVariantInline, BookSamplePageInline)
@@ -107,8 +129,11 @@ class BookAdmin(ModelAdmin):
         "cover_thumb",
         "title",
         "subjects_list",
+        "resource_type",
         "min_price_toman",
         "stock_status",
+        "completeness",
+        "current_edition",
         "sales_count",
         "is_featured",
         "is_quick_review",
@@ -116,6 +141,8 @@ class BookAdmin(ModelAdmin):
     )
     list_display_links = ("cover_thumb", "title")
     list_filter = (
+        CompletenessFilter,
+        "resource_type",
         "subjects",
         "exam_types",
         "categories",
@@ -133,21 +160,33 @@ class BookAdmin(ModelAdmin):
         "categories",
         "related_courses",
     )
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("is_quick_review", "created_at", "updated_at")
     list_per_page = 50
     fieldsets = (
         (
             "اطلاعات اصلی",
             {"fields": ("title", "subtitle", "slug", "authors", "translators", "publisher")},
         ),
-        ("طبقه‌بندی", {"fields": ("subjects", "exam_types", "categories")}),
+        (
+            "طبقه‌بندی",
+            {"fields": ("resource_type", "subjects", "exam_types", "categories")},
+        ),
         (
             "مشخصات",
-            {"fields": ("edition", "publish_year", "volumes", "pages", "isbn")},
+            {
+                "fields": (
+                    "edition",
+                    "publish_year",
+                    "law_updated_until",
+                    "volumes",
+                    "pages",
+                    "isbn",
+                )
+            },
         ),
         (
             "محتوا",
-            {"fields": ("description", "table_of_contents", "study_plan_note")},
+            {"fields": ("description", "table_of_contents", "study_plan_note", "study_days")},
         ),
         ("رسانه", {"fields": ("cover", "sample_pdf", "intro_video_url")}),
         (
@@ -158,6 +197,7 @@ class BookAdmin(ModelAdmin):
                     "is_featured",
                     "is_quick_review",
                     "sales_count",
+                    "season_sales_count",
                     "is_active",
                 )
             },
@@ -177,14 +217,37 @@ class BookAdmin(ModelAdmin):
         return search_books(queryset, search_term), False
 
     def get_queryset(self, request):
-        return (
+        year = current_exam_year()
+        return annotate_completeness(
             super()
             .get_queryset(request)
             .prefetch_related(
                 "subjects",
                 Prefetch("variants", queryset=active_variants_qs(), to_attr="active_variants"),
             )
+        ).annotate(
+            is_current_edition=Case(
+                When(publish_year__gte=year, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
         )
+
+    @display(description="کامل‌بودن")
+    def completeness(self, obj):
+        percent = completeness_percent(obj)
+        missing = "، ".join(missing_labels(obj)) or "کامل"
+        colour = "#15803d" if percent == 100 else "#b45309" if percent >= 50 else "#b91c1c"
+        return format_html(
+            '<span title="کم دارد: {}" style="color:{};font-weight:600">{}٪</span>',
+            missing,
+            colour,
+            to_persian_digits(percent),
+        )
+
+    @display(description="ویرایش جاری؟", boolean=True, ordering="is_current_edition")
+    def current_edition(self, obj):
+        return obj.is_current_edition
 
     @display(description="جلد")
     def cover_thumb(self, obj):
@@ -283,7 +346,8 @@ class StudyKitItemInline(TabularInline):
 @admin.register(StudyKitRecommendation)
 class StudyKitRecommendationAdmin(ModelAdmin):
     inlines = (StudyKitItemInline,)
-    list_display = ("exam_type", "subject", "items_count", "is_active")
+    list_display = ("exam_type", "subject", "weight", "items_count", "is_active")
+    list_editable = ("weight",)
     list_filter = ("exam_type", "subject", "is_active")
     list_select_related = ("exam_type", "subject")
 
