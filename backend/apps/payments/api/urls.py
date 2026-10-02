@@ -1,3 +1,8 @@
-from django.urls import path  # noqa: F401
+from django.urls import path
 
-urlpatterns: list = []
+from .views import FakeGatewayPageView, ZarinpalCallbackView
+
+urlpatterns = [
+    path("zarinpal/callback/", ZarinpalCallbackView.as_view(), name="payments-callback"),
+    path("fake/<str:authority>/", FakeGatewayPageView.as_view(), name="payments-fake"),
+]

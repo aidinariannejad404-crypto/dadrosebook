@@ -1,3 +1,7 @@
-from django.urls import path  # noqa: F401
+from django.urls import path
 
-urlpatterns: list = []
+from .views import LibraryView
+
+urlpatterns = [
+    path("", LibraryView.as_view(), name="library"),
+]
