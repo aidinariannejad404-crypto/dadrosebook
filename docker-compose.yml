@@ -48,10 +48,11 @@ services:
 
   backend:
     <<: *backend
-    # (Idempotently) seed the real catalogue, fetch missing covers (skips books that already have
+    # (Idempotently) seed the real catalogue and demo ebook files, fetch missing covers (skips books that already have
     # one; never blocks startup on failure), then serve.
     command: >
       sh -c "python manage.py seed_catalog --if-empty --with-superuser &&
+             python manage.py seed_demo_ebooks --if-empty &&
              (python manage.py fetch_covers || true) &&
              python manage.py runserver 0.0.0.0:8000"
     ports:
