@@ -209,3 +209,85 @@ for a sold-out book, P1-8); `exam_type` (one slug) fills `kit_role`.
 → `StoreSettings` (also embedded in `/catalog/home/` as `store`).
 
 ### `GET /health/` → `{ "status": "ok" }`
+
+---
+
+## Course cross-sell and study-plan lead magnet (added for academy courses)
+
+Decisions: course purchase links out to dadrose.com (UTM added by the frontend), one admin-editable
+discount code per subject, free first-session video on book pages, study plan unlocked by a mobile number.
+
+```jsonc
+// Course (full shape; RelatedCourse is extended into this)
+{
+  "id": 1,
+  "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+  "url": "https://dadrose.com/courses/…",
+  "course_type": "FULL",            // FULL | ESSENTIALS | TIPS_TESTS | REVIEW | WORKSHOP_ADVICE | MOCK | PACKAGE | OTHER
+  "course_type_label": "دوره جامع",  // FULL دوره جامع · ESSENTIALS امهات · TIPS_TESTS نکته و تست · REVIEW جمع‌بندی · WORKSHOP_ADVICE مشاوره و کارگاه · MOCK آزمون آزمایشی · PACKAGE پکیج · OTHER سایر
+  "subject": SubjectMini | null,
+  "exam_types": [ExamTypeMini],
+  "teachers": ["امین بیات"],
+  "price": 8125000,                 // toman; 0 for free
+  "sale_price": null,
+  "effective_price": 8125000,
+  "is_free": false,
+  "hours": 120,                     // int or null
+  "sessions": 60,                   // int or null
+  "price_per_hour": 67708,          // effective_price / hours, null if unknown or free
+  "students_count": 1200,           // null unless ≥ 100 (honest social proof)
+  "rating": 4.8,                    // null unless reviews_count ≥ 3 and rating ≥ 4.5
+  "reviews_count": 12,
+  "image": null,
+  "intro_video_url": "https://www.aparat.com/v/…",  // "" when none
+  "short_description": "…",          // plain text ≤ 300 chars
+  "selling_points": ["…"],
+  "relevance": "referenced",        // only inside a book's course_offer: referenced | same_author | same_subject | general
+  "relevance_label": "تدریس‌شده بر اساس همین کتاب"   // referenced: «تدریس‌شده بر اساس همین کتاب» · same_author: «تدریس توسط مؤلف همین کتاب» · same_subject: «دوره همین درس» · general: «مهارت آزمون»
+}
+```
+
+### Book detail gains `course_offer` (null when no open course is relevant)
+```jsonc
+"course_offer": {
+  "subject": SubjectMini | null,
+  "recommended_type": "ESSENTIALS",          // by days to the selected/next exam: >60 FULL, 15–60 ESSENTIALS, <15 TIPS_TESTS/REVIEW
+  "recommended_reason": "۳۳ روز تا آزمون کانون وکلا؛ وقت جمع‌بندی و امهات است",
+  "highlight": Course | null,                // referenced or same_author course, shown first and big
+  "tiers": [                                 // good-better-best, max 3, order: best, better, good (anchoring)
+    Course & { "tier": "best" | "better" | "good", "is_recommended": true }
+  ],
+  "more": [Course],                          // other relevant open courses, max 4
+  "free_sample": { "course": Course, "video_url": "https://…" } | null,
+  "discount": {                              // from SubjectCourseDiscount (admin); null when none active
+    "code": "MADANI15",
+    "percent": 15,                           // int or null
+    "label": "۱۵٪ تخفیف دوره‌های حقوق مدنی برای خریداران این کتاب",
+    "expires_on": "2026-11-05",              // date; defaults to the next exam date
+    "days_left": 33
+  } | null,
+  "exam_countdown": { "exam_name": "آزمون کانون وکلا ۱۴۰۵", "date": "2026-11-05", "days_left": 33 } | null
+}
+```
+`related_courses` stays (open courses linked to the book) for compatibility.
+
+### `GET /catalog/courses/?subject=<slug>&course_type=<TYPE>&exam_type=<slug>` → `[Course]` (open courses only)
+
+### Study plan lead magnet
+- `POST /leads/study-plan/` body `{ "phone": "09121234567", "exam_type": "کانون-وکلا", "subjects": ["حقوق-مدنی"], "books": ["<book slug>"], "hours_per_day": 6, "consent": true }`
+  → `201 { "token": "<uuid>", "plan_url": "/plan/<uuid>" }`. 400 `{field: [errors]}` on invalid phone / missing consent.
+  Throttled (10/hour per IP). Phone normalised to `09xxxxxxxxx`.
+- `GET /leads/study-plan/<token>/` →
+```jsonc
+{
+  "token": "…",
+  "created_at": "…",
+  "phone_masked": "0912***4567",
+  "exam": { "name": "آزمون کانون وکلا ۱۴۰۵", "date": "2026-11-05", "days_left": 33 } | null,
+  "hours_per_day": 6,
+  "summary": { "total_pages": 2100, "study_days": 28, "review_days": 5, "pages_per_day": 75 },
+  "days": [ { "date": "2026-10-03", "items": [ { "subject": SubjectMini, "book_title": "…", "book_slug": "…", "pages_from": 1, "pages_to": 75, "task": "مطالعه" } ] } ],
+  "review": [ { "date": "2026-10-31", "task": "جمع‌بندی و تست حقوق مدنی" } ],
+  "recommended_courses": [Course]           // max 3, by the same timing rule
+}
+```
