@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.content",
     "apps.leads",
+    "apps.reader",
 ]
 
 MIDDLEWARE = [
@@ -169,6 +170,19 @@ CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000", "http://localhost:3000"]
 )
 
+# The reader and (Phase 3) auth cookies are sent cross-origin from the storefront.
+CORS_ALLOW_CREDENTIALS = True
+
+# --- Ebook reader (Phase 4) ---------------------------------------------------------------------
+# Lifetime of the signed ebook file URL (S3 pre-signed URL or local signed token).
+READER_URL_TTL_SECONDS = env.int("READER_URL_TTL_SECONDS", default=300)
+# ``callable(user, book) -> bool``; default delegates to apps.library (Phase 3 entitlements).
+READER_ENTITLEMENT_CHECKER = env(
+    "READER_ENTITLEMENT_CHECKER", default="apps.reader.services.access.library_entitlement"
+)
+# Staff may open any ebook in the reader to check uploads.
+READER_STAFF_PREVIEW = env.bool("READER_STAFF_PREVIEW", default=True)
+
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL)
@@ -275,6 +289,27 @@ UNFOLD = {
                         "title": "دوره‌های مرتبط",
                         "icon": "cast_for_education",
                         "link": reverse_lazy("admin:catalog_relatedcourse_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "کتابخوان",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "فایل‌های کتاب الکترونیک",
+                        "icon": "picture_as_pdf",
+                        "link": reverse_lazy("admin:reader_ebookfile_changelist"),
+                    },
+                    {
+                        "title": "پیشرفت مطالعه",
+                        "icon": "auto_stories",
+                        "link": reverse_lazy("admin:reader_readingprogress_changelist"),
+                    },
+                    {
+                        "title": "هایلایت‌ها",
+                        "icon": "ink_highlighter",
+                        "link": reverse_lazy("admin:reader_highlight_changelist"),
                     },
                 ],
             },

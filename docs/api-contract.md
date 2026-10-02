@@ -293,3 +293,62 @@ discount code per subject, free first-session video on book pages, study plan un
   "recommended_courses": [Course]           // max 3, by the same timing rule
 }
 ```
+
+## Phase 4: secure ebook reader (`apps.reader`)
+
+All endpoints below require an authenticated user (Phase 3 JWT cookie; the browser calls them with
+`credentials: "include"`). Errors: `401 {"detail": "…"}` when not signed in, `403 {"detail": "…",
+"code": "no_entitlement"}` when the user does not own the ebook, `404 {"detail": "…", "code":
+"no_ebook"}` when the book has no active ebook file. `<slug>` is the book slug (Unicode, URL-encoded).
+Responses carry `Cache-Control: private, no-store`.
+
+### `GET /library/<slug>/read/` → reader session
+```jsonc
+{
+  "book": { "slug": "…", "title": "…", "subtitle": "…", "cover": "https://…" | null,
+            "authors": ["…"], "subjects": [SubjectMini] },
+  "file": {
+    "format": "PDF",                          // PDF | EPUB (frontend renders PDF; EPUB shows «به‌زودی»)
+    "version": 3,
+    "url": "https://…signed…",                // short-lived; fetch the whole file once (no range requests)
+    "expires_at": "2026-10-02T19:05:00Z",     // ~5 min (READER_URL_TTL_SECONDS); call this endpoint again to refresh
+    "pages": 412 | null                       // from the admin, informational
+  },
+  "progress": ReadingProgress | null,
+  "watermark": "0912***4567 · ۱۴۰۵/۰۷/۱۰"      // drawn over every page by the frontend
+}
+```
+
+### `GET /library/files/<token>/` → the file bytes (dev / local storage only)
+Signed, user-bound, expiring token minted by `/read/`. `Content-Disposition: inline`, `no-store`,
+`X-Content-Type-Options: nosniff`. In production (`USE_S3=1`) `file.url` is instead a pre-signed
+URL on the private bucket with the same TTL. Expired/tampered token → 403. The URL is
+self-authenticating (fetch it with `withCredentials: false`); the token names the user and file
+version it was minted for, and the entitlement is re-checked when it is redeemed.
+
+### Reading progress
+`ReadingProgress = { "page": 37, "total_pages": 412, "percent": 8.98, "location": "", "updated_at": "…" }`
+(`location` is free text for EPUB CFI; empty for PDF).
+- `GET /library/<slug>/progress/` → `ReadingProgress` (404 `code: "no_progress"` when none).
+- `PUT /library/<slug>/progress/` body `{ "page": 37, "total_pages": 412, "location": "" }` → `ReadingProgress`.
+  `page` ≥ 1, `page` ≤ `total_pages`. `percent` is computed by the server.
+
+### Highlights
+```jsonc
+Highlight = {
+  "id": 12,
+  "page": 37,
+  "text": "عین عبارت انتخاب‌شده",             // ≤ 2000 chars
+  "note": "یادداشت کاربر",                     // ≤ 2000 chars, may be ""
+  "color": "yellow",                          // yellow | green | blue | pink
+  "rects": [ { "x": 0.12, "y": 0.40, "w": 0.55, "h": 0.02 } ],  // fractions of the page box (0..1), ≤ 50
+  "location": "",                             // EPUB CFI range, "" for PDF
+  "created_at": "…", "updated_at": "…"
+}
+```
+- `GET /library/<slug>/highlights/?page=37` → `[Highlight]` ordered by page then created (page filter optional).
+- `POST /library/<slug>/highlights/` body `{page, text, note?, color?, rects, location?}` → `201 Highlight`.
+- `PATCH /library/<slug>/highlights/<id>/` body `{note?, color?}` → `Highlight`.
+- `DELETE /library/<slug>/highlights/<id>/` → `204`.
+Highlights and progress are kept even if the entitlement is later revoked, but every endpoint
+re-checks the entitlement.
