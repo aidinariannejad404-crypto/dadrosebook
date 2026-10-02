@@ -2,7 +2,7 @@
 
 Stable API (Phase 4 depends on it):
 
-* ``has_entitlement(user, book) -> bool``
+* ``has_entitlement(user, book) -> bool`` (alias ``has_ebook_entitlement``)
 * ``grant_for_order(order) -> list[EbookEntitlement]`` — call inside the transaction that marks the
   order paid; idempotent.
 * ``grant(user, book, source=..., order=None)`` — admin grants; idempotent, re-activates a
@@ -75,3 +75,7 @@ def library_books(user):
     return Book.objects.filter(
         entitlements__user=user, entitlements__revoked_at__isnull=True
     ).distinct()
+
+
+# Name used by the Phase 4 reader.
+has_ebook_entitlement = has_entitlement
