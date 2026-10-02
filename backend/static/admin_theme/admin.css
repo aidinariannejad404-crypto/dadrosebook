@@ -1,0 +1,35 @@
+/* Admin theme for پنل مدیریت دادرُز: self-hosted Vazirmatn (OFL, see ../fonts/OFL.txt). */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/Vazirmatn-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Unlayered, so it wins over unfold's @layer theme values. */
+html:root {
+  --font-sans: "Vazirmatn", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body,
+input,
+select,
+textarea,
+button {
+  font-family: var(--font-sans);
+}
+
+/* Numbers, codes, URLs and slugs read left-to-right inside RTL forms. */
+input[type="url"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[name="slug"],
+input[name="isbn"],
+input[name="color"],
+code {
+  direction: ltr;
+  text-align: end;
+}
