@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, StackedInline
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
-from .models import User
+from apps.orders.models import Address
+
+from .models import OtpCode, User
 from .phone import normalize_phone
 
 
@@ -37,8 +39,20 @@ class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     pass
 
 
+class AddressInline(StackedInline):
+    model = Address
+    extra = 0
+    fields = (
+        ("title", "is_default"),
+        ("recipient_name", "recipient_phone"),
+        ("province", "city", "postal_code"),
+        "address_line",
+    )
+
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin, ModelAdmin):
+    inlines = [AddressInline]
     form = PhoneUserChangeForm
     add_form = PhoneUserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -65,3 +79,28 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(OtpCode)
+class OtpCodeAdmin(ModelAdmin):
+    """Read-only log of login codes; the code itself is never stored or shown (only its hash,
+    which is hidden too)."""
+
+    list_display = ("phone", "created_at", "expires_at", "attempts", "consumed_at", "ip")
+    list_filter = ("created_at",)
+    search_fields = ("phone",)
+    fields = ("phone", "created_at", "expires_at", "attempts", "consumed_at", "ip")
+    readonly_fields = fields
+    ordering = ("-created_at",)
+    date_hierarchy = "created_at"
+
+    def get_search_results(self, request, queryset, search_term):
+        return super().get_search_results(
+            request, queryset, normalize_phone(search_term) or search_term
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
