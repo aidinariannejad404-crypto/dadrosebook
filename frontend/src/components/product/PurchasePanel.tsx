@@ -12,6 +12,9 @@ import {
   purchasableEbook,
 } from "@/lib/variants";
 import { courseLink } from "@/lib/courses";
+import Link from "next/link";
+import { track } from "@/lib/analytics";
+import { routes } from "@/lib/config";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { TrackedLink } from "@/components/ui/TrackedLink";
 import {
@@ -87,7 +90,11 @@ export function PurchaseProvider({ children, ...props }: PurchaseProviderProps &
   return <PurchaseContext.Provider value={value}>{children}</PurchaseContext.Provider>;
 }
 
-/** Primary action: aria-disabled add-to-cart (cart arrives in Phase 2; never for a placeholder price) or notify-me. */
+/**
+ * Primary action: «خرید» → /checkout?variant=<id> (Phase 3 quick buy; «خرید و شروع مطالعه» for
+ * EBOOK/BUNDLE), notify-me when sold out, aria-disabled while the price is a placeholder (P1-17).
+ * The full box also keeps a disabled add-to-cart until the Phase 2 cart lands.
+ */
 function BuyAction({ compact, helperId }: { compact: boolean; helperId?: string }) {
   const { selected, bookId, bookTitle, ebook, printOut } = usePurchase();
   const soldOut = selected ? !selected.in_stock : printOut;
@@ -103,22 +110,58 @@ function BuyAction({ compact, helperId }: { compact: boolean; helperId?: string 
       />
     );
   }
-  const reason = !selected || selected.price_is_placeholder ? PRICE_SOON_NOTE : CART_SOON;
+  const size = compact ? "px-4 text-sm" : "w-full px-6 text-base";
+  if (!selected || selected.price_is_placeholder) {
+    return (
+      <button
+        type="button"
+        aria-disabled="true"
+        aria-describedby={helperId}
+        title={compact ? PRICE_SOON_NOTE : undefined}
+        onClick={(e) => e.preventDefault()}
+        className={`inline-flex min-h-12 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white opacity-80 ${size}`}
+      >
+        <CartIcon size={20} />
+        خرید
+        {compact && <span className="sr-only">({PRICE_SOON_NOTE})</span>}
+      </button>
+    );
+  }
+  const readNow = selected.type === "EBOOK" || selected.type === "BUNDLE";
   return (
-    <button
-      type="button"
-      aria-disabled="true"
-      aria-describedby={helperId}
-      title={compact ? reason : undefined}
-      onClick={(e) => e.preventDefault()}
-      className={`inline-flex min-h-12 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white opacity-80 ${
-        compact ? "px-4 text-sm" : "w-full px-6 text-base"
-      }`}
-    >
-      <CartIcon size={20} />
-      افزودن به سبد خرید
-      {compact && <span className="sr-only">({reason})</span>}
-    </button>
+    <>
+      <Link
+        prefetch={false}
+        href={`${routes.checkout}?variant=${selected.id}`}
+        onClick={() =>
+          track("begin_checkout", {
+            item_id: bookId,
+            item_name: bookTitle,
+            variant_id: selected.id,
+            variant_type: selected.type,
+            value: selected.effective_price,
+            currency: "IRT",
+            source: "quick_buy",
+          })
+        }
+        className={`inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover ${size}`}
+      >
+        {readNow ? <BoltIcon size={20} /> : <CartIcon size={20} />}
+        {readNow ? "خرید و شروع مطالعه" : "خرید"}
+      </Link>
+      {!compact && (
+        <button
+          type="button"
+          aria-disabled="true"
+          aria-describedby={helperId}
+          onClick={(e) => e.preventDefault()}
+          className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-control border border-line-strong px-6 text-sm font-bold text-ink-muted"
+        >
+          <CartIcon size={18} />
+          افزودن به سبد خرید
+        </button>
+      )}
+    </>
   );
 }
 

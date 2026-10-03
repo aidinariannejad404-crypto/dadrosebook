@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/config";
 import { toPersianDigits } from "@/lib/format";
-import { CartIcon, SearchIcon, UserIcon } from "@/components/ui/Icons";
+import { CartIcon, SearchIcon } from "@/components/ui/Icons";
+import { UserChip } from "@/components/auth/UserChip";
 
-/** Site header: logo, search (GET /search — page arrives in Phase 2), login (Phase 3), cart (Phase 2). */
+/** Site header: logo, search (GET /search — page arrives in Phase 2), login state (Phase 3, client-side UserChip so catalog pages stay ISR), cart (Phase 2). */
 export function Header({ cartCount = 0 }: { cartCount?: number }) {
   return (
     <header className="border-b border-line bg-surface">
@@ -43,15 +44,7 @@ export function Header({ cartCount = 0 }: { cartCount?: number }) {
         </form>
 
         <nav aria-label="حساب کاربری و سبد خرید" className="order-2 ms-auto flex items-center gap-1 md:order-3 md:ms-0">
-          <Link
-            prefetch={false}
-            href="/login"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-control px-2 text-sm font-bold text-ink hover:bg-primary-soft md:px-3"
-          >
-            <UserIcon size={22} />
-            <span className="hidden sm:inline">ورود / ثبت‌نام</span>
-            <span className="sr-only sm:hidden">ورود / ثبت‌نام</span>
-          </Link>
+          <UserChip />
           <Link
             prefetch={false}
             href="/cart"
