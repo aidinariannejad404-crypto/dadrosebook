@@ -2,6 +2,10 @@
 .env
 .env.*
 !.env.example
+!.env.prod.example
+# production secrets (docker-compose.prod.yml) and backups
+.env.prod
+backups/
 
 # python
 __pycache__/

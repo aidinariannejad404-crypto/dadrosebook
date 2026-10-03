@@ -389,3 +389,23 @@ export interface StudyKit {
 export interface ApiError {
   detail: string;
 }
+
+/* ---------- SEO (Phase 5) ---------- */
+
+export interface SitemapEntry {
+  slug: string;
+  /** ISO 8601 */
+  updated_at: string;
+}
+
+export interface SitemapBook extends SitemapEntry {
+  cover: string | null;
+}
+
+/** GET /seo/sitemap/ — active items only (books with at least one active variant). */
+export interface SitemapData {
+  books: SitemapBook[];
+  categories: SitemapEntry[];
+  subjects: SitemapEntry[];
+  exam_types: SitemapEntry[];
+}

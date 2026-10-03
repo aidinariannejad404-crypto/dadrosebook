@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { track } from "@/lib/analytics";
+import { trackNotifyMeRequested } from "@/lib/analytics";
+import type { VariantType } from "@/lib/types";
 import { BellIcon } from "./Icons";
 import { Dialog } from "./Dialog";
 
@@ -9,7 +10,7 @@ interface NotifyMeButtonProps {
   bookId: number;
   bookTitle: string;
   /** e.g. "PRINT" */
-  variantType?: string;
+  variantType?: VariantType;
   /** an ebook of the same book is available right now */
   ebookAvailable?: boolean;
   className?: string;
@@ -36,7 +37,7 @@ export function NotifyMeButton({
         type="button"
         onClick={() => {
           setOpen(true);
-          track("notify_me_requested", { item_id: bookId, item_name: bookTitle, variant: variantType });
+          trackNotifyMeRequested({ item_id: bookId, item_name: bookTitle, variant: variantType });
         }}
         className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-primary bg-surface font-bold text-primary transition-colors hover:bg-primary-soft ${
           size === "sm" ? "whitespace-nowrap px-2 text-xs" : "px-5 text-base"

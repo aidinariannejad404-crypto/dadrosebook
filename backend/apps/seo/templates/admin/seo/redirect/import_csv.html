@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6 max-w-3xl">
+    <div>
+        <a href="{{ changelist_url }}" class="text-primary-600 underline">بازگشت به فهرست ریدایرکت‌ها</a>
+    </div>
+
+    <div class="border border-base-200 rounded-default p-6 shadow-xs dark:border-base-800">
+        <h2 class="font-semibold mb-2 text-font-important-light dark:text-font-important-dark">{{ title }}</h2>
+        <p class="mb-4">
+            فهرست کامل نشانی‌های قدیمی را از سازیتو یا Google Search Console بگیرید و به شکل CSV بارگذاری کنید.
+            هر سطر: <code dir="ltr">old_path,new_path[,status]</code> — مثلاً
+            <code dir="ltr">/product/حقوق-مدنی,/product/حقوق-مدنی-نموداری,301</code>.
+        </p>
+        <form method="post" enctype="multipart/form-data" class="flex flex-col gap-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="text-red-600">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="flex flex-col gap-2">
+                <label for="{{ form.file.id_for_label }}" class="font-semibold">{{ form.file.label }}</label>
+                {{ form.file }}
+                <p class="text-sm text-base-500">{{ form.file.help_text }}</p>
+                {% for error in form.file.errors %}<p class="text-red-600">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+                <button type="submit" class="bg-primary-600 text-white font-medium px-4 py-2 rounded-default min-h-11">درون‌ریزی</button>
+            </div>
+        </form>
+    </div>
+
+    {% if report %}
+    <div class="border border-base-200 rounded-default p-6 shadow-xs dark:border-base-800" id="import-report">
+        <h2 class="font-semibold mb-4 text-font-important-light dark:text-font-important-dark">گزارش درون‌ریزی</h2>
+        <ul class="flex flex-col gap-1 mb-4">
+            <li>ساخته شد: <strong>{{ report.created }}</strong></li>
+            <li>به‌روز شد: <strong>{{ report.updated }}</strong></li>
+            <li>بدون تغییر: <strong>{{ report.skipped }}</strong></li>
+            <li>خطا: <strong>{{ report.errors|length }}</strong></li>
+        </ul>
+        {% if report.errors %}
+        <table class="w-full border-collapse">
+            <thead><tr><th class="text-start p-2 border-b border-base-200">سطر</th><th class="text-start p-2 border-b border-base-200">خطا</th></tr></thead>
+            <tbody>
+            {% for line, message in report.errors %}
+                <tr><td class="p-2 border-b border-base-200">{{ line }}</td><td class="p-2 border-b border-base-200">{{ message }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

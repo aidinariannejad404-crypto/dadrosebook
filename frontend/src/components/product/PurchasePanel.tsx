@@ -135,7 +135,7 @@ function tilePrice(v: Variant): { text: string; cls: string } {
  */
 export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const uid = useId();
-  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut } =
+  const { bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut } =
     usePurchase();
 
   if (variants.length === 0) {
@@ -332,8 +332,7 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
           <TrackedLink
             href={courseLink(course.url, bookSlug ?? "")}
             external
-            event="course_cross_sell_click"
-            params={{ course: course.id, course_name: course.title, book: bookSlug ?? null, item_id: bookId, tier: "buy_box" }}
+            course={{ course_id: course.id, course_title: course.title, book_slug: bookSlug ?? null, placement: "buy_box" }}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border-2 border-primary px-4 text-sm font-bold text-primary hover:bg-primary-soft"
           >
             خرید دوره «{course.title}» در دادرُز

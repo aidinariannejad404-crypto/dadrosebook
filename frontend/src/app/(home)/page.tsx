@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { fixturesEnabled, getHome } from "@/lib/api";
-import { routes } from "@/lib/config";
+import { routes, siteUrl } from "@/lib/config";
+import { organizationJsonLd, serializeJsonLd, websiteJsonLd } from "@/lib/jsonld";
+import { DEFAULT_OPEN_GRAPH } from "@/lib/seo";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { daysLeft, quickReviewFirst } from "@/lib/exam-time";
 import { toPersianDigits } from "@/lib/format";
@@ -16,6 +19,11 @@ import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 // SSR on each request (the «آزمون من» cookie picks the variant); the API response itself is cached
 // per URL — so per exam type — for 60s (fetch revalidate) and does not need the backend at build time.
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { ...DEFAULT_OPEN_GRAPH, url: "/" },
+};
 
 export default async function HomePage() {
   const exam = await selectedExamSlug();
@@ -56,8 +64,12 @@ export default async function HomePage() {
     </section>
   );
 
+  const site = siteUrl();
+  const jsonLd = [organizationJsonLd(site, home.store), websiteJsonLd(site)];
+
   return (
     <div className="mx-auto flex max-w-site flex-col gap-10 px-4 pt-4 md:gap-14 md:pt-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <Hero banner={home.hero_banners[0]} books={home.bestsellers} store={home.store} examName={selected?.name} />
 
       <ExamChips examTypes={home.exam_types} selected={selected} />

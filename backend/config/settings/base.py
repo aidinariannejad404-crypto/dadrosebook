@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.content",
     "apps.leads",
+    "apps.seo",
 ]
 
 MIDDLEWARE = [
@@ -158,6 +159,8 @@ REST_FRAMEWORK = {
     # Only views that set ``throttle_scope`` are throttled (per client IP).
     "DEFAULT_THROTTLE_RATES": {
         "study_plan": env("STUDY_PLAN_THROTTLE_RATE", default="10/hour"),
+        # Redirect-hit and 404 beacons (``/seo/redirects/hit/``, ``/seo/not-found/``).
+        "seo_beacon": env("SEO_BEACON_THROTTLE_RATE", default="120/min"),
     },
     # Set to the number of trusted reverse proxies in prod so the client IP is read correctly.
     "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
@@ -178,6 +181,12 @@ CELERY_ACCEPT_CONTENT = ["json"]
 
 # --- integrations -------------------------------------------------------------------------------
 SMS_PROVIDER = env("SMS_PROVIDER", default="console")
+
+# --- analytics (self-hosted Umami) -------------------------------------------------------------
+# Server-side events (``apps.core.analytics.track_server_event``). Empty → no-op.
+UMAMI_HOST = env("UMAMI_HOST", default="").rstrip("/")
+UMAMI_WEBSITE_ID = env("UMAMI_WEBSITE_ID", default="")
+SITE_HOST = env("SITE_HOST", default="")
 
 # --- caching knobs ------------------------------------------------------------------------------
 HOME_CACHE_SECONDS = env.int("HOME_CACHE_SECONDS", default=60)
@@ -291,6 +300,22 @@ UNFOLD = {
                         "title": "ویدیوهای راهنما",
                         "icon": "smart_display",
                         "link": reverse_lazy("admin:content_guidevideo_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "سئو",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "ریدایرکت‌ها",
+                        "icon": "alt_route",
+                        "link": reverse_lazy("admin:seo_redirect_changelist"),
+                    },
+                    {
+                        "title": "صفحه‌های پیدانشده (۴۰۴)",
+                        "icon": "link_off",
+                        "link": reverse_lazy("admin:seo_notfoundhit_changelist"),
                     },
                 ],
             },

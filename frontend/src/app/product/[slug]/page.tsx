@@ -259,7 +259,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     >
       <div className="mx-auto max-w-site px-4 pt-2 md:pt-4">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
-        <ViewItemTracker id={book.id} name={book.title} price={book.min_price} />
+        <ViewItemTracker id={book.id} name={book.title} price={book.min_price} subject={book.subjects[0]?.slug} />
         <Breadcrumb items={crumbs} />
 
         <div className="mt-2 grid gap-6 md:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] md:gap-8 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)_minmax(0,22rem)]">
