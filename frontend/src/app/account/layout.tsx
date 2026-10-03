@@ -30,7 +30,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     <div className="mx-auto max-w-site px-4 pb-12 pt-4 md:pt-6">
       <p className="text-sm text-ink-muted">حساب کاربری</p>
       <p className="mb-4 text-lg font-extrabold text-ink md:mb-6">{me.full_name || "کاربر دادرُز"}</p>
-      <div className="grid gap-4 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-8">
         <AccountNav />
         <div className="min-w-0">{children}</div>
       </div>

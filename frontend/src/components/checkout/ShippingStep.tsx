@@ -72,7 +72,7 @@ export function ShippingStep(p: ShippingStepProps) {
                       {a.province}، {a.city}، {a.address_line}
                     </span>
                     <span className="block text-ink-muted">
-                      {a.recipient_name} · <span dir="ltr">{toPersianDigits(a.recipient_phone)}</span> · کد پستی{" "}
+                      {a.recipient_name}، <span dir="ltr">{toPersianDigits(a.recipient_phone)}</span>، کد پستی{" "}
                       {toPersianDigits(a.postal_code)}
                     </span>
                   </span>

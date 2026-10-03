@@ -87,7 +87,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
                   )}
                 </p>
                 <p className="text-xs text-ink-muted">
-                  {it.variant_type_label} · {toPersianDigits(it.quantity)} عدد × {formatToman(it.unit_price)}
+                  {it.variant_type_label}، تعداد {toPersianDigits(it.quantity)} × {formatToman(it.unit_price)}
                   {it.list_price > it.unit_price && (
                     <>
                       {" "}
@@ -166,7 +166,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
               )}
               {addr && (
                 <address className="mt-2 text-sm not-italic leading-7 text-ink">
-                  {addr.recipient_name} · <bdi>{toPersianDigits(addr.recipient_phone)}</bdi>
+                  {addr.recipient_name}، <bdi>{toPersianDigits(addr.recipient_phone)}</bdi>
                   <br />
                   {addr.province}، {addr.city}، {toPersianDigits(addr.address_line)}
                   <br />

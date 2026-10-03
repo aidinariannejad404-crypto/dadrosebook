@@ -23,7 +23,7 @@ export function OrderLines({ quote, compact = false }: { quote: Quote; compact?:
                 {l.title}
               </Link>
               <p className="text-ink-muted">
-                {l.variant_type_label} · {toPersianDigits(l.quantity)} عدد
+                {l.variant_type_label}، تعداد {toPersianDigits(l.quantity)}
               </p>
               {!compact && l.unit_price < l.list_price && (
                 <p className="text-xs text-ink-muted">

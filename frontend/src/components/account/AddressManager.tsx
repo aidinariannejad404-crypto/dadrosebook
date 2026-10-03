@@ -121,7 +121,7 @@ export function AddressManager({ initial, provinces }: { initial: Address[]; pro
                 <div className="flex gap-1">
                   <dt>گیرنده:</dt>
                   <dd className="text-ink">
-                    {a.recipient_name} · <bdi>{toPersianDigits(a.recipient_phone)}</bdi>
+                    {a.recipient_name}، <bdi>{toPersianDigits(a.recipient_phone)}</bdi>
                   </dd>
                 </div>
                 <div className="flex gap-1">

@@ -49,7 +49,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                     <StatusPill tone={orderStatusTone(o.status)}>{orderStatusLabel(o.status, o.status_label)}</StatusPill>
                   </div>
                   <p className="mt-1 text-xs text-ink-muted">
-                    <time dateTime={o.created_at}>{formatJalaliDay(o.created_at)}</time> ·{" "}
+                    <time dateTime={o.created_at}>{formatJalaliDay(o.created_at)}</time>،{" "}
                     {toPersianDigits(o.items_count)} قلم
                   </p>
                   <p className="mt-2 font-bold text-ink">{formatToman(o.total)}</p>
