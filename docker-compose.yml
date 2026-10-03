@@ -70,7 +70,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-dadrose}:${POSTGRES_PASSWORD:-dadrose}@db:5432/${POSTGRES_DB:-dadrose}
       REDIS_URL: redis://redis:6379/0
       RUN_MIGRATIONS: "0"
-    command: celery -A config worker -l info
+    command: celery -A config worker -B -s /tmp/celerybeat-schedule -l info
     depends_on:
       backend:
         condition: service_healthy

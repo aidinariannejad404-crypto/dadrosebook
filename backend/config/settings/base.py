@@ -186,6 +186,13 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL)
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
+# Periodic jobs (the worker runs with an embedded beat: `celery -A config worker -B`).
+CELERY_BEAT_SCHEDULE = {
+    "expire-unpaid-orders": {
+        "task": "apps.orders.tasks.expire_unpaid_orders",
+        "schedule": 300.0,
+    },
+}
 
 # --- integrations -------------------------------------------------------------------------------
 SMS_PROVIDER = env("SMS_PROVIDER", default="console")
@@ -217,7 +224,7 @@ ZARINPAL_TIMEOUT_SECONDS = env.int("ZARINPAL_TIMEOUT_SECONDS", default=15)
 # storefront's result page.
 PUBLIC_API_URL = env("PUBLIC_API_URL", default="http://localhost:8000/api/v1")
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
-# Unpaid orders are cancelled (and their payments marked failed) after this many minutes.
+# Unpaid orders are cancelled after this many minutes (Celery beat, every 5 minutes).
 ORDER_PAYMENT_TIMEOUT_MINUTES = env.int("ORDER_PAYMENT_TIMEOUT_MINUTES", default=60)
 
 # --- caching knobs ------------------------------------------------------------------------------
@@ -320,6 +327,63 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "فروش",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "سفارش‌ها",
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
+                    },
+                    {
+                        "title": "پرداخت‌ها",
+                        "icon": "payments",
+                        "link": reverse_lazy("admin:payments_payment_changelist"),
+                    },
+                    {
+                        "title": "کدهای تخفیف",
+                        "icon": "sell",
+                        "link": reverse_lazy("admin:orders_discountcode_changelist"),
+                    },
+                    {
+                        "title": "استفاده‌های کد تخفیف",
+                        "icon": "redeem",
+                        "link": reverse_lazy("admin:orders_discountredemption_changelist"),
+                    },
+                    {
+                        "title": "روش‌های ارسال",
+                        "icon": "local_shipping",
+                        "link": reverse_lazy("admin:orders_shippingmethod_changelist"),
+                    },
+                    {
+                        "title": "دسترسی‌های کتاب الکترونیک",
+                        "icon": "local_library",
+                        "link": reverse_lazy("admin:library_ebookentitlement_changelist"),
+                    },
+                    {
+                        "title": "فایل‌های کتاب الکترونیک",
+                        "icon": "picture_as_pdf",
+                        "link": reverse_lazy("admin:library_ebookfile_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "نظرات کاربران",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "نظرات",
+                        "icon": "reviews",
+                        "link": reverse_lazy("admin:reviews_review_changelist"),
+                    },
+                    {
+                        "title": "علاقه‌مندی‌ها",
+                        "icon": "favorite",
+                        "link": reverse_lazy("admin:wishlist_wishlistitem_changelist"),
+                    },
+                ],
+            },
+            {
                 "title": "محتوای صفحه اصلی",
                 "separator": True,
                 "items": [
@@ -354,6 +418,16 @@ UNFOLD = {
                         "title": "کاربران",
                         "icon": "people",
                         "link": reverse_lazy("admin:accounts_user_changelist"),
+                    },
+                    {
+                        "title": "نشانی‌ها",
+                        "icon": "home_pin",
+                        "link": reverse_lazy("admin:orders_address_changelist"),
+                    },
+                    {
+                        "title": "کدهای ورود",
+                        "icon": "password",
+                        "link": reverse_lazy("admin:accounts_otpcode_changelist"),
                     },
                     {
                         "title": "گروه‌ها",

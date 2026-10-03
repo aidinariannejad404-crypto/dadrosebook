@@ -41,6 +41,17 @@ describe("parseCartResponse", () => {
       { variant_id: 4, quantity: 1 },
     ]);
   });
+  it("skips unavailable Phase 2 cart lines", () => {
+    expect(
+      parseCartResponse({
+        token: "t",
+        items: [
+          { id: 1, variant: { id: 3 }, quantity: 2, is_available: true, issue: null },
+          { id: 2, variant: { id: 4 }, quantity: 1, is_available: false, issue: "out_of_stock" },
+        ],
+      }),
+    ).toEqual([{ variant_id: 3, quantity: 2 }]);
+  });
   it("rejects unknown shapes", () => {
     expect(parseCartResponse(null)).toBeNull();
     expect(parseCartResponse({ lines: [] })).toBeNull();
