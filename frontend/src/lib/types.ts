@@ -389,3 +389,138 @@ export interface StudyKit {
 export interface ApiError {
   detail: string;
 }
+
+/* ---------- Phase 2: cart, back-in-stock, discovery (docs/api-contract-phase-2.md) ---------- */
+
+export interface CartBook {
+  id: number;
+  title: string;
+  slug: string;
+  cover: string | null;
+  subjects: SubjectMini[];
+  authors: PersonMini[];
+}
+
+export type CartIssue = "out_of_stock" | "insufficient_stock" | "unavailable" | "price_unavailable";
+
+export interface CartItem {
+  id: number;
+  variant: Variant;
+  book: CartBook;
+  quantity: number;
+  max_quantity: number;
+  unit_price: number;
+  line_total: number;
+  line_saving: number;
+  is_available: boolean;
+  issue: CartIssue | null;
+}
+
+export interface Cart {
+  token: string | null;
+  items: CartItem[];
+  item_count: number;
+  subtotal: number;
+  original_subtotal: number;
+  savings: number;
+  has_physical: boolean;
+  has_issues: boolean;
+  free_shipping_threshold: number | null;
+  free_shipping_remaining: number | null;
+  updated_at: string | null;
+}
+
+export type CartErrorCode =
+  | "out_of_stock"
+  | "insufficient_stock"
+  | "price_unavailable"
+  | "unavailable"
+  | "already_in_bundle"
+  | "invalid_quantity"
+  | "not_found";
+
+export interface CartError {
+  code: CartErrorCode | "network";
+  detail: string;
+  cart: Cart | null;
+}
+
+export type CartSource = "kit" | "product" | "card" | "cart" | "other";
+
+export interface BulkAddResult {
+  cart: Cart;
+  added: number[];
+  skipped: { variant_id: number; code: CartErrorCode; detail: string }[];
+}
+
+export interface BackInStockRequestBody {
+  variant_id: number;
+  phone: string;
+  source?: "product" | "card" | "cart" | "kit";
+}
+
+export interface BackInStockResponse {
+  id: number;
+  status: "PENDING" | "NOTIFIED" | "CANCELLED";
+  created: boolean;
+  message: string;
+}
+
+export interface FacetOption {
+  slug: string;
+  name: string;
+  count: number;
+  color?: string;
+}
+
+export interface FacetValue<V extends string> {
+  value: V;
+  label: string;
+  count: number;
+}
+
+export interface BookFacets {
+  count: number;
+  subjects: (FacetOption & { color: string })[];
+  exam_types: FacetOption[];
+  formats: FacetValue<VariantType>[];
+  resource_types: FacetValue<ResourceType>[];
+  in_stock: number;
+  price: { min: number | null; max: number | null };
+}
+
+export interface SuggestBook {
+  id: number;
+  title: string;
+  slug: string;
+  cover: string | null;
+  subjects: SubjectMini[];
+  authors: PersonMini[];
+  card_price: number | null;
+}
+
+export interface SearchSuggestions {
+  q: string;
+  books: SuggestBook[];
+  subjects: SubjectMini[];
+  categories: CategoryMini[];
+  authors: PersonMini[];
+}
+
+/** Query params accepted by GET /catalog/books/ and /catalog/books/facets/. */
+export interface BookQuery {
+  q?: string;
+  subject?: string[];
+  exam_type?: string[];
+  category?: string;
+  format?: string[];
+  resource_type?: string[];
+  min_price?: number;
+  max_price?: number;
+  in_stock?: boolean;
+  has_sample?: boolean;
+  quick_review?: boolean;
+  ordering?: "-sales_count" | "price" | "-price" | "-created_at" | "title";
+  page?: number;
+  page_size?: number;
+}

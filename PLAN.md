@@ -9,7 +9,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Scaffold, docker-compose, Django settings split, unfold admin (fa/RTL), catalog models + admin, read-only catalog API, Persian normalisation, seed data, Next.js RTL shell, homepage, product page | ✅ |
-| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
+| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ✅ (`docs/phase-2-summary.md`) |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements | ⏳ |
 | 4 | Secure ebook reader, reading progress, highlights | ⏳ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
@@ -63,7 +63,7 @@ dadrosebook/
 ├── docker-compose.yml          # db, redis, backend, worker, frontend
 ├── .env.example                # copy to .env
 ├── PLAN.md  CLAUDE.md  README.md
-├── docs/phase-1-summary.md
+├── docs/phase-1-summary.md  phase-2-summary.md  api-contract.md  api-contract-phase-2.md
 ├── backend/
 │   ├── Dockerfile  entrypoint.sh  pyproject.toml (ruff + pytest)  requirements*.txt
 │   ├── manage.py
@@ -77,11 +77,11 @@ dadrosebook/
 │       ├── content/            # Banner, GuideVideo (homepage, admin-managed)
 │       ├── leads/              # Lead (study-plan lead magnet), study plan generator, CSV export
 │       ├── accounts/   (P3)    # User (phone), OTP, SmsProvider
-│       ├── cart/       (P2)
+│       ├── cart/       (P2)    # Cart, CartItem (token or user), services, merge on user_logged_in
 │       ├── orders/     (P3)    # Order, OrderItem, Address, ShippingMethod, DiscountCode, StoreSettings
 │       ├── payments/   (P3)    # Payment, PaymentGateway, zarinpal
 │       ├── library/    (P3/4)  # EbookFile, EbookEntitlement, ReadingProgress, Highlight
-│       ├── engagement/ (P2/3)  # BackInStockRequest, Review, Wishlist
+│       ├── engagement/ (P2)    # BackInStockRequest + restock SMS task (reviews/wishlist live in their own P3 apps)
 │       └── seo/        (P5)    # Redirect (old Sazito path → new path)
 └── frontend/
     ├── Dockerfile  package.json  tailwind.config.ts  next.config.ts  eslint.config.mjs
@@ -127,7 +127,8 @@ Common: every model has `created_at`/`updated_at` (`TimeStampedModel`). Slugs ar
 - **User** (P3): phone (unique, normalised `09xxxxxxxxx`), first/last name, is_staff… custom user model
   is created in Phase 1 already (`accounts.User`, `USERNAME_FIELD = phone`) because swapping later is painful.
 - **OtpCode** (P3): phone, code hash, expires_at, attempts — rate-limited in Redis.
-- **Cart / CartItem** (P2): cart by `cart_id` cookie (UUID) or user; merged on login (`cart.services.merge`).
+- **Cart / CartItem** (P2 ✅): cart by UUID token (`X-Cart-Token` header / `dadrose_cart_token` cookie) or user
+  (one-to-one); unique (cart, variant); merged on login via `user_logged_in` (`cart.services.merge_guest_cart`).
 - **Address, ShippingMethod** (rules: base price, free over threshold, Tehran-only for پیک, ebook-only orders skip),
   **StoreSettings** (singleton: free-shipping threshold, support phone), **DiscountCode** (percent/fixed, min order,
   max uses, per-user limit, validity window, scope by subject/format).
@@ -138,7 +139,8 @@ Common: every model has `created_at`/`updated_at` (`TimeStampedModel`). Slugs ar
 - **EbookFile** (P3/4): book, format (PDF/EPUB), file on private storage, version.
 - **EbookEntitlement** (P3): user + book unique, source order; created in the same transaction that marks an order PAID.
 - **ReadingProgress, Highlight** (P4).
-- **BackInStockRequest** (P2): phone/user + variant, status, notified_at, converted_order (for out-of-stock recovery metric).
+- **BackInStockRequest** (P2 ✅): phone/user + variant, source, status (PENDING/NOTIFIED/CANCELLED), notified_at,
+  converted_at (set by `engagement.services.mark_converted` in Phase 3, out-of-stock recovery metric).
 - **Review** (P3, moderated), **Wishlist** (P3).
 - **Redirect** (P5): old_path (unique) → new_path, status 301, hit count.
 
@@ -157,7 +159,9 @@ Phase 1 (read-only, public, cached):
 | `GET /catalog/study-kits/?exam_type=&subject=` | Recommended books per subject (powers `/kit` in Phase 2) |
 | `GET /health/` | Liveness (DB + Redis) |
 
-Phase 2: `GET/POST/PATCH/DELETE /cart/…`, `POST /cart/items/bulk/` (add whole kit), `POST /back-in-stock/`.
+Phase 2 ✅ (full shapes in `docs/api-contract-phase-2.md`): `GET/DELETE /cart/`, `POST /cart/items/`,
+`PATCH/DELETE /cart/items/<id>/`, `POST /cart/items/bulk/` (add whole kit), `POST /back-in-stock/`,
+`GET /catalog/books/facets/`, `GET /catalog/search/suggest/`.
 Phase 3: `POST /auth/otp/request/`, `POST /auth/otp/verify/` (sets httpOnly JWT cookies), `POST /auth/refresh/`,
 `POST /auth/logout/`, `GET /me/`, addresses CRUD, `GET /shipping-methods/`, `POST /checkout/quote/`,
 `POST /checkout/` → payment URL, `GET /payments/zarinpal/callback/`, orders list/detail, library list,
@@ -170,9 +174,10 @@ progress & highlights CRUD.
 |---|---|---|
 | `/` | 1 | Countdown bar, header (search, login, cart), category nav, hero, exam chips, subject tiles, bestsellers, سریع‌خوان rail with "خبرم کن", book + course banner, guide videos, trust row, footer |
 | `/product/<slug>` | 1 | Cover, sample pages, intro video, meta, subject/exam tags, format switcher, course add-on, tabs (description / TOC / study plan), related rail, JSON-LD Book+Product+Offer, generateMetadata |
-| `/category/<slug>`, `/search?q=` | 2 | Filters + sorting, SSR |
-| `/kit` | 2 | Study-kit builder |
-| `/cart`, `/checkout`, `/checkout/result` | 2–3 | |
+| `/category/<slug>`, `/search?q=` | 2 ✅ | Facet filters (links, no-JS), mobile sheet, sorting, pagination, SSR, header autocomplete |
+| `/kit` | 2 ✅ | Exam → subjects by ضریب → books + format → add all to cart; shareable URL |
+| `/cart` | 2 ✅ | Guest cart, stock warnings, free-shipping progress |
+| `/checkout`, `/checkout/result` | 3 | (placeholder page in Phase 2) |
 | `/login` | 3 | Phone + OTP |
 | `/account/{orders,addresses,library,wishlist,notify}` | 3 | |
 | `/read/<book>` | 4 | Reader |

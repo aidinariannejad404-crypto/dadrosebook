@@ -10,6 +10,8 @@ api_v1 = [
     path("store/settings/", StoreSettingsView.as_view(), name="store-settings"),
     path("catalog/", include("apps.catalog.api.urls")),
     path("leads/", include("apps.leads.api.urls")),
+    path("cart/", include("apps.cart.api.urls")),
+    path("back-in-stock/", include("apps.engagement.api.urls")),
 ]
 
 urlpatterns = [

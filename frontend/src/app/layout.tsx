@@ -2,12 +2,13 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { getCategories, getStoreSettings } from "@/lib/api";
+import { fixturesEnabled, getCategories, getStoreSettings } from "@/lib/api";
 import type { CategoryNode, StoreSettings } from "@/lib/types";
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/config";
 import { Header } from "@/components/layout/Header";
 import { CategoryNav } from "@/components/layout/CategoryNav";
 import { Footer } from "@/components/layout/Footer";
+import { CartProvider } from "@/components/cart/CartProvider";
 
 const vazirmatn = localFont({
   src: "../fonts/Vazirmatn-wght.woff2",
@@ -70,13 +71,15 @@ export default async function RootLayout({ children, topbar }: { children: React
         >
           پرش به محتوای اصلی
         </a>
-        {topbar}
-        <Header />
-        <CategoryNav categories={categories} />
-        <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-          {children}
-        </main>
-        <Footer store={store} />
+        <CartProvider fixtures={fixturesEnabled()}>
+          {topbar}
+          <Header fixtures={fixturesEnabled()} />
+          <CategoryNav categories={categories} />
+          <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+            {children}
+          </main>
+          <Footer store={store} />
+        </CartProvider>
       </body>
     </html>
   );

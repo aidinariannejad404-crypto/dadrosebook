@@ -5,7 +5,10 @@ ISBN (with ZWNJ/space/compact variants, see ``apps.core.normalize.search_variant
 normalised the same way and every token must be contained in ``search_text``.
 """
 
-from django.db.models import QuerySet
+from functools import reduce
+from operator import add, or_
+
+from django.db.models import Case, ExpressionWrapper, IntegerField, Q, QuerySet, Value, When
 
 from apps.core.normalize import search_variants, tokenize_query
 
@@ -40,3 +43,29 @@ def search_books(queryset: QuerySet, q: str | None) -> QuerySet:
     for token in tokenize_query(q):
         queryset = queryset.filter(search_text__contains=token)
     return queryset
+
+
+def should_relax(q: str | None) -> bool:
+    """Only multi-token queries get the any-token fallback (one token has nothing to relax)."""
+    return len(tokenize_query(q)) > 1
+
+
+def search_books_relaxed(queryset: QuerySet, q: str | None) -> QuerySet:
+    """Books whose ``search_text`` contains *any* token of ``q``, best match first.
+
+    Annotates ``matched_tokens`` (how many distinct tokens matched) and orders by it, descending,
+    ahead of the queryset's existing ordering. Used by the list when ``search_books`` finds nothing.
+    """
+    tokens = list(dict.fromkeys(tokenize_query(q)))
+    if not tokens:
+        return queryset
+    matched = reduce(
+        add,
+        [Case(When(search_text__contains=t, then=Value(1)), default=Value(0)) for t in tokens],
+    )
+    existing = list(queryset.query.order_by) or ["id"]
+    return (
+        queryset.filter(reduce(or_, [Q(search_text__contains=t) for t in tokens]))
+        .annotate(matched_tokens=ExpressionWrapper(matched, output_field=IntegerField()))
+        .order_by("-matched_tokens", *existing)
+    )

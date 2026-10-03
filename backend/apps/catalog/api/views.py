@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -10,9 +11,17 @@ from rest_framework.views import APIView
 from ..models import Book, BookSamplePage, Category, ExamType, RelatedCourse
 from ..services.books import active_category_tree, book_card_queryset
 from ..services.courses import course_links_queryset, exposed_courses
+from ..services.facets import book_facets
 from ..services.home import get_home_data, subjects_with_book_count, upcoming_exam_events
 from ..services.related import related_books
+from ..services.search import search_books_relaxed, should_relax
 from ..services.study_kits import kit_placements, study_kits
+from ..services.suggest import (
+    DISCOVERY_CACHE_SECONDS,
+    normalize_query,
+    search_suggestions,
+    suggest_cache_key,
+)
 from . import serializers as s
 from .filters import BookFilter, _multi
 
@@ -47,11 +56,55 @@ class HomeView(APIView):
 
 
 class BookListView(generics.ListAPIView):
+    """Book cards; a multi-token ``q`` with no hits falls back to any-token matching.
+
+    The fallback is flagged with the ``X-Search-Relaxed: 1`` response header.
+    """
+
     serializer_class = s.BookCardSerializer
     filterset_class = BookFilter
 
     def get_queryset(self):
         return book_card_queryset(exam_type=selected_exam_type(self.request))
+
+    def filter_queryset(self, queryset):
+        filtered = super().filter_queryset(queryset)
+        self.search_relaxed = False
+        q = self.request.query_params.get("q")
+        if should_relax(q) and not filtered.exists():
+            params = self.request.query_params.copy()
+            params.pop("q")
+            base = BookFilter(data=params, queryset=queryset, request=self.request).qs
+            filtered = search_books_relaxed(base, q)
+            self.search_relaxed = True
+        return filtered
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        if getattr(self, "search_relaxed", False):
+            response["X-Search-Relaxed"] = "1"
+        return response
+
+
+@method_decorator(cache_page(DISCOVERY_CACHE_SECONDS), name="get")
+class BookFacetsView(APIView):
+    """Facet counts for the list's filters (cached per full URL)."""
+
+    def get(self, request):
+        return Response(book_facets(request.query_params))
+
+
+class SearchSuggestView(APIView):
+    """Header autocomplete, cached per normalised query."""
+
+    def get(self, request):
+        q = normalize_query(request.query_params.get("q"))
+        key = suggest_cache_key(q)
+        data = cache.get(key)
+        if data is None:
+            data = s.serialize_suggestions(search_suggestions(q), context={"request": request})
+            cache.set(key, data, DISCOVERY_CACHE_SECONDS)
+        return Response(data)
 
 
 class BookDetailView(generics.RetrieveAPIView):

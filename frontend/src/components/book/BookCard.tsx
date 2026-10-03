@@ -100,6 +100,8 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
           <NotifyMeButton
             bookId={book.id}
             bookTitle={book.title}
+            bookSlug={book.slug}
+            source="card"
             ebookAvailable={book.formats.includes("EBOOK") && book.in_stock}
             size="sm"
             className="relative z-10 mt-1 w-full"
