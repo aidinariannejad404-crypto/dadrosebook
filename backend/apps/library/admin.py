@@ -39,6 +39,19 @@ class EbookFileForm(forms.ModelForm):
             raise forms.ValidationError("بارگذاری فایل الزامی است.")
         return file
 
+    def clean(self):
+        # Content check (real PDF/EPUB, size) lives with the reader that serves the file.
+        from apps.reader.services.files import InvalidEbookFile, validate_upload
+
+        cleaned = super().clean()
+        upload = cleaned.get("file")
+        if upload and "file" in self.changed_data:
+            try:
+                validate_upload(cleaned.get("format") or EbookFile.Format.PDF, upload)
+            except InvalidEbookFile as exc:
+                self.add_error("file", str(exc))
+        return cleaned
+
 
 @admin.register(EbookFile)
 class EbookFileAdmin(ModelAdmin):
@@ -49,6 +62,21 @@ class EbookFileAdmin(ModelAdmin):
     autocomplete_fields = ("book",)
     list_select_related = ("book",)
     readonly_fields = ("file_name", "file_size")
+    actions = ("make_active",)
+
+    def save_model(self, request, obj, form, change):
+        from apps.reader.services.files import activate
+
+        super().save_model(request, obj, form, change)
+        if obj.is_active:
+            activate(obj)
+
+    @admin.action(description="فعال‌کردن این فایل (غیرفعال‌شدن بقیه‌ی فایل‌های کتاب)")
+    def make_active(self, request, queryset):
+        from apps.reader.services.files import activate
+
+        for ebook in queryset.select_related("book"):
+            activate(ebook)
 
     @admin.display(description="نام فایل")
     def file_name(self, obj):
