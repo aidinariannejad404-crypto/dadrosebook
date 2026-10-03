@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 
@@ -41,6 +42,8 @@ INSTALLED_APPS = [
     "apps.library",
     "apps.reviews",
     "apps.wishlist",
+    "apps.cart",
+    "apps.engagement",
 ]
 
 MIDDLEWARE = [
@@ -167,6 +170,7 @@ REST_FRAMEWORK = {
         "otp_request": env("OTP_REQUEST_THROTTLE_RATE", default="10/hour"),
         "otp_verify": env("OTP_VERIFY_THROTTLE_RATE", default="30/hour"),
         "reviews": env("REVIEW_THROTTLE_RATE", default="10/hour"),
+        "back_in_stock": env("BACK_IN_STOCK_THROTTLE_RATE", default="10/hour"),
     },
     # Set to the number of trusted reverse proxies in prod so the client IP is read correctly.
     "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
@@ -176,6 +180,8 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"])
 # Auth cookies travel with credentialed requests from the storefront origin.
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = (*default_headers, "x-cart-token")
+CORS_EXPOSE_HEADERS = ["X-Search-Relaxed"]
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000", "http://localhost:3000"]
 )
@@ -192,10 +198,20 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.orders.tasks.expire_unpaid_orders",
         "schedule": 300.0,
     },
+    "purge-stale-carts": {
+        "task": "apps.cart.tasks.purge_stale_carts",
+        "schedule": 24 * 3600.0,
+    },
 }
 
 # --- integrations -------------------------------------------------------------------------------
 SMS_PROVIDER = env("SMS_PROVIDER", default="console")
+# Public storefront origin, used in SMS links (e.g. back-in-stock → {SITE_URL}/product/<slug>).
+SITE_URL = env("SITE_URL", default="http://localhost:3000")
+
+# --- cart ---------------------------------------------------------------------------------------
+CART_MAX_QUANTITY = env.int("CART_MAX_QUANTITY", default=10)
+CART_TTL_DAYS = env.int("CART_TTL_DAYS", default=60)
 
 # --- auth (Phase 3): phone OTP + httpOnly JWT cookies ------------------------------------------
 JWT_SIGNING_KEY = env("JWT_SIGNING_KEY", default=SECRET_KEY)
@@ -396,6 +412,22 @@ UNFOLD = {
                         "title": "ویدیوهای راهنما",
                         "icon": "smart_display",
                         "link": reverse_lazy("admin:content_guidevideo_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "فروش",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "سبدهای خرید",
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:cart_cart_changelist"),
+                    },
+                    {
+                        "title": "موجود شد خبرم کن",
+                        "icon": "notifications_active",
+                        "link": reverse_lazy("admin:engagement_backinstockrequest_changelist"),
                     },
                 ],
             },

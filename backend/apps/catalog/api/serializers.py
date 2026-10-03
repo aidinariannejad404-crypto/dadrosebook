@@ -499,3 +499,28 @@ class StudyKitSerializer(serializers.Serializer):
     note = serializers.CharField()
     weight = serializers.IntegerField(allow_null=True)
     items = StudyKitItemSerializer(many=True, source="kit_items")
+
+
+class BookSuggestionSerializer(serializers.ModelSerializer):
+    cover = serializers.ImageField(read_only=True)
+    subjects = SubjectMiniSerializer(many=True, read_only=True)
+    authors = PersonMiniSerializer(many=True, read_only=True)
+    card_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Book
+        fields = ["id", "title", "slug", "cover", "subjects", "authors", "card_price"]
+
+    def get_card_price(self, obj: Book) -> int | None:
+        variant = book_card_variant(_active_variants(obj))
+        return variant.effective_price if variant else None
+
+
+def serialize_suggestions(data: dict, context: dict) -> dict:
+    return {
+        "q": data["q"],
+        "books": BookSuggestionSerializer(data["books"], many=True, context=context).data,
+        "subjects": SubjectMiniSerializer(data["subjects"], many=True).data,
+        "categories": CategoryMiniSerializer(data["categories"], many=True).data,
+        "authors": PersonMiniSerializer(data["authors"], many=True).data,
+    }

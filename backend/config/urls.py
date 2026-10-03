@@ -17,6 +17,8 @@ api_v1 = [
     path("library/", include("apps.library.api.urls")),
     path("", include("apps.reviews.api.urls")),  # catalog/books/<slug>/reviews/, me/reviews/
     path("wishlist/", include("apps.wishlist.api.urls")),
+    path("cart/", include("apps.cart.api.urls")),
+    path("back-in-stock/", include("apps.engagement.api.urls")),
 ]
 
 urlpatterns = [

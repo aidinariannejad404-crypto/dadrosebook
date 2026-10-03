@@ -1,6 +1,9 @@
 import type {
   BookCard,
   BookDetail,
+  BookFacets,
+  BookQuery,
+  CategoryDetail,
   CategoryNode,
   Course,
   CourseType,
@@ -8,10 +11,13 @@ import type {
   ExamTypeMini,
   HomePayload,
   KitRole,
+  Paginated,
+  SearchSuggestions,
   StoreSettings,
   StudyPlan,
   StudyPlanCreated,
   StudyPlanRequest,
+  StudyKit,
   SubjectWithCount,
 } from "./types";
 import { fixtureStudyPlan, studyPlanErrors, type StudyPlanField } from "./study-plan";
@@ -289,4 +295,102 @@ export async function getStudyPlan(token: string): Promise<StudyPlan | null> {
   if (res.status === 404 || res.status === 400) return null;
   if (!res.ok) throw new ApiError(res.status, url);
   return (await res.json()) as StudyPlan;
+}
+
+/* ---------- Phase 2: discovery (docs/api-contract-phase-2.md) ---------- */
+
+/** Serialise a BookQuery for /catalog/books/ and /catalog/books/facets/ (arrays comma separated). */
+export function bookQueryString(query: BookQuery, { facets = false } = {}): string {
+  const qs = new URLSearchParams();
+  const put = (k: string, v: string | number | boolean | string[] | undefined) => {
+    if (v === undefined || v === false || v === "") return;
+    if (Array.isArray(v)) {
+      if (v.length) qs.set(k, v.join(","));
+      return;
+    }
+    qs.set(k, String(v));
+  };
+  put("q", query.q?.trim());
+  put("subject", query.subject);
+  put("exam_type", query.exam_type);
+  put("category", query.category);
+  put("format", query.format);
+  put("resource_type", query.resource_type);
+  put("min_price", query.min_price);
+  put("max_price", query.max_price);
+  put("in_stock", query.in_stock);
+  put("has_sample", query.has_sample);
+  put("quick_review", query.quick_review);
+  if (!facets) {
+    put("ordering", query.ordering);
+    if (query.page && query.page > 1) put("page", query.page);
+    put("page_size", query.page_size);
+  }
+  const out = qs.toString();
+  return out ? `?${out}` : "";
+}
+
+/** GET /catalog/books/ — paginated book cards for /category/<slug> and /search. */
+export async function getBooks(query: BookQuery = {}): Promise<Paginated<BookCard>> {
+  if (fixturesEnabled()) {
+    const { fixtureBookList } = await import("./fixture-discovery");
+    return fixtureBookList(await fixtureBooks(), query);
+  }
+  return apiGet<Paginated<BookCard>>(`/catalog/books/${bookQueryString(query)}`);
+}
+
+/** GET /catalog/books/facets/ — filter counts for the same query. */
+export async function getBookFacets(query: BookQuery = {}): Promise<BookFacets> {
+  if (fixturesEnabled()) {
+    const { fixtureFacets } = await import("./fixture-discovery");
+    return fixtureFacets(await fixtureBooks(), query);
+  }
+  return apiGet<BookFacets>(`/catalog/books/facets/${bookQueryString(query, { facets: true })}`);
+}
+
+/** GET /catalog/categories/<slug>/, or null on 404. */
+export async function getCategory(slug: string): Promise<CategoryDetail | null> {
+  if (fixturesEnabled()) {
+    const walk = (nodes: CategoryNode[], parent: CategoryNode | null): CategoryDetail | null => {
+      for (const n of nodes) {
+        if (n.slug === slug) {
+          return { ...n, description: "", parent: parent && { id: parent.id, name: parent.name, slug: parent.slug } };
+        }
+        const hit = walk(n.children, n);
+        if (hit) return hit;
+      }
+      return null;
+    };
+    return walk((await fixtureHome()).categories, null);
+  }
+  try {
+    return await apiGet<CategoryDetail>(`/catalog/categories/${slugSegment(slug)}/`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+/** GET /catalog/search/suggest/?q= — header autocomplete (browser or server). */
+export async function getSearchSuggestions(q: string, { fixtures = false } = {}): Promise<SearchSuggestions> {
+  const empty: SearchSuggestions = { q, books: [], subjects: [], categories: [], authors: [] };
+  if (q.trim().length < 2) return empty;
+  if (fixtures || fixturesEnabled()) {
+    const { fixtureSuggest } = await import("./fixture-discovery");
+    return fixtureSuggest(await fixtureBooks(), (await fixtureHome()).categories, q);
+  }
+  const res = await fetch(`${apiBase()}/catalog/search/suggest/${queryString({ q })}`, {
+    headers: { Accept: "application/json" },
+  }).catch(() => null);
+  if (!res || !res.ok) return empty;
+  return (await res.json()) as SearchSuggestions;
+}
+
+/** GET /catalog/study-kits/?exam_type= — recommendations for the /kit builder. */
+export async function getStudyKits(examType: string | null = null): Promise<StudyKit[]> {
+  if (fixturesEnabled()) {
+    const { fixtureStudyKits } = await import("./fixture-discovery");
+    return fixtureStudyKits(await fixtureBooks(), await fixtureWeights(), examType);
+  }
+  return apiGet<StudyKit[]>(`/catalog/study-kits/${queryString({ exam_type: examType })}`);
 }

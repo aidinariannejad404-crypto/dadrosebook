@@ -6,3 +6,8 @@ class OrdersConfig(AppConfig):
     name = "apps.orders"
     label = "orders"
     verbose_name = "سفارش‌ها"
+
+    def ready(self):
+        from . import receivers
+
+        receivers.connect()
