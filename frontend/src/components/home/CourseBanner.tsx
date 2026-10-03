@@ -31,8 +31,7 @@ export function CourseBanner({ banner, course }: { banner: Banner | undefined; c
             <TrackedLink
               href={withCourseUtm(course.url, "home_course")}
               external
-              event="course_cross_sell_click"
-              params={{ course_id: course.id, course_name: course.title, placement: "home" }}
+              course={{ course_id: course.id, course_title: course.title, placement: "home" }}
               className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 font-bold text-white hover:bg-primary-hover"
             >
               مشاهده دوره در سایت دادرُز

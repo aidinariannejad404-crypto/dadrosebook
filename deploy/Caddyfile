@@ -1,0 +1,85 @@
+# Caddy 2 — TLS (automatic Let's Encrypt / ZeroSSL), HTTP→HTTPS, routing, security headers.
+# Variables come from the caddy service environment (docker-compose.prod.yml / .env.prod):
+#   SITE_DOMAIN     e.g. dadrosebook.com          (the store)
+#   STATS_DOMAIN    e.g. stats.dadrosebook.com    (Umami)
+#   ACME_EMAIL      certificate expiry notices
+#   TRUSTED_PROXIES space-separated CIDRs of a CDN in front of Caddy (default: none, 127.0.0.1/32)
+#
+# Routing on {$SITE_DOMAIN}:
+#   /api/*, /admin/*, /static/*  → backend:8000 (Django; WhiteNoise serves /static/)
+#   /media/*                     → files from the shared "media" volume (only used when USE_S3=false;
+#                                  with USE_S3=true cover URLs point at the public bucket instead and
+#                                  this route simply returns 404). Private ebook files are never here.
+#   everything else              → frontend:3000 (Next.js)
+#
+# --- ArvanCloud CDN in front (optional) ---------------------------------------------------------
+# 1. In the Arvan panel point the domain to this server through the CDN (orange cloud), SSL mode
+#    "HTTPS to origin" (Caddy keeps its own certificate; issuance needs HTTP-01 on port 80 to reach
+#    the origin, or use the Arvan origin certificate, see docs/deploy.md).
+# 2. Set TRUSTED_PROXIES in .env.prod to Arvan's published edge IP ranges (space separated), so
+#    Caddy keeps the CDN's X-Forwarded-For / X-Forwarded-Proto instead of overwriting them.
+# 3. Set NUM_PROXIES=2 for the backend (CDN + Caddy) so DRF throttles by the real client IP.
+#    Without a CDN keep NUM_PROXIES=1 (Caddy only).
+{
+	email {$ACME_EMAIL}
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1/32}
+		client_ip_headers X-Forwarded-For
+	}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self), usb=(), interest-cohort=()"
+		-Server
+		-X-Powered-By
+	}
+}
+
+(access_log) {
+	log {
+		output stdout
+		format json
+	}
+}
+
+{$SITE_DOMAIN} {
+	import security_headers
+	import access_log
+	encode zstd gzip
+
+	# Long-lived caches for content-hashed assets.
+	header /_next/static/* ?Cache-Control "public, max-age=31536000, immutable"
+	# WhiteNoise already sets "immutable" on hashed static files; this is only a fallback.
+	header /static/* ?Cache-Control "public, max-age=2592000"
+
+	@backend path /api/* /admin /admin/* /static/*
+	handle @backend {
+		reverse_proxy backend:8000
+	}
+
+	handle_path /media/* {
+		root * /srv/media
+		header Cache-Control "public, max-age=2592000"
+		file_server
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
+
+www.{$SITE_DOMAIN} {
+	import security_headers
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$STATS_DOMAIN} {
+	import security_headers
+	import access_log
+	encode zstd gzip
+	reverse_proxy umami:3000
+}

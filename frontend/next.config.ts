@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
   // Always render <title>/<meta>/Open Graph inside <head> (no metadata streaming): link previews in
   // Telegram/Instagram/WhatsApp and non-JS crawlers only read the initial <head>.
   htmlLimitedBots: /.*/,
+  // Inline the (small, ~10 KB gzipped) CSS into the HTML: removes two render-blocking requests on
+  // first load; measured +4 Lighthouse points and lower LCP on the homepage (Phase 5).
+  experimental: { inlineCss: true },
   images: {
     remotePatterns,
     formats: ["image/avif", "image/webp"],

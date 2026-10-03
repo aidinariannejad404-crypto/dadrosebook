@@ -1,11 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { track } from "@/lib/analytics";
+import { trackViewItem } from "@/lib/analytics";
 
-export function ViewItemTracker({ id, name, price }: { id: number; name: string; price: number | null }) {
+export function ViewItemTracker({
+  id,
+  name,
+  price,
+  subject,
+}: {
+  id: number;
+  name: string;
+  price: number | null;
+  /** primary subject slug */
+  subject?: string;
+}) {
   useEffect(() => {
-    track("view_item", { item_id: id, item_name: name, price: price ?? undefined, currency: "TOMAN" });
-  }, [id, name, price]);
+    trackViewItem({ item_id: id, item_name: name, price, subject });
+  }, [id, name, price, subject]);
   return null;
 }
