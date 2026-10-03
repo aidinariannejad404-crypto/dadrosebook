@@ -19,7 +19,7 @@ class TestSignedUrl:
         grant(reader, ebook.book)
         before = timezone.now()
         signed = signing.signed_url(rf_request, ebook, reader)
-        assert signed.url.startswith("http://testserver/api/v1/library/files/")
+        assert signed.url.startswith("/api/v1/library/files/")
         assert before + dt.timedelta(seconds=290) < signed.expires_at
         assert signed.expires_at <= timezone.now() + dt.timedelta(seconds=300)
 

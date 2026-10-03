@@ -167,3 +167,103 @@
     border: 0.75pt solid #000;
   }
 }
+
+/* ---------- Phase 4 ebook reader ---------- */
+
+/* full-screen reader: hide the store chrome (header, category nav, footer, countdown) */
+body:has(.reader-root) {
+  overflow: hidden;
+}
+/* only the known chrome elements: pdf.js appends measuring nodes to <body> that must stay rendered */
+body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
+  display: none !important;
+}
+
+.reader-page {
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  -webkit-touch-callout: none;
+}
+.reader-highlight {
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+}
+.reader-highlight-active {
+  opacity: 0.6;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* pdf.js text layer (subset of pdfjs-dist/web/pdf_viewer.css): transparent, selectable text */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 1;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.textLayer .markedContent {
+  display: contents;
+}
+.textLayer span[role="img"] {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+.textLayer ::selection {
+  background: color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+.textLayer br::selection {
+  background: transparent;
+}
+.textLayer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.textLayer.selecting .endOfContent {
+  top: 0;
+}
+
+/* no printing of ebooks */
+@media print {
+  .reader-root {
+    display: none !important;
+  }
+  .reader-print-block {
+    display: block !important;
+  }
+}

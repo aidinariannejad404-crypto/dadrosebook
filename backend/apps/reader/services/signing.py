@@ -1,8 +1,9 @@
 """Short-lived signed URLs for ebook files.
 
 * S3 private bucket (prod): a pre-signed GET URL from the storage itself.
-* Any other storage (dev/test, local ``private_media/``): a URL to ``library/files/<token>/`` where
-  the token is a ``TimestampSigner`` payload naming the file, its version and the user. The view
+* Any other storage (dev/test, local ``private_media/``): a relative
+  ``/api/v1/library/files/<token>/`` where the token is a ``TimestampSigner`` payload naming the
+  file, its version and the user. The view
   re-checks expiry, version, the file's active flag and the user's entitlement before streaming.
 """
 
@@ -66,8 +67,8 @@ def signed_url(request, ebook: EbookFile, user) -> SignedUrl:
             expire=ttl,
         )
     else:
-        path = reverse("reader:file", kwargs={"token": make_token(ebook, user)})
-        url = request.build_absolute_uri(path)
+        # Relative: the browser reaches the API same-origin through the storefront's /api/v1 proxy.
+        url = reverse("reader:file", kwargs={"token": make_token(ebook, user)})
     return SignedUrl(url=url, expires_at=expires_at)
 
 

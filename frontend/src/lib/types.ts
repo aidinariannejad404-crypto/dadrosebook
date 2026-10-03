@@ -389,3 +389,67 @@ export interface StudyKit {
 export interface ApiError {
   detail: string;
 }
+
+/* ---------- Phase 4: secure ebook reader (/library/<slug>/…) ---------- */
+
+export type EbookFormat = "PDF" | "EPUB";
+export type HighlightColor = "yellow" | "green" | "blue" | "pink";
+
+export interface ReadingProgress {
+  page: number;
+  total_pages: number;
+  /** 0..100, computed by the server */
+  percent: number;
+  /** EPUB CFI; "" for PDF */
+  location: string;
+  updated_at: string;
+}
+
+export interface ReaderSession {
+  book: {
+    slug: string;
+    title: string;
+    subtitle: string;
+    cover: string | null;
+    authors: string[];
+    subjects: SubjectMini[];
+  };
+  file: {
+    format: EbookFormat;
+    version: number;
+    /** short-lived signed URL; fetch the whole file once */
+    url: string;
+    expires_at: string;
+  };
+  progress: ReadingProgress | null;
+  watermark: string;
+}
+
+/** A rectangle as fractions (0..1) of the page box. */
+export interface FractionRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface Highlight {
+  id: number;
+  page: number;
+  text: string;
+  note: string;
+  color: HighlightColor;
+  rects: FractionRect[];
+  location: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HighlightCreate {
+  page: number;
+  text: string;
+  note?: string;
+  color?: HighlightColor;
+  rects: FractionRect[];
+  location?: string;
+}

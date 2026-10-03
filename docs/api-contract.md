@@ -310,7 +310,7 @@ Responses carry `Cache-Control: private, no-store`.
   "file": {
     "format": "PDF",                          // PDF | EPUB (frontend renders PDF; EPUB shows «به‌زودی»)
     "version": 3,
-    "url": "https://…signed…",                // short-lived; fetch the whole file once (no range requests)
+    "url": "https://…signed…",                // S3 pre-signed, or relative "/api/v1/library/files/<token>/" locally; short-lived; fetch the whole file once (no range requests)
     "expires_at": "2026-10-02T19:05:00Z"      // ~5 min (READER_URL_TTL_SECONDS); call this endpoint again to refresh
   },
   "progress": ReadingProgress | null,

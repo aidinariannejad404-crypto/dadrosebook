@@ -34,4 +34,5 @@ export const routes = {
   kit: "/kit",
   login: "/login",
   cart: "/cart",
+  read: (slug: string) => "/read/" + encodeURIComponent(slug),
 };
