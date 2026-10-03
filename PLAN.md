@@ -11,7 +11,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 1 | Scaffold, docker-compose, Django settings split, unfold admin (fa/RTL), catalog models + admin, read-only catalog API, Persian normalisation, seed data, Next.js RTL shell, homepage, product page | ✅ |
 | 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
-| 4 | Secure ebook reader, reading progress, highlights | ⏳ |
+| 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
 
 ---
@@ -140,7 +140,12 @@ Common: every model has `created_at`/`updated_at` (`TimeStampedModel`). Slugs ar
   `PaymentLog` row for every state change. Verify is idempotent via `select_for_update` + unique authority.
 - **EbookFile** (P3/4): book, format (PDF/EPUB), file on private storage, version.
 - **EbookEntitlement** (P3): user + book unique, source order; created in the same transaction that marks an order PAID.
-- **ReadingProgress, Highlight** (P4).
+- **ReadingProgress** (P4, `apps.reader`): user + book unique, page, total_pages, location (EPUB CFI), `percent` computed.
+- **Highlight** (P4): user, book, page, text, note, color (yellow/green/blue/pink), rects (page fractions, ≤ 50), location.
+- Reader security (P4): the file is only reachable through a 5-minute signed URL minted by `/library/<book>/read/`
+  after `has_entitlement` (S3 pre-signed in prod; locally a signed token re-checked for expiry, file version, active
+  flag and entitlement). Staff can preview any book (`READER_STAFF_PREVIEW`). Watermark (masked phone + Jalali date)
+  is drawn into every rendered page; print and context menu are blocked.
 - **BackInStockRequest** (P2): phone/user + variant, status, notified_at, converted_order (for out-of-stock recovery metric).
 - **Review** (P3, moderated; `apps.reviews`), **WishlistItem** (P3; `apps.wishlist`). Kept out of `engagement`
   so Phase 2 and 3 migrations never collide.
@@ -165,8 +170,9 @@ Phase 2: `GET/POST/PATCH/DELETE /cart/…`, `POST /cart/items/bulk/` (add whole 
 Phase 3 (full contract: `docs/api-contract-phase-3.md`): `POST /auth/otp/request/`, `POST /auth/otp/verify/` (sets httpOnly JWT cookies), `POST /auth/refresh/`,
 `POST /auth/logout/`, `GET /me/`, addresses CRUD, `GET /shipping-methods/`, `POST /checkout/quote/`,
 `POST /checkout/` → payment URL, `GET /payments/zarinpal/callback/`, orders list/detail, library list,
-wishlist, notify-me list. Phase 4: `GET /library/<book>/read/` → short-lived signed page/file URLs,
-progress & highlights CRUD.
+wishlist, notify-me list. Phase 4 (done, see docs/api-contract.md): `GET /library/<book>/read/` → book, short-lived signed file URL, progress,
+watermark; `GET/PUT /library/<book>/progress/`; highlights CRUD under `/library/<book>/highlights/`;
+`GET /library/files/<token>/` (local storage only).
 
 ## 5. Pages (Next.js)
 
@@ -180,7 +186,7 @@ progress & highlights CRUD.
 | `/login` | 3 | Phone + OTP |
 | `/account`, `/account/{orders,orders/<number>,addresses,library,wishlist,reviews}` | 3 | Dashboard, order timeline + retry payment, ebook library (→ `/read/<slug>` in P4); a «خبرم کن» list is not built yet |
 | `/checkout`, `/checkout/result` | 3 | 3 steps: ورود → ارسال (skipped for ebook-only) → پرداخت; result page with retry |
-| `/read/<book>` | 4 | Reader |
+| `/read/<book>` | 4 | ✅ pdf.js reader: page view, zoom, jump, swipe/keys (RTL), resume, highlights + notes drawer, watermark |
 | `sitemap.xml`, `robots.txt` | 5 | |
 
 ## 6. Analytics events (Phase 5, names fixed now)

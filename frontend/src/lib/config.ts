@@ -44,4 +44,5 @@ export const routes = {
   library: "/account/library",
   wishlist: "/account/wishlist",
   reviews: "/account/reviews",
+  read: (slug: string) => "/read/" + encodeURIComponent(slug),
 };

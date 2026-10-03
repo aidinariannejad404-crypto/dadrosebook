@@ -19,6 +19,7 @@ api_v1 = [
     path("wishlist/", include("apps.wishlist.api.urls")),
     path("cart/", include("apps.cart.api.urls")),
     path("back-in-stock/", include("apps.engagement.api.urls")),
+    path("library/", include("apps.reader.api.urls")),
 ]
 
 urlpatterns = [

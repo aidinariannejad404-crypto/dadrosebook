@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.wishlist",
     "apps.cart",
     "apps.engagement",
+    "apps.reader",
 ]
 
 MIDDLEWARE = [
@@ -185,6 +186,16 @@ CORS_EXPOSE_HEADERS = ["X-Search-Relaxed"]
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000", "http://localhost:3000"]
 )
+
+# --- Ebook reader (Phase 4) ---------------------------------------------------------------------
+# Lifetime of the signed ebook file URL (S3 pre-signed URL or local signed token).
+READER_URL_TTL_SECONDS = env.int("READER_URL_TTL_SECONDS", default=300)
+# ``callable(user, book) -> bool``; default is the Phase 3 entitlement check.
+READER_ENTITLEMENT_CHECKER = env(
+    "READER_ENTITLEMENT_CHECKER", default="apps.library.services.entitlements.has_entitlement"
+)
+# Staff may open any ebook in the reader to check uploads.
+READER_STAFF_PREVIEW = env.bool("READER_STAFF_PREVIEW", default=True)
 
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)
@@ -380,6 +391,16 @@ UNFOLD = {
                         "title": "فایل‌های کتاب الکترونیک",
                         "icon": "picture_as_pdf",
                         "link": reverse_lazy("admin:library_ebookfile_changelist"),
+                    },
+                    {
+                        "title": "پیشرفت مطالعه",
+                        "icon": "auto_stories",
+                        "link": reverse_lazy("admin:reader_readingprogress_changelist"),
+                    },
+                    {
+                        "title": "هایلایت‌ها",
+                        "icon": "ink_highlighter",
+                        "link": reverse_lazy("admin:reader_highlight_changelist"),
                     },
                 ],
             },
