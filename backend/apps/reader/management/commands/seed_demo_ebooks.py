@@ -1,4 +1,4 @@
-"""Dev only: attach a bundled sample PDF to books that sell an ebook but have no file yet.
+"""Dev only: attach a bundled sample PDF to books that sell an ebook (else bestsellers).
 
 ``python manage.py seed_demo_ebooks [--limit 5] [--if-empty]``. Staff users can then open
 ``/read/<slug>`` (staff preview) before real files are uploaded in the admin.
@@ -29,16 +29,13 @@ class Command(BaseCommand):
         if if_empty and EbookFile.objects.exists():
             self.stdout.write("ebook files exist; skipping")
             return
-        books = (
-            Book.objects.filter(
-                is_active=True,
-                variants__type=BookVariant.Type.EBOOK,
-                variants__is_active=True,
-            )
-            .exclude(ebook_files__is_active=True)
-            .distinct()
-            .order_by("-sales_count", "id")[:limit]
+        candidates = Book.objects.filter(is_active=True).exclude(ebook_files__is_active=True)
+        with_ebook = candidates.filter(
+            variants__type=BookVariant.Type.EBOOK, variants__is_active=True
         )
+        # The imported catalogue sells print only so far; fall back to bestsellers for the demo.
+        source = with_ebook if with_ebook.exists() else candidates
+        books = source.distinct().order_by("-sales_count", "id")[:limit]
         created = 0
         for book in books:
             ebook = EbookFile(book=book, format=EbookFile.Format.PDF, version=1)
