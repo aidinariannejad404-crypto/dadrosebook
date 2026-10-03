@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { createContext, useContext, useId, useState, type ReactNode } from "react";
 import type { Course, StoreSettings, Variant, VariantType } from "@/lib/types";
 import { formatNumber, formatPercent, formatToman, toPersianDigits } from "@/lib/format";
@@ -12,6 +13,9 @@ import {
   purchasableEbook,
 } from "@/lib/variants";
 import { courseLink } from "@/lib/courses";
+import { track } from "@/lib/analytics";
+import { routes } from "@/lib/config";
+import { useCart } from "@/components/cart/CartProvider";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { TrackedLink } from "@/components/ui/TrackedLink";
 import {
@@ -49,7 +53,6 @@ const DELIVERY_ICON: Record<VariantType, typeof TruckIcon> = {
   BUNDLE: BookOpenIcon,
 };
 
-const CART_SOON = "سبد خرید به‌زودی فعال می‌شود";
 const PRICE_SOON_NOTE = "قیمت این نسخه به‌زودی اعلام می‌شود";
 
 interface PurchaseState extends PurchaseProviderProps {
@@ -59,7 +62,11 @@ interface PurchaseState extends PurchaseProviderProps {
   setWantsCourse: (v: boolean) => void;
   ebook: Variant | undefined;
   printOut: boolean;
+  add: AddState;
+  addSelected: () => Promise<void>;
 }
+
+type AddState = { kind: "idle" } | { kind: "busy" } | { kind: "added"; variantId: number } | { kind: "error"; message: string };
 
 const PurchaseContext = createContext<PurchaseState | null>(null);
 
@@ -74,11 +81,38 @@ export function PurchaseProvider({ children, ...props }: PurchaseProviderProps &
   // A placeholder price is never the default; a sold-out print edition defaults to the ebook (P1-8, P1-17).
   const [selectedId, setSelectedId] = useState<number | undefined>(() => defaultVariant(props.variants)?.id);
   const [wantsCourse, setWantsCourse] = useState(false);
+  const [add, setAdd] = useState<AddState>({ kind: "idle" });
+  const cart = useCart();
   const print = props.variants.find((v) => v.type === "PRINT");
+  const selected = props.variants.find((v) => v.id === selectedId);
+
+  async function addSelected() {
+    if (!selected || selected.price_is_placeholder || !selected.in_stock || add.kind === "busy") return;
+    setAdd({ kind: "busy" });
+    const r = await cart.add(selected.id, 1, "product");
+    if (r.ok) {
+      setAdd({ kind: "added", variantId: selected.id });
+      track("add_to_cart", {
+        item_id: props.bookId,
+        item_name: props.bookTitle,
+        variant: selected.type,
+        value: selected.effective_price,
+        quantity: 1,
+      });
+    } else {
+      setAdd({ kind: "error", message: r.error.detail });
+    }
+  }
+
   const value: PurchaseState = {
     ...props,
-    selected: props.variants.find((v) => v.id === selectedId),
-    select: setSelectedId,
+    selected,
+    select: (id: number) => {
+      setSelectedId(id);
+      setAdd({ kind: "idle" });
+    },
+    add,
+    addSelected,
     wantsCourse,
     setWantsCourse,
     ebook: purchasableEbook(props.variants),
@@ -87,38 +121,94 @@ export function PurchaseProvider({ children, ...props }: PurchaseProviderProps &
   return <PurchaseContext.Provider value={value}>{children}</PurchaseContext.Provider>;
 }
 
-/** Primary action: aria-disabled add-to-cart (cart arrives in Phase 2; never for a placeholder price) or notify-me. */
+/**
+ * Primary action: add to cart (never for a placeholder price), «view cart» once added, or notify-me
+ * when sold out. The full box also offers a quick buy straight to /checkout?variant=<id> (Phase 3;
+ * «خرید و شروع مطالعه» for EBOOK/BUNDLE).
+ */
 function BuyAction({ compact, helperId }: { compact: boolean; helperId?: string }) {
-  const { selected, bookId, bookTitle, ebook, printOut } = usePurchase();
+  const { selected, variants, bookId, bookTitle, ebook, printOut, add, addSelected } = usePurchase();
   const soldOut = selected ? !selected.in_stock : printOut;
   if (soldOut) {
+    const watched = selected ?? variants.find((v) => v.type === "PRINT");
     return (
       <NotifyMeButton
         bookId={bookId}
         bookTitle={bookTitle}
-        variantType={selected?.type ?? "PRINT"}
+        variantId={watched?.id}
+        variantType={watched?.type ?? "PRINT"}
         ebookAvailable={ebook != null}
+        source="product"
         size={compact ? "sm" : "md"}
         className={compact ? "shrink-0" : "w-full"}
       />
     );
   }
-  const reason = !selected || selected.price_is_placeholder ? PRICE_SOON_NOTE : CART_SOON;
+  const size = compact ? "px-4 text-sm" : "w-full px-6 text-base";
+  if (add.kind === "added" && add.variantId === selected?.id) {
+    return (
+      <Link
+        href={routes.cart}
+        prefetch={false}
+        className={`inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control border-2 border-primary bg-surface font-extrabold text-primary hover:bg-primary-soft ${size}`}
+      >
+        <CartIcon size={20} />
+        مشاهده سبد خرید
+      </Link>
+    );
+  }
+  const placeholder = !selected || selected.price_is_placeholder;
+  if (placeholder) {
+    return (
+      <button
+        type="button"
+        aria-disabled="true"
+        aria-describedby={helperId}
+        title={compact ? PRICE_SOON_NOTE : undefined}
+        onClick={(e) => e.preventDefault()}
+        className={`inline-flex min-h-12 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white opacity-60 ${size}`}
+      >
+        <CartIcon size={20} />
+        افزودن به سبد خرید
+        {compact && <span className="sr-only">({PRICE_SOON_NOTE})</span>}
+      </button>
+    );
+  }
+  const busy = add.kind === "busy";
+  const readNow = selected.type === "EBOOK" || selected.type === "BUNDLE";
   return (
-    <button
-      type="button"
-      aria-disabled="true"
-      aria-describedby={helperId}
-      title={compact ? reason : undefined}
-      onClick={(e) => e.preventDefault()}
-      className={`inline-flex min-h-12 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white opacity-80 ${
-        compact ? "px-4 text-sm" : "w-full px-6 text-base"
-      }`}
-    >
-      <CartIcon size={20} />
-      افزودن به سبد خرید
-      {compact && <span className="sr-only">({reason})</span>}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => void addSelected()}
+        aria-disabled={busy || undefined}
+        className={`inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:opacity-80 ${size}`}
+      >
+        <CartIcon size={20} />
+        {busy ? "در حال افزودن…" : "افزودن به سبد خرید"}
+      </button>
+      {!compact && (
+        <Link
+          prefetch={false}
+          href={`${routes.checkout}?variant=${selected.id}`}
+          onClick={() =>
+            track("begin_checkout", {
+              item_id: bookId,
+              item_name: bookTitle,
+              variant_id: selected.id,
+              variant_type: selected.type,
+              value: selected.effective_price,
+              currency: "IRT",
+              source: "quick_buy",
+            })
+          }
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control border-2 border-primary bg-surface px-6 text-sm font-extrabold text-primary hover:bg-primary-soft"
+        >
+          {readNow ? <BoltIcon size={18} /> : null}
+          {readNow ? "خرید و شروع مطالعه" : "خرید سریع"}
+        </Link>
+      )}
+    </>
   );
 }
 
@@ -135,7 +225,7 @@ function tilePrice(v: Variant): { text: string; cls: string } {
  */
 export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const uid = useId();
-  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut } =
+  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add } =
     usePurchase();
 
   if (variants.length === 0) {
@@ -323,9 +413,20 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
 
       <div className="mt-4 flex flex-col gap-2">
         <BuyAction compact={false} helperId={helperId} />
-        {!(selected ? !selected.in_stock : printOut) && (
+        {placeholder && !(selected ? !selected.in_stock : printOut) && (
           <p id={helperId} className="text-center text-xs text-ink-muted">
-            {placeholder ? PRICE_SOON_NOTE : CART_SOON}
+            {PRICE_SOON_NOTE}
+          </p>
+        )}
+        {add.kind === "added" && add.variantId === selected?.id && (
+          <p role="status" className="flex items-center justify-center gap-1.5 text-sm font-bold text-success">
+            <CheckIcon size={16} strokeWidth={2.6} />
+            {selected.type_label} به سبد خرید اضافه شد
+          </p>
+        )}
+        {add.kind === "error" && (
+          <p role="alert" className="rounded-control bg-danger-soft px-3 py-2 text-sm font-bold leading-7 text-danger">
+            {add.message}
           </p>
         )}
         {course && wantsCourse && !courseTeaser && (

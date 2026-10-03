@@ -75,3 +75,29 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self) -> str:
         return self.first_name or self.phone
+
+
+class OtpCode(models.Model):
+    """A login code sent by SMS. Only a hash of the code is stored.
+
+    Rate limits (per phone and per IP) live in the cache; this table is the source of truth for
+    validity: a code is usable while ``consumed_at`` is null, ``expires_at`` is in the future and
+    ``attempts`` is below ``OTP_MAX_ATTEMPTS``. Requesting a new code invalidates older ones.
+    """
+
+    phone = models.CharField("شماره موبایل", max_length=11, db_index=True)
+    code_hash = models.CharField("هش کد", max_length=128)
+    expires_at = models.DateTimeField("انقضا")
+    attempts = models.PositiveSmallIntegerField("تلاش‌های ناموفق", default=0)
+    consumed_at = models.DateTimeField("استفاده‌شده در", null=True, blank=True)
+    ip = models.GenericIPAddressField("IP", null=True, blank=True)
+    created_at = models.DateTimeField("ایجاد", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "کد ورود"
+        verbose_name_plural = "کدهای ورود"
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["phone", "-created_at"], name="otp_phone_created")]
+
+    def __str__(self) -> str:
+        return f"{self.phone} — {self.created_at:%Y-%m-%d %H:%M}"

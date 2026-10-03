@@ -36,6 +36,10 @@ import { ConsultCta } from "@/components/ui/ConsultCta";
 import { CourseCrossSell } from "@/components/course/CourseCrossSell";
 import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/components/ui/Icons";
+import { ReviewsSection } from "@/components/reviews/ReviewsSection";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
+import { getBookReviews } from "@/lib/reviews-api";
+import { aggregateRating } from "@/lib/reviews";
 
 type Params = Promise<{ slug: string }>;
 
@@ -51,6 +55,11 @@ async function optional<T>(p: Promise<T>, fallback: T): Promise<T> {
   } catch {
     return fallback;
   }
+}
+
+/** schema.org aggregateRating (only with ≥ 3 approved reviews and a real average). */
+function withRating(rating: Record<string, unknown> | null): Record<string, unknown> {
+  return rating ? { aggregateRating: rating } : {};
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -85,13 +94,14 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   const printOut = book.formats.includes("PRINT") && !book.print_in_stock;
   const hasOffer = !isEmptyOffer(book.course_offer);
-  const [related, alternatives, events, examTypes, store, subjects] = await Promise.all([
+  const [related, alternatives, events, examTypes, store, subjects, reviews] = await Promise.all([
     optional(getRelatedBooks(book.slug, { examType: exam }), []),
     printOut ? optional(getRelatedBooks(book.slug, { inStock: true, examType: exam }), []) : Promise.resolve([]),
     optional(getExamEvents(), []),
     optional(getExamTypes(), [] as ExamTypeMini[]),
     optional(getStoreSettings(), null),
     hasOffer ? optional(getSubjects(), [] as SubjectWithCount[]) : Promise.resolve([] as SubjectWithCount[]),
+    getBookReviews(book.slug), // never throws; null when unavailable (same cached fetch as ReviewsSection)
   ]);
   const altIds = new Set(alternatives.map((b) => b.id));
   const relatedRest = related.filter((b) => !altIds.has(b.id));
@@ -134,7 +144,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     { name: book.title },
   ];
   const jsonLd = [
-    bookJsonLd(book, url),
+    { ...bookJsonLd(book, url), ...withRating(aggregateRating(reviews?.summary)) },
     breadcrumbJsonLd(crumbs.map((c) => ({ name: c.name, url: c.href ? `${siteUrl()}${c.href}` : url }))),
   ];
 
@@ -321,7 +331,10 @@ export default async function ProductPage({ params }: { params: Params }) {
                 )}
               </p>
             )}
-            <h1 className="text-xl font-black leading-9 text-ink md:text-2xl md:leading-[2.75rem]">{book.title}</h1>
+            <div className="flex items-start gap-2">
+              <h1 className="min-w-0 flex-1 text-xl font-black leading-9 text-ink md:text-2xl md:leading-[2.75rem]">{book.title}</h1>
+              <WishlistButton bookId={book.id} bookTitle={book.title} className="shrink-0" />
+            </div>
             {book.subtitle && <p className="mt-1 text-ink-muted">{book.subtitle}</p>}
             <dl className="mt-3 space-y-1 text-sm">
               {book.authors.length > 0 && (
@@ -453,6 +466,8 @@ export default async function ProductPage({ params }: { params: Params }) {
             <BookRail books={relatedRest} labelledBy="related-title" />
           </section>
         )}
+
+        <ReviewsSection slug={book.slug} examTypes={book.exam_types} />
 
         <StickyBuyBar />
       </div>

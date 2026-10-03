@@ -34,4 +34,14 @@ export const routes = {
   kit: "/kit",
   login: "/login",
   cart: "/cart",
+  /** Phase 3 */
+  checkout: "/checkout",
+  checkoutResult: "/checkout/result",
+  account: "/account",
+  orders: "/account/orders",
+  order: (number: string) => `/account/orders/${encodeURIComponent(number)}`,
+  addresses: "/account/addresses",
+  library: "/account/library",
+  wishlist: "/account/wishlist",
+  reviews: "/account/reviews",
 };
