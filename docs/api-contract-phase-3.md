@@ -62,7 +62,7 @@ Dates/times ISO 8601 (UTC). Errors: `400 { "<field>": ["پیام فارسی"], "
 
 ## Checkout
 
-Items are sent explicitly (the frontend reads them from the Phase 2 cart, or from a «خرید سریع» link
+Items are sent explicitly (the frontend reads them from the Phase 2 cart via `GET /cart/` with `X-Cart-Token`, or from a «خرید سریع» link
 `/checkout?variant=<id>`); the server re-prices everything from the DB.
 
 ```jsonc
@@ -103,7 +103,7 @@ Items are sent explicitly (the frontend reads them from the Phase 2 cart, or fro
 | `POST /checkout/quote/` | optional (anonymous allowed: guest sees prices before login) | `200 Quote`. `address_id` ignored when anonymous; `province` (string) may be sent instead to price shipping. Per-user discount limits are checked only when logged in. |
 | `POST /checkout/` | required | `201 { "order": Order, "payment_url": "https://sandbox.zarinpal.com/pg/StartPay/A000…" }` — redirect the browser there. Free orders (`total == 0`) are marked paid at once: `payment_url` is `null`, go to `/checkout/result?order=<number>`. `400` with field errors, or `{ "problems": [...] }` when any line is unsellable, or `{ "discount_code": ["…"] }` when the code is invalid. `502 { "detail": "اتصال به درگاه پرداخت برقرار نشد…" }` when the gateway refuses; the order stays `PENDING_PAYMENT` and can be retried. |
 | `POST /orders/<number>/pay/` | owner | Retry payment for a `PENDING_PAYMENT` order: `200 { "payment_url": … }`. Re-checks stock. |
-| `GET /payments/zarinpal/callback/?Authority=…&Status=OK\|NOK` | none | Verifies **idempotently**, then `302` to `FRONTEND_URL/checkout/result?order=<number>&status=paid\|failed\|cancelled`. Calling it twice never double-charges or double-grants. |
+| `GET /payments/zarinpal/callback/?Authority=…&Status=OK\|NOK` | none | Verifies **idempotently**, then `302` to `FRONTEND_URL/checkout/result?order=<number>&status=paid\|failed\|cancelled\|pending`. Calling it twice never double-charges or double-grants. A cancelled or declined attempt leaves the order `PENDING_PAYMENT` (`can_pay: true`) so the customer can retry. |
 | `GET /payments/fake/<authority>/` | dev only (`PAYMENT_GATEWAY=fake`) | HTML page with «پرداخت موفق» / «انصراف» buttons that hit the callback (local simulator). |
 
 The 3 steps in the UI: **۱ ورود** (phone + OTP, skipped when logged in) → **۲ ارسال** (address + method; skipped for
@@ -134,7 +134,7 @@ OrderSummary & {
 - `GET /orders/` → paginated `{ count, next, previous, results: [OrderSummary] }`, newest first, owner only.
 - `GET /orders/<number>/` → `Order` (owner only; 404 otherwise).
 
-Status flow: `PENDING_PAYMENT → PAID → PROCESSING → SHIPPED → DELIVERED`; `PENDING_PAYMENT → FAILED | CANCELLED`
+Status flow: `PENDING_PAYMENT → PAID → PROCESSING → SHIPPED → DELIVERED`; `PENDING_PAYMENT → CANCELLED`
 (unpaid orders older than `ORDER_PAYMENT_TIMEOUT_MINUTES` are cancelled by a periodic job); ebook-only orders go
 `PAID → DELIVERED` immediately. Every change writes an `OrderStatusLog`. Marking paid (one transaction):
 decrement PRINT/BUNDLE stock, record the discount redemption, create ebook entitlements, bump `Book.sales_count`,

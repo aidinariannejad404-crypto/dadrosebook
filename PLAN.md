@@ -10,7 +10,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 |---|---|---|
 | 1 | Scaffold, docker-compose, Django settings split, unfold admin (fa/RTL), catalog models + admin, read-only catalog API, Persian normalisation, seed data, Next.js RTL shell, homepage, product page | ✅ |
 | 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
-| 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements | ⏳ |
+| 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
 | 4 | Secure ebook reader, reading progress, highlights | ⏳ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
 
@@ -80,8 +80,11 @@ dadrosebook/
 │       ├── cart/       (P2)
 │       ├── orders/     (P3)    # Order, OrderItem, Address, ShippingMethod, DiscountCode, StoreSettings
 │       ├── payments/   (P3)    # Payment, PaymentGateway, zarinpal
-│       ├── library/    (P3/4)  # EbookFile, EbookEntitlement, ReadingProgress, Highlight
-│       ├── engagement/ (P2/3)  # BackInStockRequest, Review, Wishlist
+│       ├── library/    (P3)    # EbookFile, EbookEntitlement (+ services/entitlements.has_entitlement)
+│       ├── reader/     (P4)    # ReadingProgress, Highlight, signed file URLs
+│       ├── engagement/ (P2)    # BackInStockRequest
+│       ├── reviews/    (P3)    # Review (moderated)
+│       ├── wishlist/   (P3)    # WishlistItem
 │       └── seo/        (P5)    # Redirect (old Sazito path → new path)
 └── frontend/
     ├── Dockerfile  package.json  tailwind.config.ts  next.config.ts  eslint.config.mjs
@@ -139,7 +142,8 @@ Common: every model has `created_at`/`updated_at` (`TimeStampedModel`). Slugs ar
 - **EbookEntitlement** (P3): user + book unique, source order; created in the same transaction that marks an order PAID.
 - **ReadingProgress, Highlight** (P4).
 - **BackInStockRequest** (P2): phone/user + variant, status, notified_at, converted_order (for out-of-stock recovery metric).
-- **Review** (P3, moderated), **Wishlist** (P3).
+- **Review** (P3, moderated; `apps.reviews`), **WishlistItem** (P3; `apps.wishlist`). Kept out of `engagement`
+  so Phase 2 and 3 migrations never collide.
 - **Redirect** (P5): old_path (unique) → new_path, status 301, hit count.
 
 ## 4. API (`/api/v1/`)
@@ -158,7 +162,7 @@ Phase 1 (read-only, public, cached):
 | `GET /health/` | Liveness (DB + Redis) |
 
 Phase 2: `GET/POST/PATCH/DELETE /cart/…`, `POST /cart/items/bulk/` (add whole kit), `POST /back-in-stock/`.
-Phase 3: `POST /auth/otp/request/`, `POST /auth/otp/verify/` (sets httpOnly JWT cookies), `POST /auth/refresh/`,
+Phase 3 (full contract: `docs/api-contract-phase-3.md`): `POST /auth/otp/request/`, `POST /auth/otp/verify/` (sets httpOnly JWT cookies), `POST /auth/refresh/`,
 `POST /auth/logout/`, `GET /me/`, addresses CRUD, `GET /shipping-methods/`, `POST /checkout/quote/`,
 `POST /checkout/` → payment URL, `GET /payments/zarinpal/callback/`, orders list/detail, library list,
 wishlist, notify-me list. Phase 4: `GET /library/<book>/read/` → short-lived signed page/file URLs,
@@ -172,9 +176,10 @@ progress & highlights CRUD.
 | `/product/<slug>` | 1 | Cover, sample pages, intro video, meta, subject/exam tags, format switcher, course add-on, tabs (description / TOC / study plan), related rail, JSON-LD Book+Product+Offer, generateMetadata |
 | `/category/<slug>`, `/search?q=` | 2 | Filters + sorting, SSR |
 | `/kit` | 2 | Study-kit builder |
-| `/cart`, `/checkout`, `/checkout/result` | 2–3 | |
+| `/cart` | 2 | |
 | `/login` | 3 | Phone + OTP |
-| `/account/{orders,addresses,library,wishlist,notify}` | 3 | |
+| `/account`, `/account/{orders,orders/<number>,addresses,library,wishlist,reviews}` | 3 | Dashboard, order timeline + retry payment, ebook library (→ `/read/<slug>` in P4); a «خبرم کن» list is not built yet |
+| `/checkout`, `/checkout/result` | 3 | 3 steps: ورود → ارسال (skipped for ebook-only) → پرداخت; result page with retry |
 | `/read/<book>` | 4 | Reader |
 | `sitemap.xml`, `robots.txt` | 5 | |
 
@@ -194,3 +199,23 @@ Decided by the owner on 2026-10-02 (accepted the recommendations):
 Still open:
 1. Production hosting (ArvanCloud cloud server + object storage assumed).
 2. Real ebook prices (currently placeholders flagged `price_is_placeholder`).
+
+### Phase 3 decisions (2026-10-03)
+
+- Auth: phone OTP (5 digits, 2 min, 5 tries, 60 s resend, 5/hour per phone), only an HMAC of the code is
+  stored. httpOnly JWT cookies: `dr_access` 15 min, `dr_refresh` 30 days (rotated, revoked on logout),
+  `SameSite=Lax`. The storefront calls the API same-origin through a Next.js rewrite (`/api/v1/*`), so the
+  cookies are first-party; JSON-only parsing + Origin check close the CSRF gap.
+- Checkout re-prices everything server-side from an explicit item list (from the Phase 2 cart or a
+  quick-buy link `/checkout?variant=<id>`); `checkout_key` makes double clicks create one order.
+- Payments: `PaymentGateway` interface, ZarinPal v4 in sandbox by default, a `fake` gateway for offline dev.
+  The callback verifies with our stored amount under a row lock; a repeated callback never re-verifies,
+  never double-grants. Every payment state change writes a `PaymentLog`. A cancelled/declined attempt
+  keeps the order payable (retry from the result page or the order page); unpaid orders are cancelled after
+  `ORDER_PAYMENT_TIMEOUT_MINUTES` (Celery beat, every 5 min). A late successful payment on a cancelled
+  order is still honoured; a second successful payment on a paid order is flagged for refund.
+- Marking paid (one transaction): stock decrement (a shortfall is noted for staff, never blocks a paid
+  order), discount redemption, ebook entitlements, `sales_count`, then SMS + `order_paid` signal (cart
+  lines cleared, back-in-stock requests marked converted).
+- Shared book + course cart: not built; it needs dadrose.com academy integration (owner decision).
+
