@@ -6,7 +6,7 @@ import { track } from "@/lib/analytics";
 import { requestBackInStock } from "@/lib/cart-client";
 import { routes } from "@/lib/config";
 import { normalizeMobile, PHONE_ERROR } from "@/lib/phone";
-import type { BackInStockRequestBody } from "@/lib/types";
+import type { BackInStockRequestBody, VariantType } from "@/lib/types";
 import { BellIcon, CheckIcon } from "./Icons";
 import { Dialog } from "./Dialog";
 

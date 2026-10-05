@@ -275,7 +275,7 @@ function tilePrice(v: Variant): { text: string; cls: string } {
  */
 export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const uid = useId();
-  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add } =
+  const { bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add } =
     usePurchase();
 
   if (variants.length === 0) {
