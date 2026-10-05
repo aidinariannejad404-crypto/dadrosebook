@@ -18,7 +18,7 @@ interface NotifyMeButtonProps {
   /** product page link when no variantId is known (cards) */
   bookSlug?: string;
   /** e.g. "PRINT" */
-  variantType?: string;
+  variantType?: VariantType;
   /** an ebook of the same book is available right now */
   ebookAvailable?: boolean;
   source?: BackInStockRequestBody["source"];

@@ -1,10 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { NOINDEX } from "@/lib/seo";
+import { NotFoundBeacon } from "@/components/seo/NotFoundBeacon";
 
-export const metadata = { title: "صفحه پیدا نشد" };
+export const metadata: Metadata = { title: "صفحه پیدا نشد", robots: NOINDEX };
 
 export default function NotFound() {
   return (
     <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-16 text-center">
+      <NotFoundBeacon />
       <p className="text-6xl font-black text-primary">۴۰۴</p>
       <h1 className="mt-4 text-xl font-extrabold text-ink">صفحه‌ای که دنبالش بودید پیدا نشد</h1>
       <p className="mt-2 leading-8 text-ink-muted">

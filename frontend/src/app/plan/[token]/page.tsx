@@ -5,6 +5,7 @@ import { decodeSlug, getStudyPlan } from "@/lib/api";
 import { daysLeft } from "@/lib/exam-time";
 import { formatJalaliDate, formatNumber, toPersianDigits } from "@/lib/format";
 import { groupByWeek } from "@/lib/study-plan";
+import { NOINDEX } from "@/lib/seo";
 import type { StudyPlanDay } from "@/lib/types";
 import { CourseCard } from "@/components/course/CourseCard";
 import { PrintButton } from "@/components/plan/PrintButton";
@@ -19,7 +20,7 @@ const loadPlan = cache(async (raw: string) => getStudyPlan(decodeSlug(raw)));
 
 export const metadata: Metadata = {
   title: "برنامه مطالعه شخصی",
-  robots: { index: false, follow: false, nocache: true },
+  robots: NOINDEX,
 };
 
 function weekRange(days: StudyPlanDay[]): string {

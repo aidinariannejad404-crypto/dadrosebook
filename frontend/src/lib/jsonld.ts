@@ -1,5 +1,7 @@
-import type { BookDetail } from "./types";
+import type { BookDetail, StoreSettings } from "./types";
 import { toPersianDigits } from "./format";
+import { COURSE_SITE, SITE_DESCRIPTION, SITE_NAME, SOCIAL_PROFILES } from "./config";
+import { telegramUsername } from "./consult";
 
 const AVAILABILITY = {
   in: "https://schema.org/InStock",
@@ -34,7 +36,9 @@ export function bookJsonLd(book: BookDetail, url: string): Record<string, unknow
     availability: v.in_stock ? AVAILABILITY.in : AVAILABILITY.out,
     itemCondition: "https://schema.org/NewCondition",
     url,
+    seller: { "@type": "Organization", name: SITE_NAME },
   }));
+  const gtin = isbn13(book.isbn);
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": ["Book", "Product"],
@@ -46,6 +50,8 @@ export function bookJsonLd(book: BookDetail, url: string): Record<string, unknow
     bookFormat: book.variants[0] ? BOOK_FORMAT[book.variants[0].type] : undefined,
     numberOfPages: book.pages || undefined,
     isbn: book.isbn || undefined,
+    sku: gtin ?? undefined,
+    gtin13: gtin ?? undefined,
     bookEdition: bookEdition(book),
     image: book.cover ?? undefined,
     description: stripHtml(book.description).slice(0, 500) || undefined,
@@ -56,6 +62,58 @@ export function bookJsonLd(book: BookDetail, url: string): Record<string, unknow
     offers: offers.length === 1 ? offers[0] : offers.length > 1 ? offers : undefined,
   };
   return Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+}
+
+/** ISBN-13 as 13 ASCII digits (hyphens/spaces and Persian digits tolerated), else null. */
+export function isbn13(isbn: string | null | undefined): string | null {
+  if (!isbn) return null;
+  const digits = isbn
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\s-]/g, "");
+  return /^\d{13}$/.test(digits) ? digits : null;
+}
+
+/** Organization.sameAs: configured profiles + the store's Telegram account + the academy site. */
+export function sameAsLinks(store: Pick<StoreSettings, "consult_telegram"> | null | undefined): string[] {
+  const tg = store ? telegramUsername(store.consult_telegram ?? "") : null;
+  const links = [...SOCIAL_PROFILES, tg ? `https://t.me/${tg}` : "", COURSE_SITE].filter(Boolean);
+  return [...new Set(links)];
+}
+
+/** Home page: the store as an Organization (logo + sameAs). `site` is the absolute origin. */
+export function organizationJsonLd(
+  site: string,
+  store: Pick<StoreSettings, "consult_telegram"> | null | undefined,
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${site}/#organization`,
+    name: SITE_NAME,
+    url: `${site}/`,
+    logo: `${site}/icon.svg`,
+    description: SITE_DESCRIPTION,
+    sameAs: sameAsLinks(store),
+  };
+}
+
+/** Home page: WebSite with a sitelinks SearchAction (/search?q=…). */
+export function websiteJsonLd(site: string): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${site}/#website`,
+    name: SITE_NAME,
+    url: `${site}/`,
+    inLanguage: "fa",
+    publisher: { "@id": `${site}/#organization` },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${site}/search?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
+  };
 }
 
 export function breadcrumbJsonLd(items: { name: string; url: string }[]): Record<string, unknown> {

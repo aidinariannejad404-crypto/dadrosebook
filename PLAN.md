@@ -16,6 +16,10 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
 | Admin | Back office, step 1: dashboard (work queue, KPIs, goal metrics), sales report + CSV, staff roles, audit log, order print/CSV, quick price/stock edit, customer summary, admin session timeout (`apps.backoffice`, see `docs/admin-panel-summary.md`); step 2: returns/refunds (`orders.ReturnRequest`), staff SMS 2FA + admin IP allowlist, editable SMS templates (`core.SmsTemplate`), abandoned-cart reminders; next: shipment API (paid), formal invoices | 🚧 |
+| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
+| 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements | ⏳ |
+| 4 | Secure ebook reader, reading progress, highlights | ⏳ |
+| 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment config (see `docs/phase-5-summary.md`, `docs/deploy.md`) | ✅ (real deployment waits for the hosting decision) |
 
 ---
 
@@ -154,6 +158,9 @@ Common: every model has `created_at`/`updated_at` (`TimeStampedModel`). Slugs ar
 - **Review** (P3, moderated; `apps.reviews`), **WishlistItem** (P3; `apps.wishlist`). Kept out of `engagement`
   so Phase 2 and 3 migrations never collide.
 - **Redirect** (P5): old_path (unique) → new_path, status 301, hit count.
+- **Review** (P3, moderated), **Wishlist** (P3).
+- **Redirect** (P5, `apps.seo`): old_path (unique, decoded) + `old_path_key` (`redirect_key`: decoded, ي/ك fixed, lowercase ASCII, no trailing slash) → new_path (internal path or https URL), status 301/302, is_active, hit_count, last_hit_at, note, source (SEED/ADMIN/IMPORT/NOT_FOUND). No chains or loops.
+- **NotFoundHit** (P5): 404 paths reported by the storefront with hit counts, so missed Sazito URLs become redirects from the admin.
 
 ## 4. API (`/api/v1/`)
 
@@ -196,12 +203,27 @@ every reader call sends `X-Reader-Device`. Phase 6b: `POST /library/<book>/copie
 | `/checkout`, `/checkout/result` | 3 | 3 steps: ورود → ارسال (skipped for ebook-only) → پرداخت; result page with retry |
 | `/read/<book>` | 4 | ✅ pdf.js reader: page view, zoom, jump, swipe/keys (RTL), resume, highlights + notes drawer, watermark |
 | `sitemap.xml`, `robots.txt` | 5 | |
+| `/account/{orders,addresses,library,wishlist,notify}` | 3 | |
+| `/read/<book>` | 4 | Reader |
+| `sitemap.xml`, `robots.txt` | 5 | ✅ sitemap from `/seo/sitemap/`; robots blocks everything unless `NEXT_PUBLIC_SITE_ENV=production` |
 
-## 6. Analytics events (Phase 5, names fixed now)
+## 6. Analytics events (Phase 5 ✅)
 
 `view_item`, `add_to_cart`, `begin_checkout`, `purchase`, `kit_built`, `notify_me_requested`,
-`course_cross_sell_click`. A thin `track()` wrapper in `frontend/src/lib/analytics.ts` will dispatch to a
-self-hosted Umami instance (decided). Course links already carry UTM params.
+`course_cross_sell_click` (+ `study_plan_requested`). Typed helpers in `frontend/src/lib/analytics.ts`
+(`trackAddToCart`, `trackBeginCheckout`, `trackPurchase`, `trackKitBuilt`, …) send to self-hosted Umami
+(queued until the script loads; personal data stripped). Server side: `apps.core.analytics.track_server_event`
+(Celery → Umami `/api/send`) for the authoritative `purchase`. Full list, params and owners: `docs/analytics.md`.
+
+## 6b. SEO and redirects (Phase 5 ✅)
+
+- Next.js `middleware.ts` looks every request up in the cached redirect map (`GET /seo/redirects/`) and answers
+  301/302; the 404 page reports misses to `POST /seo/not-found/` (admin «سئو › صفحه‌های پیدانشده»).
+- Default Sazito redirects are seeded by `seed_redirects` (runs inside `seed_catalog`); the full old URL list is
+  imported as CSV in the admin before the DNS switch. Product and category slugs are kept, so most old URLs
+  need no redirect at all.
+- `lib/seo.ts` holds `NOINDEX` / `searchRobots()` for cart, checkout, account, login, reader and search pages.
+- Production stack: `docker-compose.prod.yml` + Caddy (TLS, www→apex, caching headers) + Umami; guide in `docs/deploy.md`.
 
 ## 7. Decisions and open questions
 
@@ -211,7 +233,7 @@ Decided by the owner on 2026-10-02 (accepted the recommendations):
 - Analytics: **self-hosted Umami** (Phase 5), no Google Analytics.
 
 Still open:
-1. Production hosting (ArvanCloud cloud server + object storage assumed).
+1. Production hosting (ArvanCloud cloud server + object storage assumed; any Ubuntu VPS works, see `docs/deploy.md`), domain DNS access, ArvanCloud CDN or not.
 2. Real ebook prices (currently placeholders flagged `price_is_placeholder`).
 
 ### Phase 3 decisions (2026-10-03)

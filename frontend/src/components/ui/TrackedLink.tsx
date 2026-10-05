@@ -1,22 +1,22 @@
 "use client";
 
 import type { AnchorHTMLAttributes } from "react";
-import { track, type AnalyticsEvent, type AnalyticsParams } from "@/lib/analytics";
+import { trackCourseCrossSellClick, type CourseCrossSellClick } from "@/lib/analytics";
 
 interface TrackedLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
-  event: AnalyticsEvent;
-  params?: AnalyticsParams;
+  /** fires `course_cross_sell_click` with these params on click */
+  course: CourseCrossSellClick;
   external?: boolean;
 }
 
-/** Plain <a> that fires an analytics event on click (used for external course links). */
-export function TrackedLink({ event, params, external, onClick, children, ...rest }: TrackedLinkProps) {
+/** Plain <a> to an academy course that fires `course_cross_sell_click` on click. */
+export function TrackedLink({ course, external, onClick, children, ...rest }: TrackedLinkProps) {
   return (
     <a
       {...rest}
       {...(external ? { target: "_blank", rel: "noopener" } : {})}
       onClick={(e) => {
-        track(event, params);
+        trackCourseCrossSellClick(course);
         onClick?.(e);
       }}
     >

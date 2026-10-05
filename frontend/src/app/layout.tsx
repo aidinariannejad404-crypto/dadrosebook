@@ -5,6 +5,8 @@ import "./globals.css";
 import { fixturesEnabled, getCategories, getExamTypes, getStoreSettings, getSubjects } from "@/lib/api";
 import type { CategoryNode, ExamTypeMini, StoreSettings, SubjectMini } from "@/lib/types";
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/config";
+import { DEFAULT_OPEN_GRAPH, INDEX } from "@/lib/seo";
+import { Umami } from "@/components/analytics/Umami";
 import { Header } from "@/components/layout/Header";
 import { CategoryNav } from "@/components/layout/CategoryNav";
 import { Footer } from "@/components/layout/Footer";
@@ -28,13 +30,10 @@ export const metadata: Metadata = {
   title: { default: `${SITE_NAME} | منابع آزمون وکالت و قضاوت`, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  openGraph: {
-    type: "website",
-    locale: "fa_IR",
-    siteName: SITE_NAME,
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-  },
+  // Indexable by default; personal/transactional routes override with NOINDEX (src/lib/seo.ts).
+  robots: INDEX,
+  openGraph: DEFAULT_OPEN_GRAPH,
+  twitter: { card: "summary_large_image", title: SITE_NAME, description: SITE_DESCRIPTION },
   formatDetection: { telephone: false },
 };
 
@@ -98,6 +97,7 @@ export default async function RootLayout({ children, topbar }: { children: React
             <Footer store={store} />
           </HideOn>
           <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
+          <Umami />
         </CartProvider>
       </body>
     </html>

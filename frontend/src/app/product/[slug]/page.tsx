@@ -293,7 +293,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     >
       <div className="mx-auto max-w-site px-4 pt-2 md:pt-4">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
-        <ViewItemTracker id={book.id} name={book.title} price={book.min_price} />
+        <ViewItemTracker id={book.id} name={book.title} price={book.min_price} subject={book.subjects[0]?.slug} />
         <RememberViewed book={{ id: book.id, slug: book.slug, title: book.title, cover: book.cover, subjects: book.subjects.slice(0, 1), authors: book.authors.slice(0, 2), volumes: book.volumes }} />
         <Breadcrumb items={crumbs} />
 

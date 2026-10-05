@@ -13,6 +13,7 @@ import type {
   KitRole,
   Paginated,
   SearchSuggestions,
+  SitemapData,
   StoreSettings,
   StudyPlan,
   StudyPlanCreated,
@@ -77,11 +78,11 @@ export function queryString(params: Record<string, string | null | undefined | f
   return out ? `?${out}` : "";
 }
 
-async function apiGet<T>(path: string): Promise<T> {
+async function apiGet<T>(path: string, revalidate: number = REVALIDATE_SECONDS): Promise<T> {
   const url = `${apiBase()}${path}`;
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
-    next: { revalidate: REVALIDATE_SECONDS },
+    next: { revalidate },
   });
   if (!res.ok) throw new ApiError(res.status, url);
   return (await res.json()) as T;
@@ -208,6 +209,12 @@ export async function getStoreSettings(): Promise<StoreSettings> {
 export async function getSubjects(): Promise<SubjectWithCount[]> {
   if (fixturesEnabled()) return (await fixtureHome()).subjects;
   return apiGet<SubjectWithCount[]>("/catalog/subjects/");
+}
+
+/** GET /seo/sitemap/ (Phase 5): slugs + updated_at for sitemap.xml; cached for an hour. */
+export async function getSitemapData(): Promise<SitemapData> {
+  if (fixturesEnabled()) return (await import("./__fixtures__/sitemap.json")).default as unknown as SitemapData;
+  return apiGet<SitemapData>("/seo/sitemap/", 3600);
 }
 
 /* ---------- academy courses ---------- */

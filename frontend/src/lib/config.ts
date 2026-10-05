@@ -9,6 +9,16 @@ export function siteUrl(): string {
 
 export const COURSE_SITE = "https://dadrose.com";
 
+/**
+ * Official social profiles for Organization.sameAs (home JSON-LD). Owner: fill in the real Instagram page
+ * and Telegram channel URLs; empty entries are skipped. The store's Telegram support account
+ * (StoreSettings.consult_telegram) and COURSE_SITE are added automatically.
+ */
+export const SOCIAL_PROFILES: readonly string[] = [
+  // "https://www.instagram.com/<page>/",
+  // "https://t.me/<channel>",
+];
+
 /** Append Dadrose referral UTM params to an external course URL. */
 export function withCourseUtm(url: string, campaign: "home_course" | "product_course"): string {
   try {

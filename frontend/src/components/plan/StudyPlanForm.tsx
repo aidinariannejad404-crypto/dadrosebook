@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { submitStudyPlan } from "@/lib/api";
-import { track } from "@/lib/analytics";
+import { trackStudyPlanRequested } from "@/lib/analytics";
 import { normalizeMobile, PHONE_ERROR } from "@/lib/phone";
 import type { StudyPlanField } from "@/lib/study-plan";
 import type { ExamTypeMini, SubjectMini } from "@/lib/types";
@@ -81,13 +81,7 @@ export function StudyPlanForm({ examTypes, subjects, defaultExam, defaultSubject
       focusFirstError(result.errors);
       return;
     }
-    track("study_plan_requested", {
-      exam_type: exam,
-      subjects: chosen.join(","),
-      subjects_count: chosen.length,
-      hours_per_day: hours,
-      book: books[0] ?? null,
-    });
+    trackStudyPlanRequested({ exam_type: exam, subjects: chosen, hours_per_day: hours, book: books[0] ?? null });
     const url = result.data.plan_url.startsWith("/plan/") ? result.data.plan_url : `/plan/${encodeURIComponent(result.data.token)}`;
     router.push(url);
   }

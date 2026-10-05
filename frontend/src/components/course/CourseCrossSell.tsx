@@ -102,8 +102,7 @@ export function CourseCrossSell({ offer, book, now, studyPlan }: CourseCrossSell
                   <TrackedLink
                     href={courseLink(highlight.url, book.slug)}
                     external
-                    event="course_cross_sell_click"
-                    params={{ course: highlight.id, course_name: highlight.title, book: book.slug, tier: "highlight" }}
+                    course={{ course_id: highlight.id, course_title: highlight.title, book_slug: book.slug, placement: "highlight" }}
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-primary px-5 font-bold text-white hover:bg-primary-hover"
                   >
                     مشاهده دوره در دادرُز
@@ -196,8 +195,7 @@ export function CourseCrossSell({ offer, book, now, studyPlan }: CourseCrossSell
                         <TrackedLink
                           href={courseLink(c.url, book.slug)}
                           external
-                          event="course_cross_sell_click"
-                          params={{ course: c.id, course_name: c.title, book: book.slug, tier: "more" }}
+                          course={{ course_id: c.id, course_title: c.title, book_slug: book.slug, placement: "more" }}
                           className="flex min-h-14 items-center gap-3 px-3 py-2.5 hover:bg-primary-soft md:px-4"
                         >
                           <span className="min-w-0 flex-1">

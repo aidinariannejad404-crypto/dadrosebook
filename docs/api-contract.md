@@ -475,3 +475,49 @@ user's own words and are never cut). Requires the entitlement. `Content-Disposit
 The reader stores the package encrypted (AES-GCM, non-extractable key kept in IndexedDB) and deletes
 it when the license expires, when the server says 403/404 for the book, or when the license is gone
 from `GET /library/offline/` on the next online open.
+
+## Phase 5 — SEO: redirects, 404 reports, sitemap
+
+Full spec (models, key rules, seeded redirects, frontend middleware): `docs/phase-5-contract.md` §1–2.
+
+**`redirect_key(path)`** (Python `apps.seo.services.keys.redirect_key`, TypeScript twin in the
+frontend middleware — both must agree): drop query string and fragment → URL-decode until stable
+(max 3 rounds) → ي/ى→ی، ك→ک, spaces and ZWNJ → `-` → lowercase ASCII, collapse repeated `/`,
+strip the trailing `/` (root stays `/`). Example: `/product/%D8%A2%D9%8A%D9%8A%D9%86/?x=1` → `/product/آیین`.
+
+### `GET /seo/redirects/` → active redirects (cached in Redis 300 s, busted on save/delete)
+```jsonc
+{
+  "version": "3f9a1c0d2b7e4a51",                       // hash of the map; changes when it changes
+  "redirects": {
+    "/product/آیین-دادرسی-مدنی-قدیمی": ["/product/آیین-دادرسی-مدنی", 301],
+    "/products": ["/search", 301],
+    "/blog": ["https://dadrose.com/blog/", 301]        // targets: internal path or absolute https URL
+  }
+}
+```
+Keys are `redirect_key(old_path)`. Response carries `Cache-Control: public, max-age=60`.
+
+### `POST /seo/redirects/hit/` body `{ "path": "/product/…" }` → `204`
+Counts a redirect the frontend just served (`hit_count += 1`, `last_hit_at`), matched by key.
+Unknown/inactive path → `204`, no-op. Missing `path` → `400`. Throttled (scope `seo_beacon`,
+`SEO_BEACON_THROTTLE_RATE`, default `120/min` per client IP) → `429` when exceeded.
+
+### `POST /seo/not-found/` body `{ "path": "/x", "referer": "https://…" | "" | null }` → `204`
+Upserts a 404 report (`hits += 1`, `last_seen`, `last_referer` when non-empty). Ignored (still
+`204`): paths not starting with `/`, longer than 500 characters, or whose first segment is
+`/_next`, `/api`, `/static`, `/media`, `/admin`. Same throttle scope as the hit beacon.
+Both beacons accept `Content-Type: application/json` **and** `text/plain` with a JSON body, so
+`navigator.sendBeacon(url, JSON.stringify(body))` works without a CORS preflight.
+
+### `GET /seo/sitemap/` (cached 300 s)
+```jsonc
+{
+  "books": [{ "slug": "…", "updated_at": "2026-10-02T12:00:00Z", "cover": "https://…" | null }],
+  "categories": [{ "slug": "…", "updated_at": "…" }],
+  "subjects": [{ "slug": "…", "updated_at": "…" }],
+  "exam_types": [{ "slug": "…", "updated_at": "…" }]
+}
+```
+Only active books with at least one active variant; a book's `updated_at` is the later of the book
+and its active variants (UTC, `Z`). Taxonomies: active only. Lists are sorted by slug.

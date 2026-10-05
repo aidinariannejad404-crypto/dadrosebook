@@ -59,8 +59,7 @@ export function CourseCard({ course, utmContent, book, tier, ribbon, code, class
         <TrackedLink
           href={courseLink(course.url, utmContent)}
           external
-          event="course_cross_sell_click"
-          params={{ course: course.id, course_name: course.title, book, tier }}
+          course={{ course_id: course.id, course_title: course.title, book_slug: book, placement: tier }}
           className={`flex min-h-11 items-center justify-center gap-2 rounded-control px-4 text-sm font-bold transition-colors ${
             recommended
               ? "bg-primary text-white hover:bg-primary-hover"

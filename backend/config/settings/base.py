@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.cart",
     "apps.engagement",
     "apps.reader",
+    "apps.seo",
     "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 
@@ -180,6 +181,8 @@ REST_FRAMEWORK = {
         "otp_verify": env("OTP_VERIFY_THROTTLE_RATE", default="30/hour"),
         "reviews": env("REVIEW_THROTTLE_RATE", default="10/hour"),
         "back_in_stock": env("BACK_IN_STOCK_THROTTLE_RATE", default="10/hour"),
+        # Redirect-hit and 404 beacons (``/seo/redirects/hit/``, ``/seo/not-found/``).
+        "seo_beacon": env("SEO_BEACON_THROTTLE_RATE", default="120/min"),
     },
     # Set to the number of trusted reverse proxies in prod so the client IP is read correctly.
     "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
@@ -294,6 +297,12 @@ PUBLIC_API_URL = env("PUBLIC_API_URL", default="http://localhost:8000/api/v1")
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 # Unpaid orders are cancelled after this many minutes (Celery beat, every 5 minutes).
 ORDER_PAYMENT_TIMEOUT_MINUTES = env.int("ORDER_PAYMENT_TIMEOUT_MINUTES", default=60)
+
+# --- analytics (self-hosted Umami) -------------------------------------------------------------
+# Server-side events (``apps.core.analytics.track_server_event``). Empty → no-op.
+UMAMI_HOST = env("UMAMI_HOST", default="").rstrip("/")
+UMAMI_WEBSITE_ID = env("UMAMI_WEBSITE_ID", default="")
+SITE_HOST = env("SITE_HOST", default="")
 
 # --- caching knobs ------------------------------------------------------------------------------
 HOME_CACHE_SECONDS = env.int("HOME_CACHE_SECONDS", default=60)
@@ -431,6 +440,22 @@ UNFOLD = {
                     _nav("دسترسی‌های کتاب الکترونیک", "key", "library_ebookentitlement"),
                     _nav("پیشرفت مطالعه", "auto_stories", "reader_readingprogress"),
                     _nav("هایلایت‌ها", "border_color", "reader_highlight"),
+                ],
+            },
+            {
+                "title": "سئو",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "ریدایرکت‌ها",
+                        "icon": "alt_route",
+                        "link": reverse_lazy("admin:seo_redirect_changelist"),
+                    },
+                    {
+                        "title": "صفحه‌های پیدانشده (۴۰۴)",
+                        "icon": "link_off",
+                        "link": reverse_lazy("admin:seo_notfoundhit_changelist"),
+                    },
                 ],
             },
             {
