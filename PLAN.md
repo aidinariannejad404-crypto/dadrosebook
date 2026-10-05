@@ -9,10 +9,11 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Scaffold, docker-compose, Django settings split, unfold admin (fa/RTL), catalog models + admin, read-only catalog API, Persian normalisation, seed data, Next.js RTL shell, homepage, product page | ✅ |
-| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
+| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ✅ |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
 | 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
+| UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
 
 ---
 
