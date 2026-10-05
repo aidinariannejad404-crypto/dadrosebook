@@ -3,8 +3,10 @@ from unfold.admin import ModelAdmin
 
 from .models import (
     Bookmark,
+    CopyLedger,
     EpubPackage,
     Highlight,
+    OfflineLicense,
     ReaderAccessLog,
     ReaderDevice,
     ReadingProgress,
@@ -101,3 +103,30 @@ class ReaderAccessLogAdmin(ReadOnlyAdmin):
     search_fields = ("user__phone", "book__title", "ip")
     list_select_related = ("user", "book", "device")
     date_hierarchy = "created_at"
+
+
+@admin.register(CopyLedger)
+class CopyLedgerAdmin(ReadOnlyAdmin):
+    list_display = ("user", "book", "used", "updated_at")
+    search_fields = ("user__phone", "book__title")
+    list_select_related = ("user", "book")
+    actions = ("reset",)
+
+    @admin.action(description="صفر کردن سهمیه کپی")
+    def reset(self, request, queryset):
+        queryset.update(used=0)
+
+
+@admin.register(OfflineLicense)
+class OfflineLicenseAdmin(ReadOnlyAdmin):
+    list_display = ("user", "book", "device", "expires_at", "revoked_at", "created_at")
+    list_filter = ("revoked_at",)
+    search_fields = ("user__phone", "book__title")
+    list_select_related = ("user", "book", "device")
+    actions = ("revoke",)
+
+    @admin.action(description="لغو مجوز آفلاین")
+    def revoke(self, request, queryset):
+        from django.utils import timezone
+
+        queryset.filter(revoked_at__isnull=True).update(revoked_at=timezone.now())

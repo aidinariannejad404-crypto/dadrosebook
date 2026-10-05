@@ -1,4 +1,4 @@
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.cache import add_never_cache_headers, patch_cache_control
 from rest_framework import status
@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 from apps.catalog.models import Book
 
 from ..models import Bookmark, Highlight
-from ..services import audit, devices
+from ..services import audit, devices, export, offline, quota
 from ..services.access import ReaderError, require_access
 from ..services.bookmarks import BookmarkLimit, add_bookmark, user_bookmarks
 from ..services.highlights import HighlightLimit, create_highlight, user_highlights
@@ -28,16 +28,21 @@ from ..services.session import chapter_payload, epub_package_for, reader_session
 from ..services.signing import CONTENT_TYPES, redeem_asset_token, redeem_token
 from .serializers import (
     BookmarkSerializer,
+    CopySerializer,
     DeviceSerializer,
     HighlightSerializer,
     HighlightUpdateSerializer,
+    OfflineLicenseSerializer,
     ProgressSerializer,
     ReaderSessionSerializer,
 )
 from .throttles import (
     ChapterDayThrottle,
     ChapterMinuteThrottle,
+    CopyThrottle,
     DeviceRemoveThrottle,
+    ExportThrottle,
+    OfflineThrottle,
     SearchThrottle,
 )
 
@@ -53,7 +58,10 @@ class ReaderAPIException(APIException):
         body = {"detail": error.message, "code": error.code}
         if isinstance(error, devices.DeviceLimit):
             body["devices"] = DeviceSerializer(error.devices, many=True).data
+        if isinstance(error, offline.OfflineLimit):
+            body["licenses"] = OfflineLicenseSerializer(error.licenses, many=True).data
         super().__init__(body)
+        self.detail = body  # keep ids and booleans typed (APIException stringifies nested data)
 
 
 def to_api_error(exc):
@@ -119,7 +127,7 @@ class ReadView(ReaderView):
             audit.log(request, audit.Kind.DENIED, user=request.user, book=self.book)
             raise
         device = self.device()
-        data = reader_session(request, request.user, self.book)
+        data = reader_session(request, request.user, self.book, device)
         audit.log(request, audit.Kind.OPEN, user=request.user, book=self.book, device=device)
         return Response(ReaderSessionSerializer(data, context={"request": request}).data)
 
@@ -302,3 +310,69 @@ class EpubAssetView(FileView):
         response["Referrer-Policy"] = "no-referrer"
         response["Content-Security-Policy"] = "default-src 'none'; sandbox"
         return private(response)
+
+
+class CopyView(ReaderView):
+    throttle_classes = [CopyThrottle]
+
+    def post(self, request, slug):
+        self.check_access()
+        serializer = CopySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(
+            quota.record_copy(request.user, self.book, serializer.validated_data["chars"])
+        )
+
+
+class NotesExportView(ReaderView):
+    throttle_classes = [ExportThrottle]
+
+    def get(self, request, slug):
+        self.check_access()
+        fmt = request.query_params.get("format", "md")
+        if fmt not in ("md", "html"):
+            raise ValidationError({"format": "قالب باید md یا html باشد."})
+        if fmt == "md":
+            body = export.render_markdown(request.user, self.book)
+            response = HttpResponse(body, content_type="text/markdown; charset=utf-8")
+        else:
+            body = export.render_html(request.user, self.book)
+            response = HttpResponse(body, content_type="text/html; charset=utf-8")
+            response["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+        response["Content-Disposition"] = export.content_disposition(self.book, fmt)
+        response["X-Content-Type-Options"] = "nosniff"
+        audit.log(request, audit.Kind.EXPORT, user=request.user, book=self.book, detail=fmt)
+        return response
+
+
+class OfflineView(ReaderView):
+    throttle_classes = [OfflineThrottle]
+
+    def post(self, request, slug):
+        device = self.device()
+        license_, package, created = offline.issue(request.user, self.book, device)
+        audit.log(
+            request,
+            audit.Kind.OFFLINE,
+            user=request.user,
+            book=self.book,
+            device=device,
+            detail="new" if created else "renew",
+        )
+        return Response(
+            {"license": OfflineLicenseSerializer(license_).data, "package": package},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class OfflineListView(ReaderBaseView):
+    def get(self, request):
+        licenses = offline.live_licenses(request.user)
+        return Response(OfflineLicenseSerializer(licenses, many=True).data)
+
+
+class OfflineDetailView(ReaderBaseView):
+    def delete(self, request, pk):
+        if not offline.revoke(request.user, pk):
+            raise NotFound({"detail": "مجوز آفلاین پیدا نشد.", "code": "no_license"})
+        return Response(status=status.HTTP_204_NO_CONTENT)

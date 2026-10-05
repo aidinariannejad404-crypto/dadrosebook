@@ -24,7 +24,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--limit", type=int, default=5)
-        parser.add_argument("--if-empty", action="store_true", help="اگر فایلی از این قالب هست، کاری نکن.")
+        parser.add_argument(
+            "--if-empty", action="store_true", help="اگر فایلی از این قالب هست، کاری نکن."
+        )
         parser.add_argument(
             "--epub", action="store_true", help="به‌جای PDF، EPUB نمونه (فصل‌به‌فصل) وصل کن."
         )

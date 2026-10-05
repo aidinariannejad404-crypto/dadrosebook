@@ -204,6 +204,17 @@ READER_CHAPTER_RATE = env("READER_CHAPTER_RATE", default="30/min")
 READER_CHAPTER_DAY_RATE = env("READER_CHAPTER_DAY_RATE", default="800/day")
 READER_SEARCH_RATE = env("READER_SEARCH_RATE", default="30/min")
 READER_DEVICE_REMOVE_RATE = env("READER_DEVICE_REMOVE_RATE", default="5/day")
+# Total copy quota per user and book: percent of an EPUB's characters (min), fixed for PDF.
+READER_COPY_QUOTA_PERCENT = env.int("READER_COPY_QUOTA_PERCENT", default=10)
+READER_COPY_QUOTA_MIN = env.int("READER_COPY_QUOTA_MIN", default=2000)
+READER_PDF_COPY_QUOTA = env.int("READER_PDF_COPY_QUOTA", default=20000)
+READER_COPY_RATE = env("READER_COPY_RATE", default="60/min")
+READER_EXPORT_RATE = env("READER_EXPORT_RATE", default="30/hour")
+# Offline reading (EPUB): whole book stored encrypted on one device, time-limited license.
+READER_OFFLINE_ENABLED = env.bool("READER_OFFLINE_ENABLED", default=True)
+READER_OFFLINE_MAX_BOOKS = env.int("READER_OFFLINE_MAX_BOOKS", default=3)
+READER_OFFLINE_DAYS = env.int("READER_OFFLINE_DAYS", default=14)
+READER_OFFLINE_RATE = env("READER_OFFLINE_RATE", default="10/day")
 
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)

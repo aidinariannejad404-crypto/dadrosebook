@@ -3,7 +3,7 @@ from rest_framework import serializers
 from apps.catalog.api.serializers import SubjectMiniSerializer
 from apps.catalog.models import Book
 
-from ..models import Bookmark, Highlight, ReaderDevice, ReadingProgress
+from ..models import Bookmark, Highlight, OfflineLicense, ReaderDevice, ReadingProgress
 from ..services.highlights import clean_rects
 
 
@@ -58,13 +58,40 @@ class EpubInfoSerializer(serializers.Serializer):
     toc = serializers.JSONField()
 
 
+class CopyQuotaSerializer(serializers.Serializer):
+    limit = serializers.IntegerField()
+    used = serializers.IntegerField()
+
+
+class OfflineLicenseSerializer(serializers.ModelSerializer):
+    book = serializers.CharField(source="book.slug")
+    title = serializers.CharField(source="book.title")
+    device_label = serializers.CharField(source="device.label")
+
+    class Meta:
+        model = OfflineLicense
+        fields = ["id", "book", "title", "device_label", "expires_at", "created_at"]
+
+
+class OfflineInfoSerializer(serializers.Serializer):
+    max_books = serializers.IntegerField()
+    days = serializers.IntegerField()
+    license = OfflineLicenseSerializer(allow_null=True)
+
+
 class ReaderSessionSerializer(serializers.Serializer):
     book = ReaderBookSerializer()
     file = FileSerializer()
     progress = ProgressSerializer(allow_null=True)
     watermark = serializers.CharField()
     copy_limit = serializers.IntegerField()
+    copy_quota = CopyQuotaSerializer()
     epub = EpubInfoSerializer(allow_null=True)
+    offline = OfflineInfoSerializer(allow_null=True)
+
+
+class CopySerializer(serializers.Serializer):
+    chars = serializers.IntegerField(min_value=0, max_value=100_000)
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

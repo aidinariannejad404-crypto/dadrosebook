@@ -185,6 +185,8 @@ class ReaderAccessLog(models.Model):
         FILE = "file", "دریافت فایل"
         ASSET = "asset", "دریافت تصویر"
         SEARCH = "search", "جستجو"
+        EXPORT = "export", "خروجی یادداشت‌ها"
+        OFFLINE = "offline", "بسته آفلاین"
         DENIED = "denied", "رد دسترسی"
 
     user = models.ForeignKey(
@@ -214,3 +216,50 @@ class ReaderAccessLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.get_kind_display()} — {self.user}"
+
+
+class CopyLedger(models.Model):
+    """Characters a user has copied from one book (all devices, all time)."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="copy_ledgers"
+    )
+    book = models.ForeignKey("catalog.Book", on_delete=models.CASCADE, related_name="+")
+    used = models.PositiveIntegerField("نویسه‌های کپی‌شده", default=0)
+    updated_at = models.DateTimeField("به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        verbose_name = "سهمیه کپی"
+        verbose_name_plural = "سهمیه‌های کپی"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "book"], name="reader_copy_user_book")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user} — {self.book}: {self.used}"
+
+
+class OfflineLicense(models.Model):
+    """Permission to keep one EPUB on one device for offline reading until ``expires_at``."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="offline_licenses"
+    )
+    book = models.ForeignKey("catalog.Book", on_delete=models.CASCADE, related_name="+")
+    device = models.ForeignKey(ReaderDevice, on_delete=models.CASCADE, related_name="+")
+    expires_at = models.DateTimeField("انقضا")
+    revoked_at = models.DateTimeField("لغو", null=True, blank=True)
+    created_at = models.DateTimeField("زمان", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "مجوز مطالعه آفلاین"
+        verbose_name_plural = "مجوزهای مطالعه آفلاین"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "book", "device"], name="reader_offline_user_book_device"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user} — {self.book}"

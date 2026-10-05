@@ -14,6 +14,7 @@ from ..models import EpubPackage
 from .access import NoEbook, active_file, require_access
 from .epub import ASSET_RE, get_package
 from .progress import get_progress
+from .quota import quota
 from .signing import asset_url, signed_url, ttl_seconds
 
 
@@ -52,7 +53,9 @@ def epub_info(package: EpubPackage) -> dict:
     }
 
 
-def reader_session(request, user, book: Book) -> dict:
+def reader_session(request, user, book: Book, device=None) -> dict:
+    from .offline import offline_info  # offline builds on this module
+
     require_access(user, book)
     ebook = active_file(book)
     epub = None
@@ -78,7 +81,9 @@ def reader_session(request, user, book: Book) -> dict:
         "progress": get_progress(user, book),
         "watermark": watermark_text(user),
         "copy_limit": copy_limit(),
+        "copy_quota": quota(user, book),
         "epub": epub,
+        "offline": offline_info(user, book, ebook, device),
     }
 
 

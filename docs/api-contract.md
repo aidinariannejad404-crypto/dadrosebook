@@ -434,3 +434,44 @@ Throttled `READER_SEARCH_RATE` (30/min).
 - `POST /library/<slug>/bookmarks/` `{page, location?, label?}` → `201 Bookmark`; the same
   `(page, location)` again → `200` with the existing one. Max 500 per book.
 - `DELETE /library/<slug>/bookmarks/<id>/` → `204`.
+
+## Phase 6b: devices page, total copy quota, notebook export, offline reading (`apps.reader`)
+
+### Session additions (`GET /library/<slug>/read/`)
+```jsonc
+{
+  …,
+  "copy_quota": { "limit": 12000, "used": 340 },  // characters per user per book, all devices, all time
+  "offline": null | { "max_books": 3, "days": 14, "license": null | OfflineLicense }  // EPUB only; null for PDF or when disabled
+}
+```
+`copy_quota.limit` = 10% of the EPUB's characters (at least `READER_COPY_QUOTA_MIN`, 2000), or
+`READER_PDF_COPY_QUOTA` (20000) for PDF. The per-copy cap `copy_limit` still applies.
+
+### `POST /library/<slug>/copies/` body `{ "chars": 420 }` → `{ "limit": 12000, "used": 760, "granted": 420 }`
+Records a copy the reader just made. The reader truncates each copy to
+`min(copy_limit, limit - used)` *before* writing the clipboard (using its last known `used`), then
+reports it; `granted` is what the server accepted (`min(chars, remaining)`). When `used >= limit` the
+reader puts only the citation line on the clipboard and says «سهمیه کپی این کتاب تمام شده است».
+Throttled `READER_COPY_RATE` (60/min).
+
+### `GET /library/<slug>/notes/export/?format=md|html` → a file (attachment)
+The user's highlights (quote + colour + note), notes and bookmarks for the book, grouped by chapter
+(EPUB) or page (PDF), with book title/authors and the Jalali export date. `md` → `text/markdown`,
+`html` → a standalone RTL print-friendly page (`text/html`, the user can print it to PDF). Each quote
+is cut to 300 characters and all quotes together to `copy_quota.limit` characters (notes are the
+user's own words and are never cut). Requires the entitlement. `Content-Disposition: attachment`.
+
+### Offline reading (EPUB only)
+`OfflineLicense = { "id": 5, "book": "<slug>", "title": "…", "device_label": "Chrome · Android",
+"expires_at": "…", "created_at": "…" }`
+- `POST /library/<slug>/offline/` (with `X-Reader-Device`) → `201 { "license": OfflineLicense,
+  "package": { "epub": <same as session.epub>, "chapters": [<chapter payload, html with images inlined
+  as data: URIs>], "watermark": "…", "copy_limit": 1000, "copy_quota": {…} } }`. At most `max_books`
+  live licenses per user (409 `{"code": "offline_limit", "licenses": [OfflineLicense]}` beyond that);
+  calling again for the same book and device renews it (200). Throttled 10/day.
+- `GET /library/offline/` → `[OfflineLicense]` (live ones).
+- `DELETE /library/offline/<id>/` → `204`.
+The reader stores the package encrypted (AES-GCM, non-extractable key kept in IndexedDB) and deletes
+it when the license expires, when the server says 403/404 for the book, or when the license is gone
+from `GET /library/offline/` on the next online open.

@@ -140,6 +140,8 @@ class TestDevices:
         body = res.json()
         assert body["code"] == "device_limit"
         assert len(body["devices"]) == 3
+        assert isinstance(body["devices"][0]["id"], int)
+        assert body["devices"][0]["current"] is False
         # chapters from the new device are refused too
         assert (
             owner_api.get(url("epub-chapter", epub_ebook.book, index=0), **dev(4)).status_code
@@ -301,5 +303,12 @@ class TestAdminUpload:
         owner_api.get(url("read", epub_ebook.book), **DEV)
         admin = User.objects.create_superuser(phone="09120000000", password="pass")
         client.force_login(admin)
-        for model in ("epubpackage", "readerdevice", "readeraccesslog", "bookmark"):
+        for model in (
+            "epubpackage",
+            "readerdevice",
+            "readeraccesslog",
+            "bookmark",
+            "copyledger",
+            "offlinelicense",
+        ):
             assert client.get(reverse(f"admin:reader_{model}_changelist")).status_code == 200
