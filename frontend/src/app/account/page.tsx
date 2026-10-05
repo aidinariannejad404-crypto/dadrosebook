@@ -5,8 +5,11 @@ import { getMe, serverApiGet } from "@/lib/server-session";
 import { accountRoutes } from "@/lib/account-routes";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { formatJalaliDay, orderStatusLabel, orderStatusTone, tehranWallClock } from "@/lib/order-status";
-import { StatusPill } from "@/components/account/StatusPill";
+import { OrderStatusChip } from "@/components/account/StatusPill";
+import { EmptyState } from "@/components/account/EmptyState";
 import { ProfileForm } from "@/components/account/ProfileForm";
+import { ContinueReading } from "@/components/account/ContinueReading";
+import { mostRecentInProgress } from "@/components/account/ReadingProgressMeter";
 import { BookOpenIcon, ChatIcon, ChevronIcon, HeartIcon, MapPinIcon, PackageIcon } from "@/components/ui/Icons";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +37,7 @@ export default async function AccountDashboard() {
   if (!me) return null; // the layout already handled anonymous visitors
 
   const latest = orders?.results.slice(0, 3) ?? [];
+  const reading = library ? mostRecentInProgress(library) : null;
   const pending = orders?.results.filter((o) => o.status === "PENDING_PAYMENT").length ?? 0;
   const links = [
     { href: accountRoutes.orders, label: "سفارش‌ها", note: orders ? `${toPersianDigits(orders.count)} سفارش` : "", Icon: PackageIcon },
@@ -57,6 +61,8 @@ export default async function AccountDashboard() {
           <ProfileForm me={me} />
         </div>
       </section>
+
+      {reading && <ContinueReading entry={reading} />}
 
       {pending > 0 && (
         <p className="rounded-control bg-warning-soft px-4 py-3 text-sm font-bold leading-7 text-warning">
@@ -83,14 +89,11 @@ export default async function AccountDashboard() {
           )}
         </div>
         {orders == null ? (
-          <p className="rounded-card bg-surface p-4 text-sm text-ink-muted">فهرست سفارش‌ها فعلاً در دسترس نیست.</p>
+          <p className="rounded-card bg-surface p-4 text-sm text-ink-muted shadow-card">فهرست سفارش‌ها فعلاً در دسترس نیست.</p>
         ) : latest.length === 0 ? (
-          <p className="rounded-card bg-surface p-4 text-sm leading-7 text-ink-muted">
-            هنوز سفارشی ثبت نکرده‌اید.{" "}
-            <Link href="/" className="font-bold text-primary underline underline-offset-4">
-              دیدن کتاب‌ها
-            </Link>
-          </p>
+          <EmptyState icon={<PackageIcon size={36} />} title="هنوز سفارشی ثبت نکرده‌اید" href="/" action="دیدن کتاب‌ها" headingLevel={3}>
+            منابع آزمون وکالت، قضاوت و سردفتری را ببینید؛ کتاب الکترونیک را همین حالا بخوانید.
+          </EmptyState>
         ) : (
           <ul className="divide-y divide-line overflow-hidden rounded-card bg-surface shadow-card">
             {latest.map((o) => (
@@ -102,7 +105,7 @@ export default async function AccountDashboard() {
                   <span className="font-bold text-ink">
                     <bdi>{o.number}</bdi>
                   </span>
-                  <StatusPill tone={orderStatusTone(o.status)}>{orderStatusLabel(o.status, o.status_label)}</StatusPill>
+                  <OrderStatusChip status={o.status} tone={orderStatusTone(o.status)}>{orderStatusLabel(o.status, o.status_label)}</OrderStatusChip>
                   <span className="text-xs text-ink-muted">{formatJalaliDay(o.created_at)}</span>
                   <span className="ms-auto text-sm font-bold text-ink">{formatToman(o.total)}</span>
                 </Link>

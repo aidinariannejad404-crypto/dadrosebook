@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { MyReview, ReviewStatus } from "@/lib/account-types";
 import { serverApiGet } from "@/lib/server-session";
 import { routes } from "@/lib/config";
+import { accountRoutes } from "@/lib/account-routes";
 import { toPersianDigits } from "@/lib/format";
 import { formatJalaliDay, type Tone } from "@/lib/order-status";
 import { StatusPill } from "@/components/account/StatusPill";
@@ -31,9 +32,9 @@ export default async function MyReviewsPage() {
     <div>
       <h1 className="mb-4 text-xl font-black text-ink">نظرات من</h1>
       {reviews == null ? (
-        <p className="rounded-card bg-surface p-4 text-ink-muted">فهرست نظرها فعلاً در دسترس نیست.</p>
+        <p className="rounded-card bg-surface p-4 text-ink-muted shadow-card">فهرست نظرها فعلاً در دسترس نیست.</p>
       ) : reviews.length === 0 ? (
-        <EmptyState icon={<ChatIcon size={40} />} title="هنوز نظری ثبت نکرده‌اید">
+        <EmptyState icon={<ChatIcon size={40} />} title="هنوز نظری ثبت نکرده‌اید" href={accountRoutes.library} action="رفتن به کتابخانه من">
           در صفحه هر کتاب می‌توانید تجربه خود را با داوطلبان دیگر به اشتراک بگذارید.
         </EmptyState>
       ) : (

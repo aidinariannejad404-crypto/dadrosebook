@@ -7,7 +7,7 @@ import { POST_TRACKING_URL, accountRoutes } from "@/lib/account-routes";
 import { routes } from "@/lib/config";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { formatJalaliDateTime, orderStatusLabel, orderStatusTone } from "@/lib/order-status";
-import { StatusPill } from "@/components/account/StatusPill";
+import { OrderStatusChip } from "@/components/account/StatusPill";
 import { MiniCover } from "@/components/account/MiniCover";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
 import { CopyButton } from "@/components/account/CopyButton";
@@ -48,7 +48,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
           <h1 className="text-xl font-black text-ink">
             سفارش <bdi>{order.number}</bdi>
           </h1>
-          <StatusPill tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status, order.status_label)}</StatusPill>
+          <OrderStatusChip status={order.status} tone={orderStatusTone(order.status)}>{orderStatusLabel(order.status, order.status_label)}</OrderStatusChip>
         </div>
         <p className="mt-1 text-sm text-ink-muted">
           ثبت: <time dateTime={order.created_at}>{formatJalaliDateTime(order.created_at)}</time>

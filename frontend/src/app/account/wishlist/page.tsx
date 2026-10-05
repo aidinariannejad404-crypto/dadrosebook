@@ -19,7 +19,7 @@ export default async function WishlistPage() {
     <div>
       <h1 className="mb-4 text-xl font-black text-ink">علاقه‌مندی‌ها</h1>
       {entries == null ? (
-        <p className="rounded-card bg-surface p-4 text-ink-muted">فهرست علاقه‌مندی‌ها فعلاً در دسترس نیست.</p>
+        <p className="rounded-card bg-surface p-4 text-ink-muted shadow-card">فهرست علاقه‌مندی‌ها فعلاً در دسترس نیست.</p>
       ) : entries.length === 0 ? (
         <EmptyState icon={<HeartIcon size={40} />} title="هنوز کتابی نشان نکرده‌اید" href="/" action="دیدن کتاب‌ها">
           با زدن دکمه قلب در صفحه هر کتاب، آن را اینجا نگه دارید تا بعداً راحت پیدایش کنید.

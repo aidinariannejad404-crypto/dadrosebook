@@ -98,9 +98,15 @@ export function AddressManager({ initial, provinces }: { initial: Address[]; pro
       </p>
 
       {addresses.length === 0 ? (
-        <div className="flex flex-col items-center rounded-card border border-dashed border-line-strong bg-surface px-4 py-10 text-center">
-          <MapPinIcon size={36} className="text-primary" />
-          <p className="mt-3 max-w-sm text-sm leading-7 text-ink-muted">
+        <div className="flex flex-col items-center rounded-card bg-surface px-5 py-10 text-center shadow-card">
+          <span
+            aria-hidden="true"
+            className="mb-4 grid size-20 place-items-center rounded-full bg-primary-soft text-primary ring-4 ring-accent-soft"
+          >
+            <MapPinIcon size={36} />
+          </span>
+          <p className="text-base font-extrabold text-ink">هنوز نشانی‌ای ثبت نکرده‌اید</p>
+          <p className="mt-2 max-w-sm text-sm leading-7 text-ink-muted">
             نشانی‌های خود را یک بار ثبت کنید تا هنگام خرید نسخه چاپی فقط انتخابشان کنید.
           </p>
         </div>

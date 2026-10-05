@@ -6,7 +6,7 @@ import { serverApiGet } from "@/lib/server-session";
 import { accountRoutes } from "@/lib/account-routes";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { formatJalaliDay, orderStatusLabel, orderStatusTone } from "@/lib/order-status";
-import { StatusPill } from "@/components/account/StatusPill";
+import { OrderStatusChip } from "@/components/account/StatusPill";
 import { MiniCover } from "@/components/account/MiniCover";
 import { EmptyState } from "@/components/account/EmptyState";
 import { ChevronIcon, PackageIcon } from "@/components/ui/Icons";
@@ -22,7 +22,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
   const data = await serverApiGet<Paginated<OrderSummary>>(`/orders/${page > 1 ? `?page=${page}` : ""}`);
   if (!data) {
     if (page > 1) notFound();
-    return <p className="rounded-card bg-surface p-4 text-ink-muted">فهرست سفارش‌ها در دسترس نیست.</p>;
+    return <p className="rounded-card bg-surface p-4 text-ink-muted shadow-card">فهرست سفارش‌ها در دسترس نیست.</p>;
   }
 
   return (
@@ -30,7 +30,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       <h1 className="mb-4 text-xl font-black text-ink">سفارش‌ها</h1>
       {data.results.length === 0 ? (
         <EmptyState icon={<PackageIcon size={40} />} title="هنوز سفارشی ثبت نکرده‌اید" href="/" action="دیدن کتاب‌ها">
-          سفارش‌های شما و وضعیت ارسالشان اینجا نمایش داده می‌شود.
+          اولین منبع آزمونتان را انتخاب کنید؛ سفارش‌ها و وضعیت ارسالشان همین‌جا نمایش داده می‌شود و کتاب الکترونیک
+          بلافاصله پس از پرداخت در کتابخانه شماست.
         </EmptyState>
       ) : (
         <ul className="space-y-3">
@@ -46,7 +47,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                       <span className="sr-only">سفارش </span>
                       <bdi>{o.number}</bdi>
                     </span>
-                    <StatusPill tone={orderStatusTone(o.status)}>{orderStatusLabel(o.status, o.status_label)}</StatusPill>
+                    <OrderStatusChip status={o.status} tone={orderStatusTone(o.status)}>{orderStatusLabel(o.status, o.status_label)}</OrderStatusChip>
                   </div>
                   <p className="mt-1 text-xs text-ink-muted">
                     <time dateTime={o.created_at}>{formatJalaliDay(o.created_at)}</time>،{" "}
