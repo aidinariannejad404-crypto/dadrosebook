@@ -102,7 +102,7 @@ export function HighlightEditor({
           <button
             type="submit"
             disabled={busy}
-            className="inline-flex min-h-11 items-center justify-center rounded-control bg-primary px-5 font-bold text-white hover:bg-primary-hover disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center rounded-control bg-primary px-5 font-bold text-surface hover:bg-primary-hover disabled:opacity-60"
           >
             {mode === "create" ? "ذخیره هایلایت" : "ذخیره تغییرات"}
           </button>

@@ -43,3 +43,52 @@
   --shadow-card: 0 1px 2px rgb(16 24 43 / 0.06), 0 4px 16px rgb(16 24 43 / 0.06);
   --shadow-raised: 0 8px 28px rgb(16 24 43 / 0.14);
 }
+
+/* ---------- Reader themes (UI refresh) ----------
+ * The reader root carries data-reader-theme; every token its chrome uses is restated here
+ * (derived tokens are resolved at :root, so they are restated, not re-derived).
+ * All text/background pairs ≥ 4.5:1. */
+:root {
+  --color-on-accent: #10182b; /* text on gold, in every theme */
+  --reader-paper-light: #ffffff;
+  --reader-ink-light: #10182b;
+  --reader-paper-sepia: #f6ecd4;
+  --reader-ink-sepia: #3b2d1a;
+  --reader-paper-dark: #1b2130;
+  --reader-ink-dark: #e6e8ee;
+}
+.reader-root[data-reader-theme="sepia"] {
+  --color-bg: #f1e5c9;
+  --color-surface: var(--reader-paper-sepia);
+  --color-surface-muted: #e6d7b5;
+  --color-text: var(--reader-ink-sepia);
+  --color-text-muted: #5e4a2f; /* ≈ 7:1 on paper */
+  --color-border: #dbc9a1;
+  --color-border-strong: #b49f74;
+  --color-primary: #6a4718; /* ≈ 7:1 on paper */
+  --color-primary-hover: #523610;
+  --color-primary-soft: #ecdcb6;
+  --color-primary-tint: #e0cc9d;
+  --color-neutral-soft: #ebdfc3;
+}
+.reader-root[data-reader-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #141924;
+  --color-surface: var(--reader-paper-dark);
+  --color-surface-muted: #10141c;
+  --color-text: var(--reader-ink-dark);
+  --color-text-muted: #aeb5c4; /* ≈ 7.5:1 on surface */
+  --color-border: #2c3446;
+  --color-border-strong: #4a5570;
+  --color-primary: #a9c1ee; /* ≈ 8.5:1 on surface */
+  --color-primary-hover: #c6d6f4;
+  --color-primary-soft: #263250;
+  --color-primary-tint: #33415f;
+  --color-neutral-soft: #262d3d;
+  --color-danger: #ff9e9e;
+  --color-danger-soft: #3a1f24;
+  --color-success: #8fd9b0;
+  --color-success-soft: #173326;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 8px 28px rgb(0 0 0 / 0.55);
+}

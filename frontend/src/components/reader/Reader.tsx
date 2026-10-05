@@ -30,6 +30,8 @@ import { PdfPageView, type PdfPageHandle } from "./PdfPageView";
 import { HighlightsDrawer } from "./HighlightsDrawer";
 import { HighlightEditor } from "./HighlightEditor";
 import { isInvalidPdfError, openPdf, type PdfDocument } from "./pdfjs";
+import { ReaderThemeToggle } from "./ReaderThemeToggle";
+import { initialReaderTheme, saveReaderTheme, type ReaderTheme } from "./theme";
 
 type State =
   | { status: "loading" }
@@ -99,6 +101,15 @@ export function Reader({ slug }: { slug: string }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [pageInput, setPageInput] = useState("");
+  const [theme, setThemeState] = useState<ReaderTheme>("light");
+
+  useEffect(() => {
+    setThemeState(initialReaderTheme());
+  }, []);
+  const setTheme = useCallback((t: ReaderTheme) => {
+    setThemeState(t);
+    saveReaderTheme(t);
+  }, []);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<PdfPageHandle>(null);
@@ -337,14 +348,14 @@ export function Reader({ slug }: { slug: string }) {
   /* ---------- render ---------- */
   const productHref = routes.product(slug);
 
-  if (state.status === "loading") return <ReaderSkeleton slug={slug} />;
+  if (state.status === "loading") return <ReaderSkeleton slug={slug} theme={theme} />;
 
   if (state.status === "error") {
     const e = state.error;
     if (e.kind === "auth") {
       const loginHref = `${routes.login}?next=${encodeURIComponent(routes.read(slug))}`;
       return (
-        <ReaderMessage title="برای مطالعه وارد حساب خود شوید">
+        <ReaderMessage theme={theme} title="برای مطالعه وارد حساب خود شوید">
           <ActionLink href={loginHref} primary>
             ورود / ثبت‌نام
           </ActionLink>
@@ -355,6 +366,7 @@ export function Reader({ slug }: { slug: string }) {
     if (e.kind === "forbidden") {
       return (
         <ReaderMessage
+          theme={theme}
           title="این کتاب الکترونیک در کتابخانه شما نیست"
           body="برای مطالعه، نسخه الکترونیک این کتاب را از صفحه کتاب تهیه کنید."
         >
@@ -366,20 +378,21 @@ export function Reader({ slug }: { slug: string }) {
     }
     if (e.kind === "no_ebook") {
       return (
-        <ReaderMessage title="نسخه الکترونیک این کتاب هنوز آماده نیست">
+        <ReaderMessage theme={theme} title="نسخه الکترونیک این کتاب هنوز آماده نیست">
           <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
         </ReaderMessage>
       );
     }
     return (
       <ReaderMessage
+        theme={theme}
         title={e.kind === "load" ? "باز کردن کتاب ممکن نشد" : "اتصال برقرار نشد"}
         body="اینترنت خود را بررسی کنید و دوباره تلاش کنید."
       >
         <button
           type="button"
           onClick={() => setAttempt((n) => n + 1)}
-          className="inline-flex min-h-11 items-center justify-center rounded-control bg-primary px-5 font-bold text-white hover:bg-primary-hover"
+          className="inline-flex min-h-11 items-center justify-center rounded-control bg-primary px-5 font-bold text-surface hover:bg-primary-hover"
         >
           تلاش دوباره
         </button>
@@ -390,7 +403,7 @@ export function Reader({ slug }: { slug: string }) {
 
   if (state.status === "epub") {
     return (
-      <ReaderMessage title="نسخه EPUB به‌زودی در کتابخوان پشتیبانی می‌شود" body={state.session.book.title}>
+      <ReaderMessage theme={theme} title="نسخه EPUB به‌زودی در کتابخوان پشتیبانی می‌شود" body={state.session.book.title}>
         <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
       </ReaderMessage>
     );
@@ -401,9 +414,9 @@ export function Reader({ slug }: { slug: string }) {
   const pageLabel = `صفحه ${formatNumber(page)} از ${formatNumber(total)}`;
 
   return (
-    <ReaderShell>
+    <ReaderShell theme={theme}>
       {/* top bar */}
-      <header className="border-b border-line bg-surface">
+      <header className="relative border-b border-line bg-surface">
         <div className="flex items-center gap-2 px-2 py-1.5 sm:px-4">
           <Link
             href={productHref}
@@ -418,6 +431,7 @@ export function Reader({ slug }: { slug: string }) {
               {pageLabel}
             </p>
           </div>
+          <ReaderThemeToggle value={theme} onChange={setTheme} />
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
@@ -427,7 +441,7 @@ export function Reader({ slug }: { slug: string }) {
             <span className="hidden md:inline">هایلایت‌ها و یادداشت‌ها</span>
             <span className="sr-only md:hidden">هایلایت‌ها و یادداشت‌ها</span>
             {highlights.length > 0 && (
-              <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-ink">{formatNumber(highlights.length)}</span>
+              <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-[color:var(--color-on-accent)]">{formatNumber(highlights.length)}</span>
             )}
           </button>
         </div>
@@ -615,7 +629,7 @@ export function Reader({ slug }: { slug: string }) {
 
       <p
         role="status"
-        className={`pointer-events-none fixed inset-x-4 bottom-24 z-50 mx-auto w-fit max-w-sm rounded-control bg-ink px-4 py-2 text-center text-sm text-white shadow-raised transition-opacity ${
+        className={`pointer-events-none fixed inset-x-4 bottom-24 z-50 mx-auto w-fit max-w-sm rounded-control bg-ink px-4 py-2 text-center text-sm text-surface shadow-raised transition-opacity ${
           notice ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -627,10 +641,12 @@ export function Reader({ slug }: { slug: string }) {
 
 /* ---------- pieces ---------- */
 
-function ReaderShell({ children }: { children: ReactNode }) {
+function ReaderShell({ theme, children }: { theme: ReaderTheme; children: ReactNode }) {
   return (
     <>
-      <div className="reader-root fixed inset-0 z-40 flex flex-col bg-surface-muted text-ink">{children}</div>
+      <div data-reader-theme={theme} className="reader-root fixed inset-0 z-40 flex flex-col bg-surface-muted text-ink">
+        {children}
+      </div>
       <p className="reader-print-block hidden p-8 text-center text-lg font-bold">چاپ کتاب الکترونیک امکان‌پذیر نیست.</p>
     </>
   );
@@ -688,9 +704,19 @@ function SelectionPopover({
   );
 }
 
-function ReaderMessage({ title, body, children }: { title: string; body?: string; children: ReactNode }) {
+function ReaderMessage({
+  theme,
+  title,
+  body,
+  children,
+}: {
+  theme: ReaderTheme;
+  title: string;
+  body?: string;
+  children: ReactNode;
+}) {
   return (
-    <ReaderShell>
+    <ReaderShell theme={theme}>
       <div className="flex flex-1 items-center justify-center p-4">
         <div className="w-full max-w-md rounded-card bg-surface p-6 text-center shadow-card">
           <span aria-hidden="true" className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-primary-soft text-primary">
@@ -711,7 +737,7 @@ function ActionLink({ href, primary = false, children }: { href: string; primary
       href={href}
       prefetch={false}
       className={`inline-flex min-h-11 items-center justify-center rounded-control px-5 font-bold ${
-        primary ? "bg-primary text-white hover:bg-primary-hover" : "text-primary hover:bg-primary-soft"
+        primary ? "bg-primary text-surface hover:bg-primary-hover" : "text-primary hover:bg-primary-soft"
       }`}
     >
       {children}
@@ -719,9 +745,9 @@ function ActionLink({ href, primary = false, children }: { href: string; primary
   );
 }
 
-function ReaderSkeleton({ slug }: { slug: string }) {
+function ReaderSkeleton({ slug, theme }: { slug: string; theme: ReaderTheme }) {
   return (
-    <ReaderShell>
+    <ReaderShell theme={theme}>
       <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2" role="status">
         <span className="sr-only">{`در حال آماده‌سازی کتاب ${slug.replace(/-/g, " ")}…`}</span>
         <Skeleton className="size-11" />
