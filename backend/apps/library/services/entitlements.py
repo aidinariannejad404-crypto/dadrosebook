@@ -8,6 +8,8 @@ Stable API (Phase 4 depends on it):
 * ``grant(user, book, source=..., order=None)`` — admin grants; idempotent, re-activates a
   revoked one.
 * ``revoke_for_order(order)`` — e.g. after a refund.
+* ``revoke_book(user, book, order=None)`` — one book (a partial refund); with ``order`` only the
+  entitlement that order granted.
 * ``library_books(user)`` — queryset of books the user may read.
 """
 
@@ -65,6 +67,13 @@ def revoke_for_order(order) -> int:
     return EbookEntitlement.objects.filter(source_order=order, revoked_at__isnull=True).update(
         revoked_at=timezone.now()
     )
+
+
+def revoke_book(user, book, *, order=None) -> int:
+    qs = EbookEntitlement.objects.filter(user=user, book_id=_book_id(book), revoked_at__isnull=True)
+    if order is not None:
+        qs = qs.filter(source_order=order)
+    return qs.update(revoked_at=timezone.now())
 
 
 def library_books(user):

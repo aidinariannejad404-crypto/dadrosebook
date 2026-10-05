@@ -13,7 +13,12 @@ import uuid
 from django.conf import settings
 from django.core.cache import cache
 
-from .gateway import GatewayRequestResult, GatewayVerifyResult, PaymentGateway
+from .gateway import (
+    GatewayRefundResult,
+    GatewayRequestResult,
+    GatewayVerifyResult,
+    PaymentGateway,
+)
 
 _FAILED_KEY = "payments:fake:failed:{}"
 _VERIFIED_KEY = "payments:fake:verified:{}"
@@ -62,4 +67,10 @@ class FakeGateway(PaymentGateway):
             ref_id=str(secrets.randbelow(10**9) + 10**9),
             card_pan="603799******0000",
             raw={"fake": True, "code": 101 if already else 100, "amount": amount_rial},
+        )
+
+    def refund(self, payment, amount_rial: int) -> GatewayRefundResult:
+        return GatewayRefundResult(
+            ref_id=f"FAKE-REFUND-{secrets.randbelow(10**9) + 10**9}",
+            raw={"fake": True, "authority": payment.authority, "amount": amount_rial},
         )
