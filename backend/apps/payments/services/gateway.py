@@ -25,6 +25,25 @@ class GatewayError(Exception):
         self.raw = raw if raw is not None else {}
 
 
+REFUND_NOT_SUPPORTED_MESSAGE = (
+    "این درگاه استرداد خودکار وجه را پشتیبانی نمی‌کند. لطفاً مبلغ را به‌صورت دستی به شماره شبای "
+    "مشتری واریز کنید و روش استرداد را «واریز به شبا» بگذارید."
+)
+
+
+class RefundNotSupported(GatewayError):
+    """The gateway has no (implemented) refund API: staff refund manually by Shaba."""
+
+    def __init__(self, message: str = REFUND_NOT_SUPPORTED_MESSAGE, **kwargs):
+        super().__init__(message, **kwargs)
+
+
+@dataclass
+class GatewayRefundResult:
+    ref_id: str = ""
+    raw: dict = field(default_factory=dict)
+
+
 @dataclass
 class GatewayRequestResult:
     authority: str
@@ -66,6 +85,13 @@ class PaymentGateway(ABC):
     @abstractmethod
     def verify(self, authority: str, amount_rial: int) -> GatewayVerifyResult:
         """Confirm a payment after the callback. Never raises for gateway answers."""
+
+    def refund(self, payment, amount_rial: int) -> GatewayRefundResult:
+        """Return ``amount_rial`` of a PAID ``payment`` to the payer's card.
+
+        Raises ``GatewayError`` when refused; the default raises ``RefundNotSupported``.
+        """
+        raise RefundNotSupported()
 
 
 def get_gateway(code: str | None = None) -> PaymentGateway:
