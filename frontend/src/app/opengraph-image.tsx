@@ -8,16 +8,37 @@ export const alt = `${SITE_NAME} — منابع آزمون وکالت، قضاو
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/**
- * Satori (next/og) shapes Persian glyphs but has no bidi: it lays words out left to right.
- * Render each word as its own box in a row-reverse flex line so the sentence reads right to left.
+/*
+ * Satori (next/og) shapes Persian glyphs but has no bidi and over-measures joined Arabic-script words
+ * (it draws each word from the box's left edge). So each line is a row-reverse flex of word boxes whose
+ * widths were measured in Chromium with the same font files (src/fonts/og). If you change a tagline,
+ * re-measure (unknown words fall back to satori's own, slightly wide, measurement). Avoid «،» and ZWNJ.
  */
-function RtlLine({ text, style, gap }: { text: string; style: CSSProperties; gap: number }) {
+const WORD_WIDTH_PER_PX: Record<string, number> = {
+  منابع: 83 / 40,
+  آزمون: 89 / 40,
+  وکالت: 96 / 40,
+  و: 18 / 40,
+  قضاوت: 118 / 40,
+  نسخه: 77 / 32,
+  چاپی: 66 / 32,
+  الکترونیک: 123 / 32,
+  با: 20 / 32,
+  ارسال: 72 / 32,
+  سراسری: 107 / 32,
+};
+
+function RtlLine({ text, fontSize, gap, style }: { text: string; fontSize: number; gap: number; style: CSSProperties }) {
   return (
-    <div style={{ display: "flex", flexDirection: "row-reverse", gap, ...style }}>
-      {text.split(/\s+/).map((word, i) => (
-        <span key={i}>{word}</span>
-      ))}
+    <div style={{ display: "flex", flexDirection: "row-reverse", gap, fontSize, ...style }}>
+      {text.split(/\s+/).map((word, i) => {
+        const ratio = WORD_WIDTH_PER_PX[word];
+        return (
+          <span key={i} style={{ display: "flex", whiteSpace: "nowrap", ...(ratio ? { width: Math.ceil(ratio * fontSize) } : {}) }}>
+            {word}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -47,22 +68,25 @@ export default async function OpengraphImage() {
           <img src={mark} width={184} height={184} alt="" style={{ borderRadius: 44 }} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
             <div style={{ display: "flex", flexDirection: "row-reverse", gap: 26, fontSize: 104, fontWeight: 800, lineHeight: 1.15 }}>
-              <span>کتاب</span>
-              <span style={{ color: BRAND_GOLD }}>دادرُز</span>
+              {/* widths measured in Chromium (see WORD_WIDTH_PER_PX) */}
+              <span style={{ display: "flex", width: 216 }}>کتاب</span>
+              <span style={{ display: "flex", width: 212, color: BRAND_GOLD }}>دادرُز</span>
             </div>
             <RtlLine
-              text="منابع آزمون وکالت، قضاوت و سردفتری"
-              gap={12}
-              style={{ fontSize: 38, fontWeight: 500, color: "rgba(255,255,255,0.88)", marginTop: 8 }}
+              text="منابع آزمون وکالت و قضاوت"
+              fontSize={40}
+              gap={11}
+              style={{ fontWeight: 500, color: "rgba(255,255,255,0.88)", marginTop: 8 }}
             />
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", gap: 20 }}>
           <div style={{ width: 72, height: 6, borderRadius: 3, background: BRAND_GOLD }} />
           <RtlLine
-            text="نسخه چاپی، الکترونیک و بسته‌های مطالعاتی"
-            gap={10}
-            style={{ fontSize: 32, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}
+            text="نسخه چاپی و الکترونیک با ارسال سراسری"
+            fontSize={32}
+            gap={9}
+            style={{ fontWeight: 500, color: "rgba(255,255,255,0.9)" }}
           />
         </div>
       </div>

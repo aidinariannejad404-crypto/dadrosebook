@@ -8,20 +8,21 @@ import { POLICY_LINKS } from "./Footer";
 export function CheckoutHeader() {
   return (
     <header className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-site items-center gap-3 px-4 py-2">
+      <div className="mx-auto flex max-w-site items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4">
         <Logo variant="compact" href="/" />
-        <p className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-xs font-bold text-success sm:text-sm">
+        <p className="ms-auto inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-success-soft px-2.5 py-1.5 text-xs font-bold text-success sm:gap-1.5 sm:px-3 sm:text-sm">
           <LockIcon size={16} className="shrink-0" />
           پرداخت امن
         </p>
         <Link
           prefetch={false}
           href={routes.cart}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-control px-2 text-sm font-bold text-primary hover:bg-primary-soft"
+          aria-label="بازگشت به سبد خرید"
+          className="inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-control px-2 text-sm font-bold text-primary hover:bg-primary-soft"
         >
           <ArrowStartIcon size={18} className="shrink-0" />
           <span className="hidden sm:inline">بازگشت به سبد خرید</span>
-          <span className="sm:hidden">سبد خرید</span>
+          <span className="sm:hidden">سبد</span>
         </Link>
       </div>
     </header>
