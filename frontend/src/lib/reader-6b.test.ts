@@ -167,7 +167,7 @@ describe("fixture mode (NEXT_PUBLIC_READER_FIXTURE=1)", () => {
   it("generates a local notebook file", async () => {
     vi.stubEnv("NEXT_PUBLIC_READER_FIXTURE", "1");
     const md = await exportNotes("epub-sample", "md");
-    expect(md.ok && md.data.filename).toBe("یادداشت‌ها-epub-sample.md");
+    expect(md.ok && md.data.filename).toBe("دفترچه-یادداشت-epub-sample.md");
     expect(md.ok && (await md.data.blob.text())).toContain("# دفترچه یادداشت");
     const html = await exportNotes("epub-sample", "html");
     expect(html.ok && (await html.data.blob.text())).toContain('dir="rtl"');
