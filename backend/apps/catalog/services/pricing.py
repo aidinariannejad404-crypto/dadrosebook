@@ -80,3 +80,33 @@ def bundle_saving(variants) -> int | None:
     print_, ebook, bundle = trio
     saving = print_.effective_price + ebook.effective_price - bundle.effective_price
     return saving if saving > 0 else None
+
+
+def card_discount(variant) -> dict:
+    """Crossed-out price for a card: ``{"compare_price": int|None, "discount_percent": int|None}``.
+
+    ``variant`` is the card variant (``book_card_variant``). The compare-at price is the variant's
+    list ``price`` and is only shown when the sale price really is lower; a discount that rounds
+    to 0 % is not worth a badge, so both values are ``None`` then.
+    """
+    none = {"compare_price": None, "discount_percent": None}
+    if variant is None or getattr(variant, "price_is_placeholder", False):
+        return none
+    if variant.effective_price >= variant.price:
+        return none
+    percent = discount_percent(variant.price, variant.sale_price)
+    if percent <= 0:
+        return none
+    return {"compare_price": variant.price, "discount_percent": percent}
+
+
+def quick_add_variant(variants):
+    """Variant a card's «افزودن به سبد» adds: the card variant when it can be bought right now.
+
+    ``None`` when there is no sellable card variant or it is out of stock — the card then keeps
+    its notify-me / product-page path instead of a one-tap add.
+    """
+    variant = book_card_variant(variants)
+    if variant is None or not variant.in_stock:
+        return None
+    return variant

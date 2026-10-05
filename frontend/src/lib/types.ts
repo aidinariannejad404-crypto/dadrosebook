@@ -588,3 +588,36 @@ export interface HighlightCreate {
   rects: FractionRect[];
   location?: string;
 }
+
+/* ---------- UI refresh: card pricing, ratings, quick add; home rails (declaration merging) ---------- */
+
+export interface BookCard {
+  /** list price of the card variant when it is discounted (crossed out on cards), else null */
+  card_compare_price?: number | null;
+  /** rounded discount of the card variant (≥ 1), else null */
+  card_discount_percent?: number | null;
+  /** variant a card's «افزودن به سبد» adds: the card variant when in stock and sellable, else null */
+  quick_add_variant_id?: number | null;
+  /** average of approved reviews, only from 5 reviews up (else null) */
+  rating_avg?: number | null;
+  /** number of approved reviews */
+  rating_count?: number;
+}
+
+/** An approved 4–5★ review on the homepage strip (author is «علی ر.», never a phone). */
+export interface Testimonial {
+  id: number;
+  rating: number;
+  body: string;
+  author: string;
+  is_verified_purchase: boolean;
+  exam_type: ExamTypeMini | null;
+  book: { title: string; slug: string };
+}
+
+export interface HomePayload {
+  /** in-stock books whose card price is discounted, biggest discount first */
+  discounted?: BookCard[];
+  /** real approved reviews; empty → the strip is hidden */
+  testimonials?: Testimonial[];
+}

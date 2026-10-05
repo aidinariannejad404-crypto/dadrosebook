@@ -37,9 +37,6 @@ BOOK_NOT_FOUND = "کتاب پیدا نشد."
 CATEGORY_NOT_FOUND = "دسته‌بندی پیدا نشد."
 
 
-TRUE_VALUES = {"true", "1", "yes"}
-
-
 def selected_exam_type(request) -> str | None:
     """The one ``?exam_type=`` slug that selects ``kit_role``; None when absent or several."""
     slugs = _multi(request.query_params, "exam_type")
@@ -141,8 +138,8 @@ class BookDetailView(generics.RetrieveAPIView):
 class RelatedBooksView(APIView):
     def get(self, request, slug):
         book = get_or_404(Book.objects.all(), BOOK_NOT_FOUND, slug=slug, is_active=True)
-        in_stock = request.query_params.get("in_stock", "").lower() in TRUE_VALUES
-        books = related_books(book, in_stock=in_stock, exam_type=selected_exam_type(request))
+        # ``?in_stock=true`` is still accepted (P1-8 clients); related books are always in stock.
+        books = related_books(book, exam_type=selected_exam_type(request))
         return Response(s.BookCardSerializer(books, many=True, context={"request": request}).data)
 
 

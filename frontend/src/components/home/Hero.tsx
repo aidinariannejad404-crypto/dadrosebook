@@ -50,18 +50,31 @@ export function Hero({
           </div>
         ) : (
           stack.length > 0 && (
-            <div aria-hidden="true" className="relative mx-auto hidden h-72 w-full max-w-sm md:block">
+            // Mobile shows a compact trio too (UI refresh); only the first cover may be
+            // preloaded and every image is requested at its small rendered size, so the hero text
+            // stays the LCP element and nothing shifts (fixed-size boxes).
+            <div aria-hidden="true" className="relative mx-auto h-40 w-full max-w-[17rem] md:h-72 md:max-w-sm">
+              <div className="absolute inset-x-6 bottom-2 h-10 rounded-[50%] bg-[radial-gradient(closest-side,rgb(0_0_0/0.35),transparent)] md:bottom-6" />
               {stack.map((b, i) => (
                 <div
                   key={b.id}
-                  className="absolute top-1/2 w-40"
+                  className="absolute top-1/2 w-[6.25rem] md:w-40"
                   style={{
-                    insetInlineStart: `${i * 26}%`,
-                    transform: `translateY(-50%) rotate(${(i - 1) * 7}deg)`,
+                    insetInlineStart: `${i * 30}%`,
+                    transform: `translateY(-50%) rotate(${(i - 1) * 7}deg)${i === 1 ? " scale(1.08)" : ""}`,
                     zIndex: i === 1 ? 3 : 2 - i,
                   }}
                 >
-                  <BookCover title={b.title} cover={b.cover} subjects={b.subjects} authors={b.authors} volumes={b.volumes} sizes="130px" variant="hero" />
+                  <BookCover
+                    title={b.title}
+                    cover={b.cover}
+                    subjects={b.subjects}
+                    authors={b.authors}
+                    volumes={b.volumes}
+                    sizes="(min-width: 768px) 160px, 100px"
+                    priority={i === 0 && b.cover != null}
+                    variant="hero"
+                  />
                 </div>
               ))}
             </div>

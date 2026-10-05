@@ -77,7 +77,17 @@
   box-shadow: inset 0 0 0 0.25cqw rgb(0 0 0 / 0.06);
 }
 
-/* hinge groove near the spine + soft gloss sheen over the artwork (image or generated) */
+/* real scans: a touch of contrast/saturation so print-flat scans read like a laminated jacket */
+.front :global(img) {
+  filter: saturate(1.06) contrast(1.04);
+}
+
+/*
+ * ::before — hinge groove near the spine (physical right), the board edge catching the light on
+ * the fore-edge (physical left), and a soft key light from the upper fore-edge corner.
+ * ::after  — the moving gloss: a diagonal specular band plus top light / bottom shade. It is wider
+ * than the cover so the band can slide on hover without revealing an edge.
+ */
 .front::before,
 .front::after {
   content: "";
@@ -87,21 +97,38 @@
   z-index: 2;
 }
 .front::before {
-  background: linear-gradient(
-    270deg,
-    rgb(0 0 0 / 0.28) 0,
-    rgb(255 255 255 / 0.22) 1.6%,
-    rgb(0 0 0 / 0.22) 3.2%,
-    rgb(255 255 255 / 0.1) 5%,
-    transparent 8.5%
-  );
+  background:
+    linear-gradient(
+      270deg,
+      rgb(0 0 0 / 0.3) 0,
+      rgb(255 255 255 / 0.24) 1.6%,
+      rgb(0 0 0 / 0.22) 3.2%,
+      rgb(255 255 255 / 0.1) 5%,
+      transparent 8.5%
+    ),
+    linear-gradient(90deg, rgb(255 255 255 / 0.28) 0, rgb(255 255 255 / 0.06) 1.4%, transparent 2.6%),
+    radial-gradient(90% 55% at 8% 0%, rgb(255 255 255 / 0.16), transparent 70%);
+  box-shadow:
+    inset 0 0.35cqw 0 rgb(255 255 255 / 0.14),
+    inset 0 -0.5cqw 0.8cqw rgb(0 0 0 / 0.12);
+  border-radius: inherit;
 }
 .front::after {
+  inset: 0 -40%;
   background:
-    linear-gradient(115deg, rgb(255 255 255 / 0) 30%, rgb(255 255 255 / 0.2) 46%, rgb(255 255 255 / 0) 62%),
-    linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent 30%, transparent 75%, rgb(0 0 0 / 0.12));
+    linear-gradient(
+      112deg,
+      rgb(255 255 255 / 0) 34%,
+      rgb(255 255 255 / 0.08) 41%,
+      rgb(255 255 255 / 0.26) 46%,
+      rgb(255 255 255 / 0.08) 51%,
+      rgb(255 255 255 / 0) 58%
+    ),
+    linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent 30%, transparent 72%, rgb(0 0 0 / 0.16));
   opacity: 0.85;
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition:
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.6s ease;
 }
 
 /* ---------- back cover ---------- */
@@ -164,8 +191,14 @@
   background:
     radial-gradient(closest-side, rgb(16 24 43 / 0.34), rgb(16 24 43 / 0.12) 55%, transparent),
     radial-gradient(50% 18% at 50% 50%, rgb(16 24 43 / 0.35), transparent);
-  transform: rotateX(90deg) translateY(-6cqw);
+  /* --lift: how far the book floats above the floor; the shadow stays down there and softens */
+  transform: translateY(var(--lift, 0cqw)) rotateX(90deg) translateY(-6cqw)
+    scale(calc(1 - var(--lift-n, 0) * 0.08));
+  opacity: calc(1 - var(--lift-n, 0) * 0.3);
   backface-visibility: visible;
+  transition:
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.6s ease;
 }
 
 /* ---------- second volume (volumes ≥ 2): an identical book standing just behind ---------- */
@@ -196,14 +229,18 @@
 
 /* ---------- interaction (pointer devices only, motion allowed) ---------- */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* the book turns towards the viewer and lifts gently off the floor; its shadow stays behind */
   :global(.group):hover .book,
   :global(.group):focus-within .book {
     --ry: -9deg;
     --rx: 3deg;
-    transform: rotateX(var(--rx)) rotateY(var(--ry)) translateZ(3cqw);
+    --lift: 3cqw;
+    --lift-n: 1;
+    transform: rotateX(var(--rx)) rotateY(var(--ry)) translateY(calc(var(--lift) * -1)) translateZ(3cqw);
   }
   :global(.group):hover .front::after {
     transform: translateX(-12%);
+    opacity: 1;
   }
   .tilting .book {
     transition-duration: 0.18s;
@@ -217,6 +254,7 @@
     --ry-rest: -10deg;
   }
   .book,
+  .ground,
   .front::after {
     transition: none;
   }
