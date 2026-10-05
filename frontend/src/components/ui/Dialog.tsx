@@ -11,13 +11,15 @@ interface DialogProps {
   /** Wider layout (e.g. sample pages viewer). */
   size?: "sm" | "lg";
   onKeyDown?: (e: React.KeyboardEvent<HTMLDialogElement>) => void;
+  /** "sheet": docked to the bottom edge on phones (bottom sheet), centred from md up. */
+  placement?: "center" | "sheet";
 }
 
 /**
  * Accessible modal built on the native <dialog> element (focus containment, Esc, inert background).
  * Focus returns to the opener automatically when the dialog closes.
  */
-export function Dialog({ open, onClose, title, children, size = "sm", onKeyDown }: DialogProps) {
+export function Dialog({ open, onClose, title, children, size = "sm", onKeyDown, placement = "center" }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -42,8 +44,12 @@ export function Dialog({ open, onClose, title, children, size = "sm", onKeyDown 
         // click on the backdrop (outside the panel) closes
         if (e.target === e.currentTarget) onClose();
       }}
-      className={`m-auto w-[calc(100%-2rem)] rounded-card bg-surface p-0 text-ink shadow-raised backdrop:bg-[color-mix(in_srgb,var(--color-text)_60%,transparent)] ${
-        size === "lg" ? "max-w-3xl" : "max-w-md"
+      className={`bg-surface p-0 text-ink shadow-raised backdrop:bg-[color-mix(in_srgb,var(--color-text)_60%,transparent)] ${
+        placement === "sheet"
+          ? `mx-0 mb-0 mt-auto max-h-[90dvh] w-full max-w-none rounded-t-card md:m-auto md:w-[calc(100%-2rem)] md:rounded-card ${
+              size === "lg" ? "md:max-w-3xl" : "md:max-w-md"
+            }`
+          : `m-auto w-[calc(100%-2rem)] rounded-card ${size === "lg" ? "max-w-3xl" : "max-w-md"}`
       }`}
     >
       <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">

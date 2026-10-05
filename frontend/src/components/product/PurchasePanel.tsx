@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { createContext, useContext, useId, useState, type ReactNode } from "react";
-import type { Course, StoreSettings, Variant, VariantType } from "@/lib/types";
+import type { BookCard, Course, StoreSettings, Variant, VariantType } from "@/lib/types";
 import { formatNumber, formatPercent, formatToman, toPersianDigits } from "@/lib/format";
 import {
   PRICE_SOON,
@@ -15,7 +15,10 @@ import {
 import { courseLink } from "@/lib/courses";
 import { track } from "@/lib/analytics";
 import { routes } from "@/lib/config";
+import * as cartClient from "@/lib/cart-client";
+import { policyRoutes, RETURN_WINDOW_DAYS } from "@/lib/content/policies";
 import { useCart } from "@/components/cart/CartProvider";
+import { AddedToCartSheet, type AddedState, type SheetBook } from "./AddedToCartSheet";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { TrackedLink } from "@/components/ui/TrackedLink";
 import {
@@ -24,6 +27,7 @@ import {
   CartIcon,
   CheckIcon,
   ClockIcon,
+  ShieldIcon,
   ExternalIcon,
   PlayIcon,
   TruckIcon,
@@ -45,6 +49,10 @@ interface PurchaseProviderProps {
   examLine?: string | null;
   /** fewer than 14 days to the exam (P1-6) */
   lowTime?: boolean;
+  /** the book as shown in the added-to-cart sheet */
+  sheetBook?: SheetBook;
+  /** a related book the sheet suggests when there is no format upgrade */
+  related?: BookCard | null;
 }
 
 const DELIVERY_ICON: Record<VariantType, typeof TruckIcon> = {
@@ -82,6 +90,7 @@ export function PurchaseProvider({ children, ...props }: PurchaseProviderProps &
   const [selectedId, setSelectedId] = useState<number | undefined>(() => defaultVariant(props.variants)?.id);
   const [wantsCourse, setWantsCourse] = useState(false);
   const [add, setAdd] = useState<AddState>({ kind: "idle" });
+  const [sheet, setSheet] = useState<AddedState | null>(null);
   const cart = useCart();
   const print = props.variants.find((v) => v.type === "PRINT");
   const selected = props.variants.find((v) => v.id === selectedId);
@@ -89,9 +98,13 @@ export function PurchaseProvider({ children, ...props }: PurchaseProviderProps &
   async function addSelected() {
     if (!selected || selected.price_is_placeholder || !selected.in_stock || add.kind === "busy") return;
     setAdd({ kind: "busy" });
-    const r = await cart.add(selected.id, 1, "product");
+    // straight to the client (not cart.add): the sheet below replaces the global toast here
+    const r = await cartClient.addToCart(selected.id, 1, "product");
+    void cart.refresh();
     if (r.ok) {
       setAdd({ kind: "added", variantId: selected.id });
+      if (props.sheetBook) setSheet({ variant: selected, cart: r.cart });
+      else cart.announce("به سبد خرید اضافه شد");
       track("add_to_cart", {
         item_id: props.bookId,
         item_name: props.bookTitle,
@@ -118,7 +131,49 @@ export function PurchaseProvider({ children, ...props }: PurchaseProviderProps &
     ebook: purchasableEbook(props.variants),
     printOut: print != null && !print.in_stock,
   };
-  return <PurchaseContext.Provider value={value}>{children}</PurchaseContext.Provider>;
+  return (
+    <PurchaseContext.Provider value={value}>
+      {children}
+      {props.sheetBook && (
+        <AddedToCartSheet state={sheet} onClose={() => setSheet(null)} book={props.sheetBook} related={props.related} />
+      )}
+    </PurchaseContext.Provider>
+  );
+}
+
+/** The selected format, for boxes outside the buy panel (e.g. «کامل‌کردن بسته این درس»). */
+export function useSelectedVariant(): Variant | undefined {
+  return useContext(PurchaseContext)?.selected;
+}
+
+/** «پرداخت امن زرین‌پال · ارسال به سراسر کشور · بازگشت ۷ روزه» under the buy button. */
+export function TrustLine({ className = "" }: { className?: string }) {
+  const items = [
+    { href: policyRoutes.faq, label: "پرداخت امن زرین‌پال", Icon: ShieldIcon },
+    { href: policyRoutes.shipping, label: "ارسال به سراسر کشور", Icon: TruckIcon },
+    { href: policyRoutes.returns, label: `بازگشت ${toPersianDigits(RETURN_WINDOW_DAYS)} روزه`, Icon: CheckIcon },
+  ];
+  return (
+    <ul className={`flex flex-wrap items-center justify-center gap-x-1 text-xs text-ink-muted ${className}`} aria-label="خرید مطمئن">
+      {items.map(({ href, label, Icon }, i) => (
+        <li key={href} className="flex items-center gap-1">
+          {i > 0 && (
+            <span aria-hidden="true" className="text-line-strong">
+              ·
+            </span>
+          )}
+          <Link
+            href={href}
+            prefetch={false}
+            className="inline-flex min-h-11 items-center gap-1 rounded-sm px-1 underline decoration-line-strong underline-offset-4 hover:text-primary hover:decoration-primary"
+          >
+            <Icon size={14} className="shrink-0 text-primary" />
+            {label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /**
@@ -429,6 +484,7 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
             {add.message}
           </p>
         )}
+        <TrustLine />
         {course && wantsCourse && !courseTeaser && (
           <TrackedLink
             href={courseLink(course.url, bookSlug ?? "")}

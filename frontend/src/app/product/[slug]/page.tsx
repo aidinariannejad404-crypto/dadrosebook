@@ -10,6 +10,7 @@ import {
   getExamTypes,
   getRelatedBooks,
   getStoreSettings,
+  getStudyKits,
   getSubjects,
 } from "@/lib/api";
 import { formatNumber, toPersianDigits } from "@/lib/format";
@@ -18,7 +19,7 @@ import { bookJsonLd, breadcrumbJsonLd, serializeJsonLd } from "@/lib/jsonld";
 import { productDescription, productTitle } from "@/lib/product-meta";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { daysLeft, isLowTime, needsQuickReviewHint, pickExamEvent } from "@/lib/exam-time";
-import type { ExamTypeMini, SubjectWithCount } from "@/lib/types";
+import type { ExamTypeMini, StudyKit, SubjectWithCount } from "@/lib/types";
 import { isEmptyOffer } from "@/lib/courses";
 import { BookCover } from "@/components/book/BookCover";
 import { BookTilt } from "@/components/book/BookTilt";
@@ -31,6 +32,10 @@ import { IntroVideo } from "@/components/product/IntroVideo";
 import { PurchasePanel, PurchaseProvider, StickyBuyBar } from "@/components/product/PurchasePanel";
 import { ProductTabs, type TabDef } from "@/components/product/ProductTabs";
 import { ViewItemTracker } from "@/components/product/ViewItemTracker";
+import { CoverGallery } from "@/components/product/CoverGallery";
+import { CollapsibleText } from "@/components/product/CollapsibleText";
+import { ShareButton } from "@/components/product/ShareButton";
+import { KitCompleteBox } from "@/components/product/KitCompleteBox";
 import { ExamFit } from "@/components/product/ExamFit";
 import { ConsultCta } from "@/components/ui/ConsultCta";
 import { CourseCrossSell } from "@/components/course/CourseCrossSell";
@@ -94,7 +99,11 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   const printOut = book.formats.includes("PRINT") && !book.print_in_stock;
   const hasOffer = !isEmptyOffer(book.course_offer);
-  const [related, alternatives, events, examTypes, store, subjects, reviews] = await Promise.all([
+  // P1-5: role in the selected exam's kit (else the first placement when no exam is selected).
+  const placement = exam
+    ? book.kit_placements.find((k) => k.exam_type.slug === exam)
+    : book.kit_placements[0];
+  const [related, alternatives, events, examTypes, store, subjects, reviews, kits] = await Promise.all([
     optional(getRelatedBooks(book.slug, { examType: exam }), []),
     printOut ? optional(getRelatedBooks(book.slug, { inStock: true, examType: exam }), []) : Promise.resolve([]),
     optional(getExamEvents(), []),
@@ -102,7 +111,12 @@ export default async function ProductPage({ params }: { params: Params }) {
     optional(getStoreSettings(), null),
     hasOffer ? optional(getSubjects(), [] as SubjectWithCount[]) : Promise.resolve([] as SubjectWithCount[]),
     getBookReviews(book.slug), // never throws; null when unavailable (same cached fetch as ReviewsSection)
+    // «کامل‌کردن بسته این درس»: the kit of this book's subject in that exam (cached per exam)
+    placement ? optional(getStudyKits(placement.exam_type.slug), [] as StudyKit[]) : Promise.resolve([] as StudyKit[]),
   ]);
+  const kit = placement
+    ? kits.find((k) => k.exam_type.slug === placement.exam_type.slug && k.subject.slug === placement.subject.slug)
+    : undefined;
   const altIds = new Set(alternatives.map((b) => b.id));
   const relatedRest = related.filter((b) => !altIds.has(b.id));
 
@@ -118,10 +132,6 @@ export default async function ProductPage({ params }: { params: Params }) {
   const examLine = event && days != null && days > 0 ? `${toPersianDigits(days)} روز تا ${event.name}` : null;
   const quickHint = needsQuickReviewHint(book.study_days, days, book.is_quick_review) && book.subjects[0];
 
-  // P1-5: role in the selected exam's kit (else the first placement when no exam is selected).
-  const placement = exam
-    ? book.kit_placements.find((k) => k.exam_type.slug === exam)
-    : book.kit_placements[0];
   const essential = book.kit_role ? book.kit_role === "essential" : placement?.is_essential;
   const selectedExamName =
     examTypes.find((e) => e.slug === exam)?.name ?? book.exam_types.find((e) => e.slug === exam)?.name ?? null;
@@ -167,8 +177,11 @@ export default async function ProductPage({ params }: { params: Params }) {
       key: "description",
       label: "توضیحات",
       content: book.description ? (
-        // HTML is sanitised by the backend (bleach allow-list) before it reaches the API.
-        <div className="rich-text max-w-3xl" dangerouslySetInnerHTML={{ __html: book.description }} />
+        // HTML is sanitised and cleaned by the backend (services/description.py) before it reaches the API;
+        // the full text stays in the server HTML, the island only clips it.
+        <CollapsibleText className="max-w-3xl">
+          <div className="rich-text" dangerouslySetInnerHTML={{ __html: book.description }} />
+        </CollapsibleText>
       ) : (
         <p className="text-ink-muted">توضیحاتی برای این کتاب ثبت نشده است.</p>
       ),
@@ -266,6 +279,16 @@ export default async function ProductPage({ params }: { params: Params }) {
       store={store}
       examLine={examLine}
       lowTime={isLowTime(days)}
+      sheetBook={{
+        id: book.id,
+        title: book.title,
+        cover: book.cover,
+        subjects: book.subjects,
+        authors: book.authors,
+        volumes: book.volumes,
+        variants: book.variants,
+      }}
+      related={relatedRest.find((b) => b.in_stock) ?? null}
     >
       <div className="mx-auto max-w-site px-4 pt-2 md:pt-4">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
@@ -276,16 +299,18 @@ export default async function ProductPage({ params }: { params: Params }) {
           {/* media + sample CTA (above the fold on mobile, P1-4) */}
           <div className="flex flex-col gap-3">
             <BookTilt className="mx-auto w-full max-w-[12rem] md:max-w-none">
-              <BookCover
-                title={book.title}
-                cover={book.cover}
-                subjects={book.subjects}
-                authors={book.authors}
-                volumes={book.volumes}
-                variant="product"
-                priority
-                sizes="(min-width: 1024px) 240px, (min-width: 768px) 212px, 150px"
-              />
+              <CoverGallery cover={book.cover} pages={book.sample_pages} title={book.title}>
+                <BookCover
+                  title={book.title}
+                  cover={book.cover}
+                  subjects={book.subjects}
+                  authors={book.authors}
+                  volumes={book.volumes}
+                  variant="product"
+                  priority
+                  sizes="(min-width: 1024px) 240px, (min-width: 768px) 212px, 150px"
+                />
+              </CoverGallery>
             </BookTilt>
             {(samplePages > 0 || book.sample_pdf) && (
               <div className="flex flex-col gap-2">
@@ -313,8 +338,9 @@ export default async function ProductPage({ params }: { params: Params }) {
             )}
           </div>
 
-          {/* info */}
-          <div className="min-w-0">
+          {/* info — phones: title, then the buy box, then fit/specs (research #10); tablet: buy box last */}
+          <div className="flex min-w-0 flex-col">
+            <div>
             {(book.edition_badge || book.law_updated_until || highlightLabel) && (
               <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                 {highlightLabel && (
@@ -333,6 +359,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             )}
             <div className="flex items-start gap-2">
               <h1 className="min-w-0 flex-1 text-xl font-black leading-9 text-ink md:text-2xl md:leading-[2.75rem]">{book.title}</h1>
+              <ShareButton url={url} title={book.title} text={`کتاب «${book.title}» در فروشگاه دادرُز`} className="shrink-0" />
               <WishlistButton bookId={book.id} bookTitle={book.title} className="shrink-0" />
             </div>
             {book.subtitle && <p className="mt-1 text-ink-muted">{book.subtitle}</p>}
@@ -359,6 +386,14 @@ export default async function ProductPage({ params }: { params: Params }) {
                 <SubjectTag key={s.id} subject={s} link size="md" />
               ))}
             </div>
+            </div>
+
+            {/* buy box sits in the info column on phones/tablet, in its own column on desktop */}
+            <div className="mt-6 md:order-last lg:hidden">
+              <PurchasePanel footer={consult} />
+            </div>
+
+            <div>
 
             <ExamFit all={examTypes} fits={book.exam_types} className="mt-4" />
 
@@ -421,12 +456,9 @@ export default async function ProductPage({ params }: { params: Params }) {
               </dl>
             )}
 
-            {/* buy box sits in the info column on tablet, in its own column on desktop */}
-            <div className="mt-6 lg:hidden">
-              <PurchasePanel footer={consult} />
             </div>
             {book.intro_video_url && (
-              <div className="mt-6 md:hidden">
+              <div className="order-last mt-6 md:hidden">
                 <IntroVideo url={book.intro_video_url} title={book.title} />
               </div>
             )}
@@ -438,6 +470,23 @@ export default async function ProductPage({ params }: { params: Params }) {
             </div>
           </aside>
         </div>
+
+        {kit && (
+          <div className="mt-8 md:mt-10">
+            <KitCompleteBox
+              kit={kit}
+              book={{
+                id: book.id,
+                title: book.title,
+                slug: book.slug,
+                cover: book.cover,
+                subjects: book.subjects,
+                authors: book.authors,
+                volumes: book.volumes,
+              }}
+            />
+          </div>
+        )}
 
         {hasOffer && (
           <div className="mt-8 md:mt-10">
