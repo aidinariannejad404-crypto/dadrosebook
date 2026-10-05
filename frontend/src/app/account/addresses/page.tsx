@@ -23,7 +23,7 @@ export default async function AddressesPage() {
     <div>
       <h1 className="mb-4 text-xl font-black text-ink">نشانی‌ها</h1>
       {addresses == null ? (
-        <p className="rounded-card bg-surface p-4 text-ink-muted">فهرست نشانی‌ها فعلاً در دسترس نیست.</p>
+        <p className="rounded-card bg-surface p-4 text-ink-muted shadow-card">فهرست نشانی‌ها فعلاً در دسترس نیست.</p>
       ) : (
         <AddressManager initial={Array.isArray(addresses) ? addresses : []} provinces={provinces ?? []} />
       )}

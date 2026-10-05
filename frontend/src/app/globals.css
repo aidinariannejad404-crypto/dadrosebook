@@ -267,3 +267,32 @@ body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
     display: block !important;
   }
 }
+
+/* ---------- Reader themes (UI refresh) ----------
+ * Chrome colours come from tokens.css; the rendered PDF page is tinted with a CSS filter so the
+ * pixels (text + burned-in watermark) stay one layer and the watermark keeps its relative contrast. */
+.reader-root .reader-page canvas {
+  transition: filter 0.2s ease;
+}
+.reader-root[data-reader-theme="sepia"] .reader-page {
+  background-color: var(--reader-paper-sepia);
+}
+.reader-root[data-reader-theme="sepia"] .reader-page canvas {
+  filter: sepia(0.55) saturate(1.15) brightness(0.97) contrast(0.96);
+}
+.reader-root[data-reader-theme="dark"] .reader-page {
+  background-color: var(--reader-paper-dark);
+}
+/* invert the page, then rotate hues back so colour figures keep their hue; soften pure white */
+.reader-root[data-reader-theme="dark"] .reader-page canvas {
+  filter: invert(0.88) hue-rotate(180deg) brightness(1.05) contrast(0.92);
+}
+.reader-root[data-reader-theme="dark"] .reader-highlight {
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader-root .reader-page canvas {
+    transition: none;
+  }
+}

@@ -180,6 +180,16 @@ export interface LibraryEntry {
   granted_at: string;
   source_order: string | null;
   can_read: boolean;
+  /** Where the reader left off; null when the book was never opened. */
+  progress?: LibraryProgress | null;
+}
+
+export interface LibraryProgress {
+  /** 0–100 */
+  percent: number;
+  page: number;
+  total_pages: number;
+  updated_at: string;
 }
 
 export interface Review {
