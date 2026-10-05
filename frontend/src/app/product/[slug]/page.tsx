@@ -472,7 +472,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         </div>
 
         {kit && (
-          <div className="mt-8 md:mt-10">
+          <div className="mt-8 md:mt-10 lg:max-w-4xl">
             <KitCompleteBox
               kit={kit}
               book={{

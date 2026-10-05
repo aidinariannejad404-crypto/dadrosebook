@@ -154,14 +154,9 @@ export function TrustLine({ className = "" }: { className?: string }) {
     { href: policyRoutes.returns, label: `بازگشت ${toPersianDigits(RETURN_WINDOW_DAYS)} روزه`, Icon: CheckIcon },
   ];
   return (
-    <ul className={`flex flex-wrap items-center justify-center gap-x-1 text-xs text-ink-muted ${className}`} aria-label="خرید مطمئن">
-      {items.map(({ href, label, Icon }, i) => (
-        <li key={href} className="flex items-center gap-1">
-          {i > 0 && (
-            <span aria-hidden="true" className="text-line-strong">
-              ·
-            </span>
-          )}
+    <ul className={`flex flex-wrap items-center justify-center gap-x-3 text-xs text-ink-muted ${className}`} aria-label="خرید مطمئن">
+      {items.map(({ href, label, Icon }) => (
+        <li key={href}>
           <Link
             href={href}
             prefetch={false}

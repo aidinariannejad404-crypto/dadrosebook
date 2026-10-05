@@ -106,10 +106,7 @@ export function KitCompleteBox({ kit, book }: { kit: StudyKit; book: Row["book"]
               <span className="min-w-0 flex-1">
                 <span id={labelId} className="line-clamp-2 text-sm font-bold leading-6 text-ink">
                   {r.current ? (
-                    <>
-                      <span className="text-ink-muted">همین کتاب: </span>
-                      {r.book.title}
-                    </>
+                    r.book.title
                   ) : (
                     <Link prefetch={false} href={routes.product(r.book.slug)} className="hover:text-primary hover:underline">
                       {r.book.title}
@@ -117,6 +114,7 @@ export function KitCompleteBox({ kit, book }: { kit: StudyKit; book: Row["book"]
                   )}
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-muted">
+                  {r.current && <span className="rounded-md bg-primary-soft px-1.5 font-bold text-primary">همین کتاب</span>}
                   <span>{SHORT_LABEL[r.variant.type]}</span>
                   {!r.current && r.essential && <span className="font-bold text-success">ضروری</span>}
                 </span>

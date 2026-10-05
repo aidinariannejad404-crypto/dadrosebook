@@ -29,14 +29,14 @@ export async function PolicyShell({
           <div className="mt-10 max-w-3xl rounded-card bg-surface p-4 shadow-card md:p-5">
             <h2 className="text-base font-extrabold text-ink">پرسشی دارید؟</h2>
             <p className="mt-1 text-sm leading-7 text-ink-muted">
-              {store?.support_hours ? `پشتیبانی: ${store.support_hours}` : "پشتیبانی دادرُز پاسخگوی پرسش‌های شماست."}
+              پشتیبانی دادرُز درباره سفارش، ارسال و انتخاب منبع پاسخگوی شماست.
             </p>
             <div className="mt-3">
               <ConsultCta store={store} exam={null} book={null} />
             </div>
           </div>
         </article>
-        <nav aria-label="راهنمای خرید" className="order-first md:order-none">
+        <nav aria-label="راهنمای خرید" className="order-first min-w-0 md:order-none">
           <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:sticky md:top-4 md:mx-0 md:flex-col md:gap-1 md:overflow-visible md:rounded-card md:bg-surface md:p-2 md:shadow-card">
             {POLICY_PAGES.map((p) => {
               const active = p.path === current;
