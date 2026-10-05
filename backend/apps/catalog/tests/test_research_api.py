@@ -112,6 +112,7 @@ def test_kit_role_needs_one_exam_type(api, catalog):
 
 
 def test_kit_role_optional_on_related_and_detail(api, catalog):
+    catalog["quick_book"].variants.update(stock=3)  # related books are in stock only
     url = f"{LIST}{quote(catalog['tests_book'].slug)}/related/"
     related = cards(api, url, exam_type=KANOON)
     assert related[QUICK]["kit_role"] == "optional"
@@ -214,12 +215,14 @@ def test_study_kit_variants_have_bundle_saving(api, catalog):
 # --- P1-8 related in stock ----------------------------------------------------------------------
 def test_related_in_stock(api, catalog):
     url = f"{LIST}{quote(catalog['tests_book'].slug)}/related/"
-    assert list(cards(api, url)) == [QUICK]
+    # related books are always in stock now; ``in_stock=true`` is still accepted
+    assert cards(api, url) == {}
     assert cards(api, url, in_stock="true") == {}
     in_stock = make_book(
         "جایگزین موجود", subjects=[catalog["fiqh"]], variants=[print_variant(1, stock=3)]
     )
     assert list(cards(api, url, in_stock="true")) == [in_stock.title]
+    assert list(cards(api, url)) == [in_stock.title]
 
 
 # --- P1-10 weights in study kits ----------------------------------------------------------------
@@ -322,7 +325,8 @@ def test_home_query_count_with_exam_type(api, catalog):
     cache.clear()
     with CaptureQueriesContext(connection) as ctx:
         api.get(HOME, {"exam_type": KANOON})
-    assert len(ctx.captured_queries) <= 22, len(ctx.captured_queries)
+    # +6 in the UI refresh: the discounted rail (1 + 4 prefetches) and the testimonials strip
+    assert len(ctx.captured_queries) <= 28, len(ctx.captured_queries)
 
 
 def test_list_query_count_with_exam_type(api, catalog):

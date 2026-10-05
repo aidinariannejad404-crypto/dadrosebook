@@ -15,6 +15,9 @@ BOOK_CARD_KEYS = {
     # added after research (P1-*)
     "resource_type", "resource_type_label", "has_sample", "kit_role", "edition_badge",
     "law_updated_until", "course_badge", "social_proof", "badges",
+    # added in the UI refresh
+    "card_compare_price", "card_discount_percent", "quick_add_variant_id", "rating_avg",
+    "rating_count",
 }  # fmt: skip
 BOOK_DETAIL_KEYS = BOOK_CARD_KEYS | {
     "publisher", "translators", "categories", "edition", "publish_year", "pages", "isbn",
@@ -227,8 +230,10 @@ def test_detail_404(api, catalog):
 
 def test_related(api, catalog):
     url = f"{LIST}{quote(catalog['tests_book'].slug)}/related/"
+    assert api.get(url).json() == []  # the only fiqh sibling (QUICK) is out of stock
+    make_book("متون فقه موجود", subjects=[catalog["fiqh"]], variants=[print_variant(1, stock=3)])
     data = api.get(url).json()
-    assert [b["title"] for b in data] == [QUICK]
+    assert [b["title"] for b in data] == ["متون فقه موجود"]
     assert set(data[0]) == BOOK_CARD_KEYS
     assert api.get(f"{LIST}nope/related/").status_code == 404
 

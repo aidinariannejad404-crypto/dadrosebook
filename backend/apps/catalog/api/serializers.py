@@ -29,7 +29,14 @@ from ..services.courses import (
     students_shown,
 )
 from ..services.editions import current_exam_year
-from ..services.pricing import book_card_variant, book_min_price, bundle_saving
+from ..services.pricing import (
+    book_card_variant,
+    book_min_price,
+    bundle_saving,
+    card_discount,
+    quick_add_variant,
+)
+from ..services.ratings import book_card_rating
 
 
 class SubjectMiniSerializer(serializers.ModelSerializer):
@@ -135,6 +142,12 @@ class BookCardSerializer(serializers.ModelSerializer):
     course_badge = serializers.SerializerMethodField()
     social_proof = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
+    # UI refresh: crossed-out price, ratings and quick add on cards.
+    card_compare_price = serializers.SerializerMethodField()
+    card_discount_percent = serializers.SerializerMethodField()
+    quick_add_variant_id = serializers.SerializerMethodField()
+    rating_avg = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -165,6 +178,12 @@ class BookCardSerializer(serializers.ModelSerializer):
             "course_badge",
             "social_proof",
             "badges",
+            # Added in the UI refresh.
+            "card_compare_price",
+            "card_discount_percent",
+            "quick_add_variant_id",
+            "rating_avg",
+            "rating_count",
         ]
 
     def _exam_year(self) -> int:
@@ -209,6 +228,31 @@ class BookCardSerializer(serializers.ModelSerializer):
     def get_card_format(self, obj: Book) -> str | None:
         variant = book_card_variant(_active_variants(obj))
         return variant.type if variant else None
+
+    def _card_discount(self, obj: Book) -> dict:
+        return card_discount(book_card_variant(_active_variants(obj)))
+
+    def get_card_compare_price(self, obj: Book) -> int | None:
+        return self._card_discount(obj)["compare_price"]
+
+    def get_card_discount_percent(self, obj: Book) -> int | None:
+        return self._card_discount(obj)["discount_percent"]
+
+    def get_quick_add_variant_id(self, obj: Book) -> int | None:
+        variant = quick_add_variant(_active_variants(obj))
+        return variant.id if variant else None
+
+    def _rating(self, obj: Book) -> dict:
+        rating = getattr(obj, "_card_rating", None)
+        if rating is None:
+            rating = obj._card_rating = book_card_rating(obj)
+        return rating
+
+    def get_rating_avg(self, obj: Book) -> float | None:
+        return self._rating(obj)["rating_avg"]
+
+    def get_rating_count(self, obj: Book) -> int:
+        return self._rating(obj)["rating_count"]
 
     def get_formats(self, obj: Book) -> list[str]:
         return [v.type for v in _active_variants(obj)]
@@ -472,6 +516,26 @@ class HomeSubjectSerializer(SubjectWithCountSerializer):
         fields = [*SubjectWithCountSerializer.Meta.fields, "weight"]
 
 
+class TestimonialSerializer(serializers.Serializer):
+    """An approved review on the homepage strip; author shown as «علی ر.», never the phone."""
+
+    id = serializers.IntegerField()
+    rating = serializers.IntegerField()
+    body = serializers.CharField(source="excerpt")
+    author = serializers.SerializerMethodField()
+    is_verified_purchase = serializers.BooleanField()
+    exam_type = ExamTypeMiniSerializer(allow_null=True)
+    book = serializers.SerializerMethodField()
+
+    def get_author(self, obj) -> str:
+        from apps.reviews.services.reviews import author_display
+
+        return author_display(obj.user)
+
+    def get_book(self, obj) -> dict:
+        return {"title": obj.book.title, "slug": obj.book.slug}
+
+
 class HomeSerializer(serializers.Serializer):
     next_exam = ExamEventSerializer(allow_null=True)
     exam_types = ExamTypeMiniSerializer(many=True)
@@ -481,6 +545,8 @@ class HomeSerializer(serializers.Serializer):
     course_banners = BannerSerializer(many=True)
     bestsellers = BookCardSerializer(many=True)
     quick_review = BookCardSerializer(many=True)
+    discounted = BookCardSerializer(many=True)
+    testimonials = TestimonialSerializer(many=True)
     featured_course = CourseSerializer(allow_null=True)
     guide_videos = GuideVideoSerializer(many=True)
     selected_exam_type = ExamTypeMiniSerializer(allow_null=True)

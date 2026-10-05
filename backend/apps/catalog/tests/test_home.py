@@ -9,6 +9,7 @@ HOME_KEYS = {
     "next_exam", "exam_types", "subjects", "categories", "hero_banners", "course_banners",
     "bestsellers", "quick_review", "featured_course", "guide_videos",
     "selected_exam_type", "store",  # added after research
+    "discounted", "testimonials",  # added in the UI refresh
 }  # fmt: skip
 
 
@@ -75,4 +76,5 @@ def test_home_endpoint_query_count(api, content):
     cache.clear()
     with CaptureQueriesContext(connection) as ctx:
         api.get("/api/v1/catalog/home/")
-    assert len(ctx.captured_queries) <= 20, len(ctx.captured_queries)
+    # +6 in the UI refresh: the discounted rail (1 + 4 prefetches) and the testimonials strip
+    assert len(ctx.captured_queries) <= 26, len(ctx.captured_queries)

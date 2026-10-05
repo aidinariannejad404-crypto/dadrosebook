@@ -17,6 +17,7 @@ from ..models import (
     Subject,
 )
 from .pricing import min_effective_price_expression
+from .ratings import rating_annotations
 from .social_proof import books_ahead_in_subject_expression, first_subject_expression
 
 COURSE_SOURCE_RELEVANCE = (BookCourse.Relevance.REFERENCED, BookCourse.Relevance.SAME_AUTHOR)
@@ -85,8 +86,9 @@ def book_card_queryset(base: QuerySet | None = None, *, exam_type: str | None = 
     """Active books with everything a ``BookCard`` needs, without per-book queries.
 
     Annotations: ``min_price`` (non-placeholder), ``has_stock``, ``has_sample_pages``,
-    ``first_course_title``, ``first_subject_id``, ``books_ahead_in_subject`` and, when
-    ``exam_type`` (a slug) is given, ``kit_listed``/``kit_essential`` for that exam's kits.
+    ``first_course_title``, ``first_subject_id``, ``books_ahead_in_subject``,
+    ``approved_rating_avg``/``approved_rating_count`` and, when ``exam_type`` (a slug) is
+    given, ``kit_listed``/``kit_essential`` for that exam's kits.
     """
     qs = base if base is not None else Book.objects.all()
     qs = (
@@ -97,6 +99,7 @@ def book_card_queryset(base: QuerySet | None = None, *, exam_type: str | None = 
             has_sample_pages=has_sample_pages_expression(),
             first_course_title=first_course_title_expression(),
             first_subject_id=first_subject_expression(),
+            **rating_annotations(),
         )
         .annotate(books_ahead_in_subject=books_ahead_in_subject_expression())
     )
