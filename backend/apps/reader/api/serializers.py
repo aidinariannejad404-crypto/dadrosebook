@@ -3,7 +3,7 @@ from rest_framework import serializers
 from apps.catalog.api.serializers import SubjectMiniSerializer
 from apps.catalog.models import Book
 
-from ..models import Highlight, ReadingProgress
+from ..models import Bookmark, Highlight, ReaderDevice, ReadingProgress
 from ..services.highlights import clean_rects
 
 
@@ -42,11 +42,47 @@ class FileSerializer(serializers.Serializer):
     expires_at = serializers.DateTimeField()
 
 
+class EpubChapterMetaSerializer(serializers.Serializer):
+    index = serializers.IntegerField()
+    title = serializers.CharField()
+    start_page = serializers.IntegerField()
+    pages = serializers.IntegerField()
+    chars = serializers.IntegerField()
+
+
+class EpubInfoSerializer(serializers.Serializer):
+    language = serializers.CharField()
+    direction = serializers.CharField()
+    total_pages = serializers.IntegerField()
+    chapters = EpubChapterMetaSerializer(many=True)
+    toc = serializers.JSONField()
+
+
 class ReaderSessionSerializer(serializers.Serializer):
     book = ReaderBookSerializer()
     file = FileSerializer()
     progress = ProgressSerializer(allow_null=True)
     watermark = serializers.CharField()
+    copy_limit = serializers.IntegerField()
+    epub = EpubInfoSerializer(allow_null=True)
+
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = ["id", "page", "location", "label", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class DeviceSerializer(serializers.ModelSerializer):
+    current = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReaderDevice
+        fields = ["id", "label", "last_seen", "current"]
+
+    def get_current(self, device) -> bool:
+        return device.pk == self.context.get("current_id")
 
 
 class HighlightSerializer(serializers.ModelSerializer):

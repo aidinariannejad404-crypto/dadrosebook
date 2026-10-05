@@ -66,3 +66,29 @@ def owner_api(api, reader, book, grant):
     grant(reader, book)
     api.force_authenticate(reader)
     return api
+
+
+@pytest.fixture
+def make_epub_file(book):
+    """Attach an EPUB (the sample by default) to ``book`` and return the EbookFile."""
+    from apps.reader.sample_epub import build_epub
+
+    made = []
+
+    def _make(data: bytes | None = None, version: int = 1):
+        ebook = EbookFile(book=book, format=EbookFile.Format.EPUB, version=version)
+        ebook.file.save("civil.epub", ContentFile(data or build_epub()), save=True)
+        made.append(ebook)
+        return ebook
+
+    yield _make
+    for ebook in made:
+        from apps.reader.services.epub import delete_package
+
+        delete_package(ebook)
+        ebook.file.delete(save=False)
+
+
+@pytest.fixture
+def epub_ebook(make_epub_file):
+    return make_epub_file()

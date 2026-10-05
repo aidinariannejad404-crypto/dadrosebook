@@ -87,3 +87,41 @@ def redeem_token(token: str) -> tuple[EbookFile, object]:
     if not can_read(user, ebook.book):
         raise InvalidToken
     return ebook, user
+
+
+ASSET_SALT = "apps.reader.epub-asset"
+
+
+def asset_url(asset, user) -> str:
+    """Signed URL for one EPUB image (pre-signed on S3, a relative token URL otherwise)."""
+    storage = asset.file.storage
+    if _is_presigning_storage(storage):
+        return storage.url(
+            asset.file.name,
+            parameters={
+                "ResponseCacheControl": "private, no-store",
+                "ResponseContentType": asset.media_type,
+            },
+            expire=ttl_seconds(),
+        )
+    token = signing.dumps({"a": asset.pk, "u": user.pk}, salt=ASSET_SALT, compress=True)
+    return reverse("reader:epub-asset", kwargs={"token": token})
+
+
+def redeem_asset_token(token: str):
+    """Return the ``EpubAsset`` for a valid token, or raise ``InvalidToken`` / ``NoEbook``."""
+    from ..models import EpubAsset
+
+    try:
+        data = signing.loads(token, salt=ASSET_SALT, max_age=ttl_seconds())
+    except signing.BadSignature as exc:
+        raise InvalidToken from exc
+    asset = (
+        EpubAsset.objects.select_related("package__ebook__book").filter(pk=data.get("a")).first()
+    )
+    if asset is None or not asset.package.ebook.is_active:
+        raise NoEbook
+    user = get_user_model().objects.filter(pk=data.get("u")).first()
+    if not can_read(user, asset.package.ebook.book):
+        raise InvalidToken
+    return asset, user

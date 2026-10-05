@@ -53,6 +53,7 @@ services:
     command: >
       sh -c "python manage.py seed_catalog --if-empty --with-superuser &&
              python manage.py seed_demo_ebooks --if-empty &&
+             python manage.py seed_demo_ebooks --epub --limit 1 --if-empty &&
              (python manage.py fetch_covers || true) &&
              python manage.py runserver 0.0.0.0:8000"
     ports:

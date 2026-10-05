@@ -65,9 +65,14 @@ class EbookFileAdmin(ModelAdmin):
     actions = ("make_active",)
 
     def save_model(self, request, obj, form, change):
-        from apps.reader.services.files import activate
+        from apps.reader.services.files import InvalidEbookFile, activate, prepare
 
         super().save_model(request, obj, form, change)
+        if not change or {"file", "format"} & set(form.changed_data):
+            try:
+                prepare(obj)
+            except InvalidEbookFile as exc:
+                messages.error(request, f"پردازش EPUB انجام نشد: {exc}")
         if obj.is_active:
             activate(obj)
 

@@ -6,6 +6,13 @@ app_name = "reader"
 
 urlpatterns = [
     path("files/<str:token>/", views.FileView.as_view(), name="file"),
+    path("epub-assets/<str:token>/", views.EpubAssetView.as_view(), name="epub-asset"),
+    path("devices/", views.DeviceListView.as_view(), name="devices"),
+    path("devices/<int:pk>/", views.DeviceDetailView.as_view(), name="device"),
+    path("<str:slug>/epub/chapters/<int:index>/", views.ChapterView.as_view(), name="epub-chapter"),
+    path("<str:slug>/epub/search/", views.SearchView.as_view(), name="epub-search"),
+    path("<str:slug>/bookmarks/", views.BookmarkListView.as_view(), name="bookmarks"),
+    path("<str:slug>/bookmarks/<int:pk>/", views.BookmarkDetailView.as_view(), name="bookmark"),
     path("<str:slug>/read/", views.ReadView.as_view(), name="read"),
     path("<str:slug>/progress/", views.ProgressView.as_view(), name="progress"),
     path("<str:slug>/highlights/", views.HighlightListView.as_view(), name="highlights"),

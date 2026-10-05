@@ -20,6 +20,18 @@ def validate_upload(fmt: str, django_file) -> None:
     head = django_file.read(8)
     django_file.seek(0)
     check_magic(fmt, head)
+    if fmt == EbookFile.Format.EPUB:
+        from .epub import inspect_upload
+
+        inspect_upload(django_file)
+
+
+def prepare(ebook: EbookFile) -> None:
+    """After an upload: unpack an EPUB for streaming (PDFs need nothing)."""
+    if ebook.format == EbookFile.Format.EPUB and ebook.file:
+        from .epub import process_epub
+
+        process_epub(ebook)
 
 
 def activate(ebook: EbookFile) -> None:

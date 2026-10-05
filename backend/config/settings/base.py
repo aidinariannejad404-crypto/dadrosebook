@@ -181,7 +181,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"])
 # Auth cookies travel with credentialed requests from the storefront origin.
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = (*default_headers, "x-cart-token")
+CORS_ALLOW_HEADERS = (*default_headers, "x-cart-token", "x-reader-device")
 CORS_EXPOSE_HEADERS = ["X-Search-Relaxed"]
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000", "http://localhost:3000"]
@@ -196,6 +196,14 @@ READER_ENTITLEMENT_CHECKER = env(
 )
 # Staff may open any ebook in the reader to check uploads.
 READER_STAFF_PREVIEW = env.bool("READER_STAFF_PREVIEW", default=True)
+# Phase 6: devices, copy limit and anti-scraping rates (per user).
+READER_MAX_DEVICES = env.int("READER_MAX_DEVICES", default=3)
+READER_DEVICE_WINDOW_DAYS = env.int("READER_DEVICE_WINDOW_DAYS", default=90)
+READER_COPY_LIMIT = env.int("READER_COPY_LIMIT", default=1000)
+READER_CHAPTER_RATE = env("READER_CHAPTER_RATE", default="30/min")
+READER_CHAPTER_DAY_RATE = env("READER_CHAPTER_DAY_RATE", default="800/day")
+READER_SEARCH_RATE = env("READER_SEARCH_RATE", default="30/min")
+READER_DEVICE_REMOVE_RATE = env("READER_DEVICE_REMOVE_RATE", default="5/day")
 
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)

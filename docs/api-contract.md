@@ -351,3 +351,86 @@ Highlight = {
 - `DELETE /library/<slug>/highlights/<id>/` → `204`.
 Highlights and progress are kept even if the entitlement is later revoked, but every endpoint
 re-checks the entitlement.
+
+## Phase 6: ebook platform — EPUB streaming, bookmarks, devices, search (`apps.reader`)
+
+Same rules as Phase 4: authenticated, entitlement re-checked on every call, `Cache-Control: private,
+no-store`. New error codes: `409 {"code": "device_limit", "detail": "…", "devices": [Device]}` and
+`429 {"detail": "…"}` (throttled; the reader shows «کمی صبر کنید»).
+
+### Device header
+Every reader call from the browser sends `X-Reader-Device: <uuid>` (a random v4 id the reader keeps
+in `localStorage["dadrose.reader.device"]`, created on first use). `GET /read/` registers it. A user
+may read on at most `READER_MAX_DEVICES` (default 3) devices seen in the last 90 days; a fourth new
+device gets the `409 device_limit` answer above until the user removes one. Missing header → the
+server treats the request as device `"unknown"` (counted like any other device).
+`Device = { "id": 7, "label": "Chrome · Android", "last_seen": "…", "current": true }`
+- `GET /library/devices/` → `[Device]` (`current` = this request's device).
+- `DELETE /library/devices/<id>/` → `204` (throttled to 5 removals per day).
+
+### `GET /library/<slug>/read/` (extended)
+Adds, for both formats:
+```jsonc
+{
+  …Phase 4 fields…,
+  "file": { "format": "EPUB", "version": 2, "url": "", "expires_at": "…" },  // url is "" for EPUB: nothing to download
+  "copy_limit": 1000,            // max characters one copy may take; the reader appends a citation
+  "epub": null | {               // present when format == "EPUB"
+    "language": "fa",
+    "direction": "rtl",          // "rtl" | "ltr"
+    "total_pages": 213,          // virtual pages (~1200 characters each), stable per file version
+    "chapters": [ { "index": 0, "title": "پیشگفتار", "start_page": 1, "pages": 3, "chars": 3410 } ],
+    "toc": [ { "title": "فصل اول", "chapter": 2, "anchor": "", "level": 0 },
+             { "title": "مبحث اول", "chapter": 2, "anchor": "s1", "level": 1 } ]   // flat, in reading order
+  }
+}
+```
+Progress for EPUB: `page` = virtual page (1..total_pages), `total_pages` = `epub.total_pages`,
+`location` = `"epub:<chapter>:<charOffset>"` (offset into the chapter's text, see below).
+Highlights for EPUB: `page` = virtual page of the start, `rects: []`,
+`location` = `"epub:<chapter>:<start>-<end>"`.
+
+**Text offsets** are offsets into `root.textContent` of the element the chapter `html` was inserted
+into (UTF-16 code units, i.e. JS string indices).
+
+### `GET /library/<slug>/epub/chapters/<index>/` → one chapter
+```jsonc
+{
+  "index": 3, "title": "فصل دوم", "start_page": 12, "pages": 5, "chars": 6020,
+  "prev": 2, "next": 4,          // null at the ends
+  "html": "<h2 id=\"s1\">…</h2><p>…</p>"
+}
+```
+`html` is sanitized server-side (no scripts, styles, iframes, forms, event handlers or publisher CSS;
+allowed: headings, p, div, span, section, blockquote, ol/ul/li, dl/dt/dd, table/thead/tbody/tr/th/td,
+em/strong/b/i/u/sub/sup/small/mark, br/hr, figure/figcaption, img, a, aside; attributes id, dir,
+lang, colspan, rowspan, alt, src, href, title). Links:
+- internal → `href="#epub:<chapter>:<anchor>"` (anchor may be empty) — the reader navigates itself;
+- external `http(s)` → kept; every `<a>` carries `rel="noopener noreferrer nofollow" target="_blank"`;
+- element ids are prefixed: anchor `s1` is the element `id="epub-s1"` (avoids clashing with page ids);
+- anything else removed.
+Images: `src` is a relative signed `/api/v1/library/epub-assets/<token>/` URL (same TTL as files;
+refetch the chapter if they fail). Throttled: `READER_CHAPTER_RATE` (30/min) and
+`READER_CHAPTER_DAY_RATE` (800/day) per user.
+
+### `GET /library/epub-assets/<token>/` → image bytes
+Self-authenticating like `/library/files/<token>/`; `no-store`, `nosniff`, image types only.
+
+### `GET /library/<slug>/epub/search/?q=ماده ۱۰` → in-book search
+`q` 2–100 characters, matched after one-to-one folding (ي/ى→ی، ك→ک، Persian/Arabic digits→ASCII,
+ZWNJ→space, per-character lowercase when it stays one character; no whitespace collapsing).
+```jsonc
+{ "results": [ { "chapter": 3, "title": "فصل دوم", "occurrence": 0,      // nth match in that chapter (0-based)
+                 "before": "…متن قبل", "match": "ماده ۱۰", "after": "متن بعد…" } ],
+  "truncated": false }                                                    // at most 100 results
+```
+The reader opens the chapter and selects the `occurrence`-th folded match of `q` in its text.
+Throttled `READER_SEARCH_RATE` (30/min).
+
+### Bookmarks (PDF and EPUB)
+`Bookmark = { "id": 4, "page": 37, "location": "", "label": "", "created_at": "…" }`
+(`location` = `"epub:<chapter>:<offset>"` for EPUB, `""` for PDF; `label` ≤ 120 chars.)
+- `GET /library/<slug>/bookmarks/` → `[Bookmark]` ordered by page.
+- `POST /library/<slug>/bookmarks/` `{page, location?, label?}` → `201 Bookmark`; the same
+  `(page, location)` again → `200` with the existing one. Max 500 per book.
+- `DELETE /library/<slug>/bookmarks/<id>/` → `204`.
