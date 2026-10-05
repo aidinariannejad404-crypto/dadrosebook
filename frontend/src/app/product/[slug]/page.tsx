@@ -290,6 +290,8 @@ export default async function ProductPage({ params }: { params: Params }) {
         variants: book.variants,
       }}
       related={relatedRest.find((b) => b.in_stock) ?? null}
+      ebookFormats={book.ebook_formats ?? []}
+      pages={book.pages}
     >
       <div className="mx-auto max-w-site px-4 pt-2 md:pt-4">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />

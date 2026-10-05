@@ -12,6 +12,7 @@ import {
   normalizePhone,
 } from "@/lib/otp";
 import { receiveSmsCode } from "@/lib/webotp";
+import { mergeGuestWishlist } from "@/lib/guest-wishlist";
 import { announceAuth } from "./auth-events";
 
 interface OtpLoginProps {
@@ -146,6 +147,8 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
     setError(null);
     const res = await apiFetch<OtpVerified>("/auth/otp/verify/", { method: "POST", json: { phone, code: value } });
     if (res.ok) {
+      // ج۶: hearts saved as a guest join the account (like the cart merge); never blocks login.
+      await mergeGuestWishlist((ids) => apiFetch("/wishlist/merge/", { method: "POST", json: { book_ids: ids } }));
       announceAuth(res.data.user);
       onSuccess(res.data.user, res.data.is_new);
       return; // stay busy: the parent navigates or swaps the step

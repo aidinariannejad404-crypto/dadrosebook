@@ -12,7 +12,8 @@ interface CartContextValue {
   fixtures: boolean;
   add: (variantId: number, quantity?: number, source?: CartSource) => Promise<client.CartResult>;
   update: (itemId: number, quantity: number) => Promise<client.CartResult>;
-  remove: (itemId: number) => Promise<client.CartResult>;
+  /** `silent`: the caller announces it itself (the cart's undo row, ج۴) */
+  remove: (itemId: number, opts?: { silent?: boolean }) => Promise<client.CartResult>;
   bulk: (items: { variant_id: number; quantity?: number }[], source?: CartSource) => Promise<client.BulkResult>;
   clear: () => Promise<client.CartResult>;
   refresh: () => Promise<void>;
@@ -82,9 +83,9 @@ export function CartProvider({ fixtures, children }: { fixtures: boolean; childr
         return r;
       },
       update: async (itemId, quantity) => apply(await client.updateQuantity(itemId, quantity)),
-      remove: async (itemId) => {
+      remove: async (itemId, opts) => {
         const r = apply(await client.removeItem(itemId));
-        if (r.ok) announce("از سبد خرید حذف شد");
+        if (r.ok && !opts?.silent) announce("از سبد خرید حذف شد");
         return r;
       },
       bulk: async (items, source = "other") => {

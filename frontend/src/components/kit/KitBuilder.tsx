@@ -23,6 +23,8 @@ import { BookCover } from "@/components/book/BookCover";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { CartIcon, CheckIcon, ClockIcon } from "@/components/ui/Icons";
 import { useCart } from "@/components/cart/CartProvider";
+import { AddToCalendar } from "@/components/calendar/AddToCalendar";
+import type { CalendarEvent } from "@/lib/calendar";
 
 export interface KitBuilderProps {
   examTypes: ExamTypeMini[];
@@ -30,7 +32,7 @@ export interface KitBuilderProps {
   /** ordered by weight */
   kits: StudyKit[];
   subjectsParam: string | null;
-  event: { name: string; date: string; dateLabel: string } | null;
+  event: { name: string; date: string; dateLabel: string; calendar?: CalendarEvent } | null;
   serverNow: number;
 }
 
@@ -476,6 +478,7 @@ function ExamCountdown({ event, serverNow }: { event: NonNullable<KitBuilderProp
         </p>
         <p className="mt-0.5 text-xs text-white/80">{event.dateLabel}</p>
         <p className="mt-1 text-sm leading-6 text-white/90">{hint}</p>
+        {event.calendar && <AddToCalendar event={event.calendar} placement="kit" tone="dark" className="-ms-3 mt-1" />}
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ClockIcon } from "@/components/ui/Icons";
 import { examCountdown } from "@/lib/countdown";
 import { toPersianDigits } from "@/lib/format";
+import type { CalendarEvent } from "@/lib/calendar";
+import { AddToCalendar } from "@/components/calendar/AddToCalendar";
 
 interface CountdownBarProps {
   examName: string;
@@ -14,13 +16,15 @@ interface CountdownBarProps {
   examDateLabel: string;
   /** server timestamp used for the first (hydration) render */
   serverNow: number;
+  /** ج۵: «افزودن به تقویم» (exam day + registration window) */
+  calendar?: CalendarEvent | null;
 }
 
 /**
  * Countdown to the next exam. The first render uses the server's clock (identical markup on
  * server and client → no hydration mismatch); after mount it switches to the live clock.
  */
-export function CountdownBar({ examName, examDate, examDateLabel, serverNow }: CountdownBarProps) {
+export function CountdownBar({ examName, examDate, examDateLabel, serverNow, calendar = null }: CountdownBarProps) {
   const [now, setNow] = useState(serverNow);
 
   useEffect(() => {
@@ -51,6 +55,7 @@ export function CountdownBar({ examName, examDate, examDateLabel, serverNow }: C
           <Link prefetch={false} href="/kit" className="hidden min-h-11 items-center px-2 font-bold text-accent underline-offset-4 hover:underline md:inline-flex">
             بسته مطالعاتی آزمون
           </Link>
+          {calendar && <AddToCalendar event={calendar} placement="countdown" tone="dark" />}
         </p>
       </div>
     </div>

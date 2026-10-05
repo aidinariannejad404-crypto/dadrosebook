@@ -1,6 +1,7 @@
 import { getHome } from "@/lib/api";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { formatJalaliDate } from "@/lib/format";
+import { toCalendarEvent } from "@/lib/calendar";
 import { CountdownBar } from "@/components/layout/CountdownBar";
 import { HomeOnly } from "@/components/layout/HomeOnly";
 
@@ -26,6 +27,7 @@ export default async function TopbarHome() {
         examDate={exam.date}
         examDateLabel={formatJalaliDate(exam.date)}
         serverNow={Date.now()}
+        calendar={toCalendarEvent(exam)}
       />
     </HomeOnly>
   );
