@@ -76,8 +76,9 @@ def hash_code(phone: str, code: str) -> str:
     return hmac.new(key, f"{phone}:{code}".encode(), hashlib.sha256).hexdigest()
 
 
-def generate_code() -> str:
-    return "".join(secrets.choice("0123456789") for _ in range(settings.OTP_LENGTH))
+def generate_code(length: int | None = None) -> str:
+    length = length or settings.OTP_LENGTH
+    return "".join(secrets.choice("0123456789") for _ in range(length))
 
 
 def _now_ts() -> float:

@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.admin_security.AdminSecurityMiddleware",  # admin IP allowlist + staff 2FA
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -247,6 +248,16 @@ OTP_MAX_ATTEMPTS = 5
 OTP_MAX_PER_PHONE_PER_HOUR = env.int("OTP_MAX_PER_PHONE_PER_HOUR", default=5)
 # Console provider only: also log the code at WARNING (easy to spot in `docker compose logs`).
 OTP_DEBUG_ECHO = env.bool("OTP_DEBUG_ECHO", default=DEBUG)
+
+# --- admin security -----------------------------------------------------------------------------
+# Staff must confirm an SMS code after the password (apps.accounts.admin_security).
+STAFF_2FA_REQUIRED = env.bool("STAFF_2FA_REQUIRED", default=True)
+STAFF_2FA_CODE_LENGTH = 6
+STAFF_2FA_TTL_SECONDS = 5 * 60
+STAFF_2FA_MAX_ATTEMPTS = 5
+STAFF_2FA_RESEND_SECONDS = 60
+# IPs or CIDR networks allowed to reach /admin/ (others get 404); empty = everyone.
+ADMIN_ALLOWED_IPS = env.list("ADMIN_ALLOWED_IPS", default=[])
 
 # --- payments (Phase 3) -------------------------------------------------------------------------
 # "zarinpal" (sandbox unless ZARINPAL_SANDBOX=false) or "fake" (local simulator, dev/tests only).
