@@ -22,7 +22,13 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // --- ux stream ---
+  | "search_zero_state_click"
+  | "undo_remove"
+  | "add_to_calendar"
+  | "wishlist_toggle"
+  | "compare_open";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -290,4 +296,31 @@ export function _resetAnalyticsForTests(): void {
 /** Test helper: number of events waiting for Umami. */
 export function _queuedEventsForTests(): number {
   return queue.length;
+}
+
+/* ---------- ux stream (ج۳, ج۴, ج۵, ج۶, د۶) ---------- */
+
+/** A tap in the empty-search panel: a recent term, a popular book or a subject shortcut. */
+export function trackSearchZeroStateClick(kind: "recent" | "popular" | "subject", exam: string | null): void {
+  track("search_zero_state_click", { kind, exam_type: exam ?? undefined });
+}
+
+/** «بازگرداندن» after removing a cart line or a wishlist heart. */
+export function trackUndoRemove(target: "cart" | "wishlist"): void {
+  track("undo_remove", { target });
+}
+
+/** .ics download or Google Calendar link for an exam date / registration window. */
+export function trackAddToCalendar(c: { kind: "exam" | "registration"; via: "ics" | "google"; exam_type: string; placement: string }): void {
+  track("add_to_calendar", c);
+}
+
+/** Heart toggled; `guest` = kept in this browser until login. */
+export function trackWishlistToggle(w: { item_id: number; on: boolean; guest: boolean }): void {
+  track("wishlist_toggle", w);
+}
+
+/** Compare page opened with `count` books. */
+export function trackCompareOpen(count: number): void {
+  track("compare_open", { count });
 }

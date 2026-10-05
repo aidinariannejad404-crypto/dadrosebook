@@ -529,6 +529,9 @@ class ExamEvent(TimeStampedModel):
     )
     date = models.DateField("تاریخ برگزاری")
     is_active = models.BooleanField("فعال", default=True)
+    # --- ux stream (ج۵ add-to-calendar): optional registration window ---
+    registration_start = models.DateField("شروع ثبت‌نام", null=True, blank=True)
+    registration_end = models.DateField("پایان ثبت‌نام", null=True, blank=True)
 
     class Meta:
         verbose_name = "تاریخ آزمون"

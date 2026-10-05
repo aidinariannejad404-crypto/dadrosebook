@@ -1,5 +1,5 @@
 from rest_framework import serializers, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -74,3 +74,28 @@ class WishlistIdsView(APIView):
 
     def get(self, request):
         return Response(svc.ids(request.user))
+
+
+# --- ux stream (ج۶ guest wishlist) ---------------------------------------------------------------
+class WishlistMergeView(APIView):
+    """``POST {"book_ids": [...]}`` — merge the browser-kept guest wishlist after login."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        raw = request.data.get("book_ids") if isinstance(request.data, dict) else None
+        return Response({"ids": svc.merge(request.user, raw)})
+
+
+class WishlistGuestCardsView(APIView):
+    """``GET ?ids=3,1,2`` — book cards for a guest's hearts (public catalog data, in that order)."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        wanted = svc.clean_ids((request.query_params.get("ids") or "").split(","), limit=50)
+        books = {
+            b.id: b for b in book_card_queryset(Book.objects.filter(id__in=wanted, is_active=True))
+        }
+        ordered = [books[i] for i in wanted if i in books]
+        return Response(BookCardSerializer(ordered, many=True, context={"request": request}).data)

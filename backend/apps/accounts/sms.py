@@ -20,7 +20,7 @@ class SmsProvider(ABC):
 
 
 def webotp_host() -> str:
-    """The storefront host the code is bound to (``SITE_HOST``, else the host of ``FRONTEND_URL``)."""
+    """Storefront host the code is bound to: ``SITE_HOST``, else the ``FRONTEND_URL`` host."""
     host = (getattr(settings, "SITE_HOST", "") or "").strip().lower()
     if not host:
         host = (urlsplit(getattr(settings, "FRONTEND_URL", "") or "").hostname or "").lower()
@@ -40,7 +40,7 @@ def otp_message(code: str) -> str:
 
     try:
         text = render_sms(OTP_LOGIN, code=code)
-    except Exception:  # noqa: BLE001 — a DB hiccup must never block a login code
+    except Exception:  # a DB hiccup must never block a login code
         logger.exception("OTP SMS template lookup failed; using the default text")
         text = None
     # A login code must always go out: a disabled or code-less template falls back to the default.

@@ -1,6 +1,7 @@
 import pytest
 
 from apps.catalog.services.home import get_home_data
+from apps.catalog.tests.test_api import UX_EXAM_EVENT_KEYS
 from apps.content.models import Banner, GuideVideo
 
 pytestmark = pytest.mark.django_db
@@ -53,7 +54,7 @@ def test_home_endpoint_shape(api, content):
     assert response.status_code == 200
     data = response.json()
     assert set(data) == HOME_KEYS
-    assert set(data["next_exam"]) == {"id", "name", "date", "exam_type"}
+    assert set(data["next_exam"]) == {"id", "name", "date", "exam_type", *UX_EXAM_EVENT_KEYS}
     assert set(data["subjects"][0]) == {"id", "name", "slug", "color", "book_count", "weight"}
     assert set(data["categories"][0]) == {"id", "name", "slug", "children"}
     assert set(data["hero_banners"][0]) == {

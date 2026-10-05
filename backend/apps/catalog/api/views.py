@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Prefetch
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import generics
@@ -8,13 +9,15 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Book, BookSamplePage, Category, ExamType, RelatedCourse
+from ..models import Book, BookSamplePage, Category, ExamEvent, ExamType, RelatedCourse
 from ..services.books import active_category_tree, book_card_queryset
 from ..services.courses import course_links_queryset, exposed_courses
+from ..services.exam_calendar import EXAM, KINDS, NoRegistrationWindow, build_ics
 from ..services.facets import book_facets
 from ..services.home import get_home_data, subjects_with_book_count, upcoming_exam_events
 from ..services.related import related_books
 from ..services.search import search_books_relaxed, should_relax
+from ..services.search_zero_state import search_zero_state
 from ..services.study_kits import kit_placements, study_kits
 from ..services.suggest import (
     DISCOVERY_CACHE_SECONDS,
@@ -192,6 +195,48 @@ class ExamEventListView(generics.ListAPIView):
 
     def get_queryset(self):
         return upcoming_exam_events()
+
+
+# --- ux stream: ج۵ add-to-calendar, ج۳ search zero state ---------------------------------------
+class ExamEventCalendarView(APIView):
+    """``GET exam-events/<id>/calendar.ics?kind=exam|registration`` → an all-day ``.ics``."""
+
+    def get(self, request, pk: int):
+        event = get_or_404(
+            ExamEvent.objects.select_related("exam_type").filter(
+                is_active=True, exam_type__is_active=True
+            ),
+            "تاریخ آزمون پیدا نشد.",
+            pk=pk,
+        )
+        kind = request.query_params.get("kind") or EXAM
+        if kind not in KINDS:
+            kind = EXAM
+        try:
+            body = build_ics(event, kind)
+        except NoRegistrationWindow as exc:
+            raise NotFound("برای این آزمون مهلت ثبت‌نام ثبت نشده است.") from exc
+        response = HttpResponse(body, content_type="text/calendar; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="dadrose-{kind}-{event.pk}.ics"'
+        response["Cache-Control"] = "public, max-age=3600"
+        return response
+
+
+class SearchZeroStateView(APIView):
+    """``GET search/zero-state/?exam=<slug>`` — popular books and subject shortcuts for the empty
+    search box (recent searches stay in the browser)."""
+
+    def get(self, request):
+        exam = (request.query_params.get("exam") or "").strip()[:80] or None
+        key = f"catalog:search-zero:{exam or '-'}"
+        data = cache.get(key)
+        if data is None:
+            data = s.SearchZeroStateSerializer(search_zero_state(exam)).data
+            cache.set(key, data, DISCOVERY_CACHE_SECONDS)
+        return Response(data)
+
+
+# --- end ux stream --------------------------------------------------------------------------------
 
 
 class StudyKitListView(APIView):

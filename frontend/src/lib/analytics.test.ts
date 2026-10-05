@@ -14,6 +14,11 @@ import {
   trackPurchase,
   trackStudyPlanRequested,
   trackViewItem,
+  trackAddToCalendar,
+  trackCompareOpen,
+  trackSearchZeroStateClick,
+  trackUndoRemove,
+  trackWishlistToggle,
   type AnalyticsDetail,
 } from "./analytics";
 
@@ -190,5 +195,22 @@ describe("typed helpers", () => {
     expect(domEvents[0]!.params.currency).toBe("TOMAN");
     expect(domEvents[2]!.params).toEqual({ course_id: 5, course_title: "دوره", book_slug: "x", placement: "more" });
     expect(domEvents[3]!.params).toEqual({ exam_type: "vekalat", subjects: "a,b", subjects_count: 2, hours_per_day: 4 });
+  });
+
+  it("ux stream helpers", () => {
+    trackSearchZeroStateClick("recent", null);
+    trackUndoRemove("cart");
+    trackAddToCalendar({ kind: "exam", via: "ics", exam_type: "vekalat", placement: "countdown" });
+    trackWishlistToggle({ item_id: 3, on: true, guest: true });
+    trackCompareOpen(2);
+    expect(domEvents.map((e) => e.event)).toEqual([
+      "search_zero_state_click",
+      "undo_remove",
+      "add_to_calendar",
+      "wishlist_toggle",
+      "compare_open",
+    ]);
+    expect(domEvents[0]!.params).toEqual({ kind: "recent" });
+    expect(domEvents[3]!.params).toEqual({ item_id: 3, on: true, guest: true });
   });
 });
