@@ -2,9 +2,9 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { formatNumber, toPersianDigits } from "@/lib/format";
-import { SEARCH_MAX, SEARCH_MIN, searchBook, type ReaderError } from "@/lib/reader";
+import { SEARCH_MAX, SEARCH_MIN, searchBook, type ReaderError, type ReaderResult } from "@/lib/reader";
 import { FONT_SIZES, LINE_HEIGHTS, MARGINS, type EpubSettings, type ReadingMode } from "@/lib/reader-epub";
-import type { CopyQuota, EpubTocItem, SearchResult } from "@/lib/types";
+import type { CopyQuota, EpubTocItem, SearchResponse, SearchResult } from "@/lib/types";
 import { Dialog } from "@/components/ui/Dialog";
 import { MinusIcon, PlusIcon, SearchIcon } from "@/components/ui/Icons";
 import { ReaderDrawer } from "./ReaderChrome";
@@ -78,11 +78,14 @@ export function EpubSearchDrawer({
   onClose,
   slug,
   onOpen,
+  search,
 }: {
   open: boolean;
   onClose: () => void;
   slug: string;
   onOpen: (r: SearchResult, q: string) => void;
+  /** offline-aware search (Phase 6b); defaults to the server search */
+  search?: (q: string) => Promise<ReaderResult<SearchResponse>>;
 }) {
   const [query, setQuery] = useState("");
   const [state, setState] = useState<SearchState>({ status: "idle" });
@@ -96,7 +99,7 @@ export function EpubSearchDrawer({
     lastQ.current = query;
     const id = ++reqId.current;
     setState({ status: "loading" });
-    const res = await searchBook(slug, query);
+    const res = await (search ? search(query) : searchBook(slug, query));
     if (id !== reqId.current) return;
     if (!res.ok) {
       lastQ.current = "";
@@ -283,6 +286,7 @@ export function EpubSettingsSheet({
   onChange,
   theme,
   onTheme,
+  children,
 }: {
   open: boolean;
   onClose: () => void;
@@ -293,6 +297,8 @@ export function EpubSettingsSheet({
   onChange: (s: EpubSettings) => void;
   theme: ReaderTheme;
   onTheme: (t: ReaderTheme) => void;
+  /** extra sections at the end (Phase 6b: «مطالعه آفلاین») */
+  children?: ReactNode;
 }) {
   const set = (patch: Partial<EpubSettings>) => onChange({ ...settings, ...patch });
   return (
@@ -361,6 +367,7 @@ export function EpubSettingsSheet({
           <ReaderThemeChoices value={theme} onChange={onTheme} />
         </div>
         <CopyQuotaLine quota={copyQuota} className="border-t border-line pt-3" />
+        {children}
       </div>
     </Dialog>
   );

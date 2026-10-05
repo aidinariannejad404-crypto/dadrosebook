@@ -12,6 +12,7 @@ import { ContinueReading } from "@/components/account/ContinueReading";
 import { ReadingProgressMeter, isFinished, isInProgress, mostRecentInProgress } from "@/components/account/ReadingProgressMeter";
 import { BookOpenIcon, ChevronIcon } from "@/components/ui/Icons";
 import { NotesExportMenu } from "@/components/reader/NotesExport";
+import { OfflineBadge } from "@/components/account/OfflineBadge";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "کتابخانه من", robots: { index: false, follow: false } };
@@ -90,6 +91,11 @@ function LibraryCard({ entry: { book, granted_at, can_read, progress } }: { entr
             {book.title}
           </Link>
         </h2>
+        {can_read && (
+          <div className="mt-1 empty:hidden">
+            <OfflineBadge slug={book.slug} />
+          </div>
+        )}
         {book.authors.length > 0 && (
           <p className="mt-0.5 truncate text-xs text-ink-muted">{book.authors.map((a) => a.name).join("، ")}</p>
         )}

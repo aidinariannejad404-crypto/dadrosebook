@@ -15,10 +15,14 @@ import {
   listBookmarks,
   listHighlights,
   progressPercent,
+  recordCopy,
   saveProgress,
   updateHighlight,
   type ReaderError,
+  type ReaderResult,
 } from "@/lib/reader";
+import { applyIdMap, localBookmark, localHighlight, tempId, type QueuedOp, type ReplayOutcome } from "@/lib/offline-queue";
+import { readOfflineState } from "@/lib/reader-offline";
 import {
   DEFAULT_EPUB_SETTINGS,
   FONT_SIZES,
@@ -43,7 +47,17 @@ import {
   type EpubSettings,
   type ReadingMode,
 } from "@/lib/reader-epub";
-import type { Bookmark, EpubChapter, EpubInfo, Highlight, HighlightColor, ReaderSession, SearchResult } from "@/lib/types";
+import type {
+  Bookmark,
+  CopyRecorded,
+  EpubChapter,
+  EpubInfo,
+  Highlight,
+  HighlightColor,
+  ReaderSession,
+  ReadingProgress,
+  SearchResult,
+} from "@/lib/types";
 import { BookmarkIcon, ChevronIcon, HighlighterIcon, ListIcon, SearchIcon } from "@/components/ui/Icons";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { HighlightEditor } from "./HighlightEditor";
@@ -66,6 +80,8 @@ import {
   type ColumnFrame,
 } from "./epub-dom";
 import { useCopyQuota } from "./useCopyQuota";
+import { useOfflineBook, type OfflineStart } from "./useOfflineBook";
+import { OfflinePanel } from "./OfflinePanel";
 import type { ReaderTheme } from "./theme";
 
 /** Where to put the reader once a chapter is on screen. */
@@ -95,6 +111,10 @@ const PAGE_PAD_BLOCK = 20;
 const SWIPE_MIN_PX = 50;
 /** Paged mode: one page per wheel gesture at most this often (ms). */
 const WHEEL_PAGE_MS = 350;
+/** Added to a success message when the write waits for the network (Phase 6b offline queue). */
+const QUEUED_NOTE = " با وصل شدن اینترنت همگام می‌شود.";
+
+type WriteResult<T> = { ok: true; data: T; queued: boolean } | { ok: false; error: ReaderError };
 
 function isTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
@@ -120,6 +140,7 @@ export function EpubReader({
   theme,
   onTheme,
   onFatal,
+  offlineStart = null,
 }: {
   slug: string;
   session: ReaderSession;
@@ -127,6 +148,8 @@ export function EpubReader({
   theme: ReaderTheme;
   onTheme: (t: ReaderTheme) => void;
   onFatal: (e: ReaderFatalError) => void;
+  /** Phase 6b: the book was opened from the local copy (no network) */
+  offlineStart?: OfflineStart | null;
 }) {
   const [chapter, setChapter] = useState<EpubChapter | null>(null);
   const [loading, setLoading] = useState(true);
@@ -173,6 +196,31 @@ export function EpubReader({
   chapterRef.current = chapter;
   offsetRef.current = offset;
   pendingRef.current = pending;
+
+  /* ---------- Phase 6b: offline copy, write queue ---------- */
+  const onReplayed = useCallback((out: ReplayOutcome) => {
+    if (out.highlights.size) setHighlights((list) => applyIdMap(list, out.highlights));
+    if (out.bookmarks.size) setBookmarks((list) => applyIdMap(list, out.bookmarks));
+  }, []);
+  const off = useOfflineBook({ slug, session, start: offlineStart, onFatal, onReplayed });
+  const offRef = useRef(off);
+  offRef.current = off;
+  const annotationsLoaded = useRef(false);
+
+  /** Online call with the offline queue as fallback (offline mode, or the call failed for lack of network). */
+  const write = useCallback(async <T,>(send: () => Promise<ReaderResult<T>>, op: QueuedOp, local: () => T): Promise<WriteResult<T>> => {
+    const o = offRef.current;
+    if (!o.offlineRef.current) {
+      const res = await send();
+      if (res.ok) {
+        o.noteOnline();
+        return { ok: true, data: res.data, queued: false };
+      }
+      if (res.error.kind !== "network") return res;
+    }
+    if (await o.queue(op)) return { ok: true, data: local(), queued: true };
+    return { ok: false, error: { kind: "network" } };
+  }, []);
 
   const fontPx = FONT_SIZES[settings.fontSize] ?? 18;
   const lineHeight = LINE_HEIGHTS[settings.lineHeight] ?? 1.8;
@@ -226,12 +274,25 @@ export function EpubReader({
 
   const fetchChapter = useCallback(
     async (index: number, { prefetch = false } = {}): Promise<EpubChapter | null> => {
+      const o = offRef.current;
+      if (o.offlineRef.current) {
+        const local = o.chapterFromPackage(index);
+        if (local) return local;
+        if (!prefetch) setChapterError({ kind: "network" });
+        return null;
+      }
       const hit = cache.current.get(index);
       if (hit && Date.now() - hit.at < CHAPTER_CACHE_MS) return hit.data;
       const res = await getChapter(slug, index);
       if (res.ok) {
         cache.current.set(index, { data: res.data, at: Date.now() });
+        o.noteOnline();
         return res.data;
+      }
+      // no network: read on from the local copy when this device has one
+      if (res.error.kind === "network" && (await o.enterOffline())) {
+        const local = o.chapterFromPackage(index);
+        if (local) return local;
       }
       if (!prefetch) {
         if (FATAL.includes(res.error.kind)) onFatal(res.error);
@@ -413,15 +474,50 @@ export function EpubReader({
 
   useEffect(() => {
     let cancelled = false;
-    void Promise.all([listHighlights(slug), listBookmarks(slug)]).then(([hl, bm]) => {
+    void (async () => {
+      if (!offRef.current.offlineRef.current) {
+        // send writes queued offline first, so the lists below include them
+        await offRef.current.flush().catch(() => null);
+        const [hl, bm] = await Promise.all([listHighlights(slug), listBookmarks(slug)]);
+        if (cancelled) return;
+        if (hl.ok) setHighlights(hl.data);
+        if (bm.ok) setBookmarks(bm.data);
+        const networkDown = (!hl.ok && hl.error.kind === "network") || (!bm.ok && bm.error.kind === "network");
+        if (!networkDown) {
+          annotationsLoaded.current = hl.ok && bm.ok;
+          return;
+        }
+      }
+      // offline: the last known lists of this device's copy (with the changes made offline)
+      const state = offlineStart?.state ?? (await readOfflineState(slug));
       if (cancelled) return;
-      if (hl.ok) setHighlights(hl.data);
-      if (bm.ok) setBookmarks(bm.data);
-    });
+      if (state) {
+        setHighlights(state.highlights);
+        setBookmarks(state.bookmarks);
+      }
+      annotationsLoaded.current = true;
+    })();
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
+
+  // keep the local snapshot current (used to open the book offline later)
+  useEffect(() => {
+    if (annotationsLoaded.current) offRef.current.updateState({ highlights, bookmarks });
+  }, [highlights, bookmarks]);
+  useEffect(() => {
+    if (!offlineStart && session.progress) offRef.current.updateState({ progress: session.progress });
+  }, [offlineStart, session.progress]);
+
+  // tell the reader when the copy on this device takes over (and when the network is back)
+  const wasOffline = useRef(off.offline);
+  useEffect(() => {
+    if (wasOffline.current === off.offline) return;
+    wasOffline.current = off.offline;
+    flash(off.offline ? "اینترنت قطع است؛ ادامه کتاب از نسخه آفلاین این دستگاه خوانده می‌شود." : "دوباره به اینترنت وصل شدید.");
+  }, [off.offline, flash]);
 
   const activeId = editor?.mode === "edit" ? editor.highlight.id : null;
   const chapterMarks = useMemo(() => {
@@ -500,6 +596,7 @@ export function EpubReader({
     const onError = (e: Event) => {
       const c = chapterRef.current;
       if (!(e.target instanceof HTMLImageElement) || !c || imgRetried.current.has(c.index)) return;
+      if (offRef.current.offlineRef.current) return; // package images are inline
       imgRetried.current.add(c.index);
       cache.current.delete(c.index);
       void getChapter(slug, c.index).then((res) => {
@@ -514,13 +611,26 @@ export function EpubReader({
   }, [slug]);
 
   /* ---------- progress ---------- */
+  /** PUT progress, or queue it offline; the local snapshot follows either way. */
+  const persistProgress = useCallback(
+    (body: { page: number; total_pages: number; location: string }, keepalive = false) => {
+      const local: ReadingProgress = {
+        ...body,
+        percent: progressPercent(body.page, body.total_pages),
+        updated_at: new Date().toISOString(),
+      };
+      offRef.current.updateState({ progress: local });
+      void write(() => saveProgress(slug, body, { keepalive }), { kind: "progress", body }, () => local);
+    },
+    [slug, write],
+  );
   const saver = useMemo(
     () =>
       debounce((p: number, t: number, location: string) => {
         lastSaved.current = location;
-        void saveProgress(slug, { page: p, total_pages: t, location });
+        persistProgress({ page: p, total_pages: t, location });
       }, PROGRESS_SAVE_DELAY_MS),
-    [slug],
+    [persistProgress],
   );
 
   const location = chapter ? formatEpubPoint(chapter.index, offset) : null;
@@ -537,7 +647,7 @@ export function EpubReader({
       const { page: p, total: t, location: loc } = progressNow.current;
       if (loc && t > 0 && loc !== lastSaved.current) {
         lastSaved.current = loc;
-        void saveProgress(slug, { page: p, total_pages: t, location: loc }, { keepalive: true });
+        persistProgress({ page: p, total_pages: t, location: loc }, true);
       }
     };
     const onVisibility = () => {
@@ -550,7 +660,7 @@ export function EpubReader({
       window.removeEventListener("pagehide", flushNow);
       flushNow();
     };
-  }, [saver, slug]);
+  }, [saver, persistProgress]);
 
   const scrollRaf = useRef(0);
   const onScroll = useCallback(() => {
@@ -693,14 +803,20 @@ export function EpubReader({
       const m = epub.chapters[sel.chapter];
       if (!m) return false;
       setBusy(true);
-      const res = await createHighlight(slug, {
+      const body = {
         page: virtualPage(m, sel.start),
         text: sel.text,
         rects: [],
         color,
         note,
         location: formatEpubRange(sel.chapter, sel.start, sel.end),
-      });
+      };
+      const temp = tempId();
+      const res = await write(
+        () => createHighlight(slug, body),
+        { kind: "highlight-create", tempId: temp, body },
+        () => localHighlight(temp, body, new Date().toISOString()),
+      );
       setBusy(false);
       if (!res.ok) {
         flash(res.error.kind === "throttled" ? "کمی صبر کنید و دوباره تلاش کنید." : "ذخیره هایلایت انجام نشد. دوباره تلاش کنید.");
@@ -709,10 +825,10 @@ export function EpubReader({
       setHighlights((list) => [...list, res.data]);
       setPending(null);
       window.getSelection()?.removeAllRanges();
-      flash("هایلایت ذخیره شد.");
+      flash(res.queued ? `هایلایت ذخیره شد؛${QUEUED_NOTE}` : "هایلایت ذخیره شد.");
       return true;
     },
-    [epub.chapters, slug, flash],
+    [epub.chapters, slug, flash, write],
   );
 
   const saveEditor = useCallback(
@@ -723,26 +839,32 @@ export function EpubReader({
         return;
       }
       setBusy(true);
-      const res = await updateHighlight(slug, editor.highlight.id, { color, note });
+      const current = editor.highlight;
+      const res = await write(
+        () => updateHighlight(slug, current.id, { color, note }),
+        { kind: "highlight-update", id: current.id, body: { color, note } },
+        () => ({ ...current, color, note, updated_at: new Date().toISOString() }),
+      );
       setBusy(false);
       if (!res.ok) return flash("ذخیره تغییرات انجام نشد. دوباره تلاش کنید.");
       setHighlights((list) => list.map((h) => (h.id === res.data.id ? res.data : h)));
       setEditor(null);
+      if (res.queued) flash(`تغییرات ذخیره شد؛${QUEUED_NOTE}`);
     },
-    [editor, create, slug, flash],
+    [editor, create, slug, flash, write],
   );
 
   const removeHighlight = useCallback(async () => {
     if (editor?.mode !== "edit") return;
     setBusy(true);
-    const res = await deleteHighlight(slug, editor.highlight.id);
+    const id = editor.highlight.id;
+    const res = await write(() => deleteHighlight(slug, id), { kind: "highlight-delete", id }, () => undefined);
     setBusy(false);
     if (!res.ok) return flash("حذف هایلایت انجام نشد. دوباره تلاش کنید.");
-    const id = editor.highlight.id;
     setHighlights((list) => list.filter((h) => h.id !== id));
     setEditor(null);
-    flash("هایلایت حذف شد.");
-  }, [editor, slug, flash]);
+    flash(res.queued ? `هایلایت حذف شد؛${QUEUED_NOTE}` : "هایلایت حذف شد.");
+  }, [editor, slug, flash, write]);
 
   /* ---------- bookmarks ---------- */
   const currentBookmark = bookmarks.find((b) => b.page === page) ?? null;
@@ -750,26 +872,33 @@ export function EpubReader({
     if (!chapter) return;
     setBusy(true);
     if (currentBookmark) {
-      const res = await deleteBookmark(slug, currentBookmark.id);
+      const id = currentBookmark.id;
+      const res = await write(() => deleteBookmark(slug, id), { kind: "bookmark-delete", id }, () => undefined);
       setBusy(false);
       if (!res.ok) return flash("حذف نشانک انجام نشد. دوباره تلاش کنید.");
-      setBookmarks((list) => list.filter((b) => b.id !== currentBookmark.id));
-      return flash("نشانک برداشته شد.");
+      setBookmarks((list) => list.filter((b) => b.id !== id));
+      return flash(res.queued ? `نشانک برداشته شد؛${QUEUED_NOTE}` : "نشانک برداشته شد.");
     }
-    const res = await createBookmark(slug, { page, location: formatEpubPoint(chapter.index, offset), label: chapter.title });
+    const body = { page, location: formatEpubPoint(chapter.index, offset), label: chapter.title.slice(0, 120) };
+    const temp = tempId();
+    const res = await write(
+      () => createBookmark(slug, body),
+      { kind: "bookmark-create", tempId: temp, body },
+      () => localBookmark(temp, body, new Date().toISOString()),
+    );
     setBusy(false);
     if (!res.ok) return flash("افزودن نشانک انجام نشد. دوباره تلاش کنید.");
     setBookmarks((list) => [...list.filter((b) => b.id !== res.data.id), res.data]);
-    flash("این صفحه نشانک‌گذاری شد.");
-  }, [chapter, currentBookmark, slug, page, offset, flash]);
+    flash(res.queued ? `این صفحه نشانک‌گذاری شد؛${QUEUED_NOTE}` : "این صفحه نشانک‌گذاری شد.");
+  }, [chapter, currentBookmark, slug, page, offset, flash, write]);
 
   const removeBookmark = useCallback(
     async (b: Bookmark) => {
-      const res = await deleteBookmark(slug, b.id);
+      const res = await write(() => deleteBookmark(slug, b.id), { kind: "bookmark-delete", id: b.id }, () => undefined);
       if (!res.ok) return flash("حذف نشانک انجام نشد. دوباره تلاش کنید.");
       setBookmarks((list) => list.filter((x) => x.id !== b.id));
     },
-    [slug, flash],
+    [slug, flash, write],
   );
 
   const jumpToLocation = useCallback(
@@ -820,7 +949,18 @@ export function EpubReader({
     [openChapter, highlights, forward, back, rtl],
   );
 
-  const { quota: copyQuota, copyText } = useCopyQuota(slug, session, flash);
+  // offline: the report waits in the queue (the optimistic count stays until the server answers)
+  const recordCopyOrQueue = useCallback(
+    async (s: string, chars: number): Promise<ReaderResult<CopyRecorded>> => {
+      const res = await write(() => recordCopy(s, chars), { kind: "copy", chars }, () => ({ limit: 0, used: 0, granted: 0 }));
+      return res.ok && !res.queued ? { ok: true, data: res.data } : { ok: false, error: { kind: "network" } };
+    },
+    [write],
+  );
+  const { quota: copyQuota, copyText } = useCopyQuota(slug, session, flash, recordCopyOrQueue);
+  useEffect(() => {
+    if (copyQuota) offRef.current.updateState({ copy_quota: copyQuota });
+  }, [copyQuota]);
   const onCopy = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
       const out = copyText(window.getSelection()?.toString() ?? "");
@@ -1028,6 +1168,9 @@ export function EpubReader({
       {chrome && (
         <footer className="pb-safe border-t border-line bg-surface">
           <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2 text-xs">
+            {off.offline && (
+              <span className="shrink-0 rounded-full bg-warning-soft px-2 py-0.5 font-bold text-warning">حالت آفلاین</span>
+            )}
             <span className="min-w-0 flex-1 truncate font-bold">{chapter?.title ?? ""}</span>
             {paged && chapter && (
               <span className="shrink-0 tabular-nums text-ink-muted">{`صفحه ${formatNumber(col + 1)} از ${formatNumber(colCount)} این فصل`}</span>
@@ -1065,7 +1208,13 @@ export function EpubReader({
         currentChapter={chapter?.index ?? -1}
         onOpen={(t) => void openChapter(t.chapter, { kind: "anchor", anchor: t.anchor })}
       />
-      <EpubSearchDrawer open={panel === "search"} onClose={() => setPanel(null)} slug={slug} onOpen={onSearchOpen} />
+      <EpubSearchDrawer
+        open={panel === "search"}
+        onClose={() => setPanel(null)}
+        slug={slug}
+        onOpen={onSearchOpen}
+        search={off.search}
+      />
       <HighlightsDrawer
         open={panel === "notes"}
         onClose={() => setPanel(null)}
@@ -1093,7 +1242,9 @@ export function EpubReader({
         onChange={setSettings}
         theme={theme}
         onTheme={onTheme}
-      />
+      >
+        {session.offline && <OfflinePanel off={off} info={session.offline} />}
+      </EpubSettingsSheet>
 
       <ReaderNotice text={notice} />
     </ReaderShell>

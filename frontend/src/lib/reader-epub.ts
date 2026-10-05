@@ -49,6 +49,53 @@ export function findNthFolded(text: string, query: string, n: number): { start: 
   }
 }
 
+/** Most results one search returns (same cap as the server). */
+export const SEARCH_RESULT_CAP = 100;
+
+/**
+ * In-book search over chapter texts (`textContent` of the rendered chapter, so offsets match the
+ * reader's): every folded occurrence of `q`, with ~40 characters of context, at most 100 results.
+ * Used by the fixture and by offline mode (package chapters); the server answers the same shape.
+ */
+export function searchChapterTexts(
+  chapters: readonly { index: number; title: string; text: string }[],
+  q: string,
+  context = 40,
+): { results: SearchResultLike[]; truncated: boolean } {
+  const results: SearchResultLike[] = [];
+  if (!foldText(q.trim())) return { results, truncated: false };
+  let truncated = false;
+  outer: for (const ch of chapters) {
+    for (let n = 0; ; n++) {
+      const hit = findNthFolded(ch.text, q, n);
+      if (!hit) break;
+      if (results.length >= SEARCH_RESULT_CAP) {
+        truncated = true;
+        break outer;
+      }
+      const text = ch.text;
+      results.push({
+        chapter: ch.index,
+        title: ch.title,
+        occurrence: n,
+        before: (hit.start > context ? "…" : "") + text.slice(Math.max(0, hit.start - context), hit.start),
+        match: text.slice(hit.start, hit.end),
+        after: text.slice(hit.end, hit.end + context) + (hit.end + context < text.length ? "…" : ""),
+      });
+    }
+  }
+  return { results, truncated };
+}
+
+interface SearchResultLike {
+  chapter: number;
+  title: string;
+  occurrence: number;
+  before: string;
+  match: string;
+  after: string;
+}
+
 /* ---------- locations ---------- */
 
 export type EpubLocation =

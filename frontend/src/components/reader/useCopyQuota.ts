@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatNumber } from "@/lib/format";
-import { recordCopy } from "@/lib/reader";
+import { recordCopy, type ReaderResult } from "@/lib/reader";
 import { planCopy, quotaAfterCopy } from "@/lib/reader-epub";
-import type { CopyQuota, ReaderSession } from "@/lib/types";
+import type { CopyQuota, CopyRecorded, ReaderSession } from "@/lib/types";
 
 export const QUOTA_EXHAUSTED_MESSAGE = "سهمیه کپی این کتاب تمام شده است";
 
@@ -14,7 +14,13 @@ export const QUOTA_EXHAUSTED_MESSAGE = "سهمیه کپی این کتاب تما
  * adopt the server's `used`. `used` is advanced optimistically so quick repeated copies stay inside
  * the quota even before the server answers.
  */
-export function useCopyQuota(slug: string, session: ReaderSession | null, flash: (msg: string) => void) {
+export function useCopyQuota(
+  slug: string,
+  session: ReaderSession | null,
+  flash: (msg: string) => void,
+  /** Phase 6b: offline-aware reporter (queues the report without network); defaults to POST /copies/ */
+  record: (slug: string, chars: number) => Promise<ReaderResult<CopyRecorded>> = recordCopy,
+) {
   const [quota, setQuotaState] = useState<CopyQuota | null>(session?.copy_quota ?? null);
   const quotaRef = useRef<CopyQuota | null>(session?.copy_quota ?? null);
   const reqRef = useRef(0);
@@ -41,7 +47,7 @@ export function useCopyQuota(slug: string, session: ReaderSession | null, flash:
       if (plan.chars > 0) {
         if (quotaRef.current) setQuota(quotaAfterCopy(quotaRef.current, plan.chars));
         const id = ++reqRef.current;
-        void recordCopy(slug, plan.chars).then((res) => {
+        void record(slug, plan.chars).then((res) => {
           // only the latest answer wins (answers to earlier copies would undo the optimistic step)
           if (res.ok && id === reqRef.current) setQuota({ limit: res.data.limit, used: res.data.used });
         });
@@ -55,7 +61,7 @@ export function useCopyQuota(slug: string, session: ReaderSession | null, flash:
       }
       return plan.text;
     },
-    [slug, session, flash, setQuota],
+    [slug, session, flash, setQuota, record],
   );
 
   return { quota, copyText };

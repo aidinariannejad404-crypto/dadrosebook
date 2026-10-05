@@ -1,7 +1,7 @@
 import { slugSegment } from "./api";
 import { BROWSER_API, apiFetch, refreshSession } from "./session";
 import type { ApiErrorBody } from "./session";
-import { findNthFolded, foldText, isDeviceId, uuidFromBytes } from "./reader-epub";
+import { isDeviceId, searchChapterTexts, uuidFromBytes } from "./reader-epub";
 import { EPUB_FIXTURE, EPUB_FIXTURE_SLUG, fixtureText } from "./reader-fixture-epub";
 import type {
   Bookmark,
@@ -13,11 +13,12 @@ import type {
   HighlightColor,
   HighlightCreate,
   NotesExportFormat,
+  OfflineGrant,
+  OfflineLicense,
   ReaderDevice,
   ReaderSession,
   ReadingProgress,
   SearchResponse,
-  SearchResult,
 } from "./types";
 
 /**
@@ -33,6 +34,7 @@ export type ReaderError =
   | { kind: "no_ebook" }
   | { kind: "network" }
   | { kind: "device_limit"; devices: ReaderDevice[] }
+  | { kind: "offline_limit"; licenses: OfflineLicense[] }
   | { kind: "throttled" }
   | { kind: "http"; status: number };
 
@@ -71,6 +73,10 @@ export function errorFromResponse(status: number, body: ApiErrorBody | null | un
   if (status === 409 && body?.code === "device_limit") {
     const devices = Array.isArray(body.devices) ? (body.devices as ReaderDevice[]) : [];
     return { kind: "device_limit", devices };
+  }
+  if (status === 409 && body?.code === "offline_limit") {
+    const licenses = Array.isArray(body.licenses) ? (body.licenses as OfflineLicense[]) : [];
+    return { kind: "offline_limit", licenses };
   }
   return errorForStatus(status);
 }
@@ -266,6 +272,16 @@ export function groupHighlightsByPage(items: Highlight[]): { page: number; items
 
 /* ---------- fixtures ---------- */
 
+/**
+ * Fixture mode answers locally, so «offline» is simulated: with the browser offline (e.g. Playwright
+ * `context.setOffline(true)`) every fixture call fails like a network error.
+ */
+function fixtureDown(): boolean {
+  return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+const NETWORK_DOWN = { ok: false, error: { kind: "network" } } as const;
+const down = <T>(): Promise<ReaderResult<T>> => Promise.resolve(NETWORK_DOWN);
+
 let fixtureHighlights: Highlight[] = [];
 let fixtureBookmarks: Bookmark[] = [];
 const fixtureProgressBySlug = new Map<string, ReadingProgress>();
@@ -296,6 +312,37 @@ function fixtureQuotaFor(slug: string): CopyQuota {
   return q;
 }
 
+/* Offline licenses (fixture): kept in localStorage so a reload — the offline test — still sees them. */
+const FIXTURE_OFFLINE_KEY = "dadrose.reader.fixture.offline";
+export const FIXTURE_OFFLINE_MAX = 3;
+const FIXTURE_OFFLINE_DAYS = 14;
+function fixtureSeedLicenses(): OfflineLicense[] {
+  const at = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+  return [
+    { id: 901, book: "ayin-dadrasi-madani", title: "آیین دادرسی مدنی", device_label: "Chrome · Android", expires_at: at(9), created_at: at(-5) },
+    { id: 902, book: "hoquq-jazaye-omumi", title: "حقوق جزای عمومی", device_label: "Safari · iPhone", expires_at: at(2), created_at: at(-12) },
+  ];
+}
+function fixtureLicenses(): OfflineLicense[] {
+  try {
+    const raw = window.localStorage.getItem(FIXTURE_OFFLINE_KEY);
+    if (raw) {
+      const list = JSON.parse(raw) as OfflineLicense[];
+      if (Array.isArray(list)) return list.filter((l) => Date.parse(l.expires_at) > Date.now());
+    }
+  } catch {
+    /* fall through */
+  }
+  return fixtureSeedLicenses();
+}
+function setFixtureLicenses(list: OfflineLicense[]): void {
+  try {
+    window.localStorage.setItem(FIXTURE_OFFLINE_KEY, JSON.stringify(list));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 function fixtureSession(slug: string): ReaderSession {
   const epub = slug === EPUB_FIXTURE_SLUG;
   return {
@@ -320,30 +367,23 @@ function fixtureSession(slug: string): ReaderSession {
     copy_limit: 1000,
     epub: epub ? EPUB_FIXTURE.info : null,
     copy_quota: { ...fixtureQuotaFor(slug) },
+    offline: epub
+      ? {
+          max_books: FIXTURE_OFFLINE_MAX,
+          days: FIXTURE_OFFLINE_DAYS,
+          license: fixtureLicenses().find((l) => l.book === slug && l.device_label === "Chrome · Linux") ?? null,
+        }
+      : null,
   };
 }
 
 const delay = <T>(v: T, ms = 120) => new Promise<T>((r) => setTimeout(() => r(v), ms));
 
 function fixtureSearch(q: string): SearchResponse {
-  const results: SearchResult[] = [];
-  const needle = foldText(q.trim());
-  for (const ch of EPUB_FIXTURE.chapters) {
-    const text = fixtureText(ch.html);
-    for (let n = 0; results.length < 100; n++) {
-      const hit = findNthFolded(text, q, n);
-      if (!hit) break;
-      results.push({
-        chapter: ch.index,
-        title: ch.title,
-        occurrence: n,
-        before: (hit.start > 40 ? "…" : "") + text.slice(Math.max(0, hit.start - 40), hit.start),
-        match: text.slice(hit.start, hit.end),
-        after: text.slice(hit.end, hit.end + 40) + (hit.end + 40 < text.length ? "…" : ""),
-      });
-    }
-  }
-  return { results: needle ? results : [], truncated: results.length >= 100 };
+  return searchChapterTexts(
+    EPUB_FIXTURE.chapters.map((ch) => ({ index: ch.index, title: ch.title, text: fixtureText(ch.html) })),
+    q,
+  );
 }
 
 /* ---------- HTTP ---------- */
@@ -366,6 +406,7 @@ const ok = <T>(data: T): ReaderResult<T> => ({ ok: true, data });
 /** GET /library/<slug>/read/ — book, signed file URL, progress and watermark. */
 export function getReaderSession(slug: string): Promise<ReaderResult<ReaderSession>> {
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     if (slug === DEVICE_LIMIT_FIXTURE_SLUG && fixtureLimitDevices.length >= 3) {
       return Promise.resolve({ ok: false, error: { kind: "device_limit", devices: fixtureLimitDevices } });
     }
@@ -381,6 +422,7 @@ export function saveProgress(
   { keepalive = false } = {},
 ): Promise<ReaderResult<ReadingProgress>> {
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     const saved: ReadingProgress = {
       page: body.page,
       total_pages: body.total_pages,
@@ -401,6 +443,7 @@ export function saveProgress(
 /** GET /library/<slug>/highlights/ (optionally one page). */
 export function listHighlights(slug: string, page?: number): Promise<ReaderResult<Highlight[]>> {
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     return Promise.resolve(ok(fixtureHighlights.filter((h) => page === undefined || h.page === page)));
   }
   const qs = page === undefined ? "" : `?page=${page}`;
@@ -415,6 +458,7 @@ export function createHighlight(slug: string, body: HighlightCreate): Promise<Re
     rects: body.rects.slice(0, MAX_HIGHLIGHT_RECTS),
   };
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     const now = new Date().toISOString();
     const h: Highlight = {
       id: fixtureNextId++,
@@ -440,6 +484,7 @@ export function updateHighlight(
 ): Promise<ReaderResult<Highlight>> {
   const clean = { ...body, ...(body.note !== undefined ? { note: body.note.slice(0, MAX_HIGHLIGHT_TEXT) } : {}) };
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     const found = fixtureHighlights.find((h) => h.id === id);
     if (!found) return Promise.resolve({ ok: false, error: { kind: "http", status: 404 } });
     const updated = { ...found, ...clean, updated_at: new Date().toISOString() };
@@ -451,6 +496,7 @@ export function updateHighlight(
 
 export function deleteHighlight(slug: string, id: number): Promise<ReaderResult<void>> {
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     fixtureHighlights = fixtureHighlights.filter((h) => h.id !== id);
     return Promise.resolve(ok(undefined));
   }
@@ -462,6 +508,7 @@ export function deleteHighlight(slug: string, id: number): Promise<ReaderResult<
 /** GET /library/<slug>/epub/chapters/<index>/ — one sanitized chapter. */
 export function getChapter(slug: string, index: number): Promise<ReaderResult<EpubChapter>> {
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     const ch = EPUB_FIXTURE.chapters[index];
     return delay(ch ? ok(ch) : { ok: false, error: { kind: "http", status: 404 } });
   }
@@ -475,14 +522,14 @@ export const SEARCH_MAX = 100;
 export function searchBook(slug: string, q: string): Promise<ReaderResult<SearchResponse>> {
   const query = q.trim().slice(0, SEARCH_MAX);
   if (query.length < SEARCH_MIN) return Promise.resolve(ok({ results: [], truncated: false }));
-  if (readerFixtureEnabled()) return delay(ok(fixtureSearch(query)));
+  if (readerFixtureEnabled()) return fixtureDown() ? down() : delay(ok(fixtureSearch(query)));
   return call<SearchResponse>(`/${slugSegment(slug)}/epub/search/?q=${encodeURIComponent(query)}`);
 }
 
 export const MAX_BOOKMARK_LABEL = 120;
 
 export function listBookmarks(slug: string): Promise<ReaderResult<Bookmark[]>> {
-  if (readerFixtureEnabled()) return Promise.resolve(ok([...fixtureBookmarks].sort((a, b) => a.page - b.page)));
+  if (readerFixtureEnabled()) return fixtureDown() ? down() : Promise.resolve(ok([...fixtureBookmarks].sort((a, b) => a.page - b.page)));
   return call<Bookmark[]>(`/${slugSegment(slug)}/bookmarks/`);
 }
 
@@ -492,6 +539,7 @@ export function createBookmark(
 ): Promise<ReaderResult<Bookmark>> {
   const clean = { page: body.page, location: body.location ?? "", label: (body.label ?? "").slice(0, MAX_BOOKMARK_LABEL) };
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     const same = fixtureBookmarks.find((b) => b.page === clean.page && b.location === clean.location);
     if (same) return Promise.resolve(ok(same));
     const b: Bookmark = { id: fixtureNextId++, ...clean, created_at: new Date().toISOString() };
@@ -503,6 +551,7 @@ export function createBookmark(
 
 export function deleteBookmark(slug: string, id: number): Promise<ReaderResult<void>> {
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     fixtureBookmarks = fixtureBookmarks.filter((b) => b.id !== id);
     return Promise.resolve(ok(undefined));
   }
@@ -511,7 +560,7 @@ export function deleteBookmark(slug: string, id: number): Promise<ReaderResult<v
 
 /** GET /library/devices/ */
 export function listDevices(): Promise<ReaderResult<ReaderDevice[]>> {
-  if (readerFixtureEnabled()) return delay(ok(fixtureDevices));
+  if (readerFixtureEnabled()) return fixtureDown() ? down() : delay(ok(fixtureDevices));
   return call<ReaderDevice[]>("/devices/");
 }
 
@@ -525,12 +574,65 @@ export function removeDevice(id: number): Promise<ReaderResult<void>> {
   return call<void>(`/devices/${id}/`, { method: "DELETE" });
 }
 
+/* ---------- Phase 6b: offline reading ---------- */
+
+function fixtureOfflineGrant(slug: string): ReaderResult<OfflineGrant> {
+  if (slug !== EPUB_FIXTURE_SLUG) return { ok: false, error: { kind: "http", status: 400 } };
+  const list = fixtureLicenses();
+  const mine = list.find((l) => l.book === slug && l.device_label === "Chrome · Linux");
+  if (!mine && list.length >= FIXTURE_OFFLINE_MAX) return { ok: false, error: { kind: "offline_limit", licenses: list } };
+  const now = new Date();
+  const license: OfflineLicense = {
+    id: mine?.id ?? Math.max(950, ...list.map((l) => l.id)) + 1,
+    book: slug,
+    title: "قانون مدنی در نظم کنونی",
+    device_label: "Chrome · Linux",
+    expires_at: new Date(now.getTime() + FIXTURE_OFFLINE_DAYS * 86_400_000).toISOString(),
+    created_at: mine?.created_at ?? now.toISOString(),
+  };
+  setFixtureLicenses([...list.filter((l) => l.id !== license.id), license]);
+  const session = fixtureSession(slug);
+  return ok({
+    license,
+    package: {
+      epub: EPUB_FIXTURE.info,
+      chapters: EPUB_FIXTURE.chapters,
+      watermark: session.watermark,
+      copy_limit: session.copy_limit,
+      copy_quota: session.copy_quota,
+    },
+  });
+}
+
+/** POST /library/<slug>/offline/ — a license for this device plus the whole book (201 new, 200 renewed). */
+export function requestOfflineCopy(slug: string): Promise<ReaderResult<OfflineGrant>> {
+  if (readerFixtureEnabled()) return fixtureDown() ? down() : delay(fixtureOfflineGrant(slug), 400);
+  return call<OfflineGrant>(`/${slugSegment(slug)}/offline/`, { method: "POST" });
+}
+
+/** GET /library/offline/ — the account's live offline licenses (all devices). */
+export function listOfflineLicenses(): Promise<ReaderResult<OfflineLicense[]>> {
+  if (readerFixtureEnabled()) return fixtureDown() ? down() : delay(ok(fixtureLicenses()));
+  return call<OfflineLicense[]>("/offline/");
+}
+
+/** DELETE /library/offline/<id>/ */
+export function deleteOfflineLicense(id: number): Promise<ReaderResult<void>> {
+  if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
+    setFixtureLicenses(fixtureLicenses().filter((l) => l.id !== id));
+    return delay(ok(undefined));
+  }
+  return call<void>(`/offline/${id}/`, { method: "DELETE" });
+}
+
 /* ---------- Phase 6b: copy quota, notebook export ---------- */
 
 /** POST /library/<slug>/copies/ {chars} — report a copy the reader just made; answers the new quota. */
 export function recordCopy(slug: string, chars: number): Promise<ReaderResult<CopyRecorded>> {
   const n = Math.max(0, Math.floor(chars));
   if (readerFixtureEnabled()) {
+    if (fixtureDown()) return down();
     const q = fixtureQuotaFor(slug);
     const granted = Math.min(n, Math.max(0, q.limit - q.used));
     q.used += granted;

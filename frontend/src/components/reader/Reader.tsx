@@ -37,11 +37,14 @@ import { EpubReader } from "./EpubReader";
 import { ReaderErrorView, ReaderNotice, ReaderShell, SelectionPopover, type ReaderFatalError } from "./ReaderChrome";
 import { initialReaderTheme, saveReaderTheme, type ReaderTheme } from "./theme";
 import { useCopyQuota } from "./useCopyQuota";
+import type { OfflineStart } from "./useOfflineBook";
+import { PURGE_ERRORS, openOfflineBook, purgeOfflineBook } from "@/lib/reader-offline";
+import { registerReaderSw } from "@/lib/reader-sw";
 
 type State =
   | { status: "loading" }
   | { status: "error"; error: ReaderFatalError }
-  | { status: "epub"; session: ReaderSession; epub: NonNullable<ReaderSession["epub"]> }
+  | { status: "epub"; session: ReaderSession; epub: NonNullable<ReaderSession["epub"]>; offline: OfflineStart | null }
   | { status: "ready"; session: ReaderSession; doc: PdfDocument; total: number };
 
 interface PendingSelection {
@@ -142,10 +145,27 @@ export function Reader({ slug }: { slug: string }) {
     (async () => {
       const res = await getReaderSession(slug);
       if (cancelled) return;
-      if (!res.ok) return setState({ status: "error", error: res.error });
+      if (!res.ok) {
+        // Phase 6b: no network → open this device's encrypted copy when there is a valid one
+        if (res.error.kind === "network") {
+          const local = await openOfflineBook(slug);
+          if (cancelled) return;
+          if (local?.session.epub) {
+            return setState({
+              status: "epub",
+              session: local.session,
+              epub: local.session.epub,
+              offline: { package: local.package, state: local.state, meta: local.meta },
+            });
+          }
+        }
+        // entitlement gone / signed out: the local copy goes too
+        if (PURGE_ERRORS.includes(res.error.kind)) void purgeOfflineBook(slug);
+        return setState({ status: "error", error: res.error });
+      }
       if (res.data.file.format !== "PDF") {
         if (!res.data.epub) return setState({ status: "error", error: { kind: "load" } });
-        return setState({ status: "epub", session: res.data, epub: res.data.epub });
+        return setState({ status: "epub", session: res.data, epub: res.data.epub, offline: null });
       }
       const out = await openWithRefresh(slug, res.data);
       if ("error" in out) {
@@ -292,7 +312,18 @@ export function Reader({ slug }: { slug: string }) {
     };
   }, [ready]);
 
-  const onFatal = useCallback((error: ReaderFatalError) => setState({ status: "error", error }), []);
+  const onFatal = useCallback(
+    (error: ReaderFatalError) => {
+      if (error.kind !== "load" && PURGE_ERRORS.includes(error.kind)) void purgeOfflineBook(slug);
+      setState({ status: "error", error });
+    },
+    [slug],
+  );
+
+  // Phase 6b: app-shell worker (production, or NEXT_PUBLIC_READER_SW=1) so /read/<slug> opens offline
+  useEffect(() => {
+    void registerReaderSw();
+  }, []);
 
   const flash = useCallback((msg: string) => {
     setNotice(msg);
@@ -423,6 +454,7 @@ export function Reader({ slug }: { slug: string }) {
         theme={theme}
         onTheme={setTheme}
         onFatal={onFatal}
+        offlineStart={state.offline}
       />
     );
   }

@@ -564,6 +564,41 @@ export interface ReaderSession {
   epub: EpubInfo | null;
   /** Phase 6b: total characters this user may copy from this book (all devices, all time) */
   copy_quota?: CopyQuota | null;
+  /** Phase 6b: offline reading (EPUB only; null for PDF or when disabled) */
+  offline?: OfflineInfo | null;
+}
+
+/* ---------- Phase 6b: offline reading (EPUB) ---------- */
+
+export interface OfflineLicense {
+  id: number;
+  /** book slug */
+  book: string;
+  title: string;
+  device_label: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface OfflineInfo {
+  max_books: number;
+  days: number;
+  /** this device's live license for the book, if any */
+  license: OfflineLicense | null;
+}
+
+/** `POST /library/<slug>/offline/` → package: the whole book, images inlined as data: URIs. */
+export interface OfflinePackage {
+  epub: EpubInfo;
+  chapters: EpubChapter[];
+  watermark: string;
+  copy_limit: number;
+  copy_quota?: CopyQuota | null;
+}
+
+export interface OfflineGrant {
+  license: OfflineLicense;
+  package: OfflinePackage;
 }
 
 /** Phase 6b: server-side total copy quota (`POST /library/<slug>/copies/` answers with `granted`). */

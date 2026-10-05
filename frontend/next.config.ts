@@ -33,6 +33,16 @@ const nextConfig: NextConfig = {
   // Phase 6: the reader is private and must not be framed, cached, indexed or leak its URL.
   async headers() {
     return [
+      // Phase 6b: reader app-shell worker (scope "/" from the site root needs no Service-Worker-Allowed);
+      // always revalidated so a new deployment's worker is picked up.
+      {
+        source: "/reader-sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
       {
         source: "/read/:path*",
         headers: [

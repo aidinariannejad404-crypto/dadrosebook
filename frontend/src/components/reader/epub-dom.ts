@@ -38,7 +38,9 @@ export function chapterFragment(html: string): DocumentFragment {
   });
   frag.querySelectorAll("img").forEach((img) => {
     const src = img.getAttribute("src") ?? "";
-    if (!/^(\/|https:\/\/)/.test(src) || src.startsWith("//")) img.removeAttribute("src");
+    // server-signed relative URLs, https, or (offline packages) inlined raster/SVG images
+    const inline = /^data:image\/(png|jpe?g|gif|webp|avif|svg\+xml);base64,/i.test(src);
+    if (!inline && (!/^(\/|https:\/\/)/.test(src) || src.startsWith("//"))) img.removeAttribute("src");
     img.setAttribute("draggable", "false");
     img.setAttribute("loading", "lazy");
     img.setAttribute("decoding", "async");
