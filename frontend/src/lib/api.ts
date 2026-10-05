@@ -138,6 +138,7 @@ async function fixtureHomeFor(exam: string | null): Promise<HomePayload> {
     subjects,
     bestsellers: await Promise.all(home.bestsellers.filter(fits).map((b) => fixtureWithExam(b, slug))),
     quick_review: await Promise.all(home.quick_review.filter(fits).map((b) => fixtureWithExam(b, slug))),
+    discounted: await Promise.all((home.discounted ?? []).filter(fits).map((b) => fixtureWithExam(b, slug))),
   };
 }
 

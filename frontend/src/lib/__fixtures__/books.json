@@ -823,7 +823,12 @@
         "date": "2026-11-05",
         "days_left": 33
       }
-    }
+    },
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 101,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 2,
@@ -1030,7 +1035,12 @@
     ],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": 1650000,
+    "card_discount_percent": 10,
+    "quick_add_variant_id": 104,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 3,
@@ -1175,7 +1185,12 @@
     ],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 107,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 4,
@@ -1219,7 +1234,7 @@
       }
     ],
     "min_price": 760000,
-    "card_price": 1280000,
+    "card_price": 1090000,
     "card_format": "PRINT",
     "formats": [
       "PRINT",
@@ -1283,9 +1298,9 @@
         "type": "PRINT",
         "type_label": "نسخه چاپی",
         "price": 1280000,
-        "sale_price": null,
-        "effective_price": 1280000,
-        "discount_percent": 0,
+        "sale_price": 1090000,
+        "effective_price": 1090000,
+        "discount_percent": 15,
         "in_stock": true,
         "stock": 9,
         "price_is_placeholder": false,
@@ -1315,7 +1330,7 @@
         "in_stock": true,
         "stock": 9,
         "price_is_placeholder": false,
-        "bundle_saving": 350000
+        "bundle_saving": 160000
       }
     ],
     "related_courses": [
@@ -1382,7 +1397,12 @@
     ],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": 1280000,
+    "card_discount_percent": 15,
+    "quick_add_variant_id": 109,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 5,
@@ -1521,7 +1541,12 @@
     ],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 112,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 6,
@@ -1649,7 +1674,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 114,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 7,
@@ -1693,7 +1723,7 @@
       }
     ],
     "min_price": 590000,
-    "card_price": 980000,
+    "card_price": 830000,
     "card_format": "PRINT",
     "formats": [
       "PRINT",
@@ -1751,9 +1781,9 @@
         "type": "PRINT",
         "type_label": "نسخه چاپی",
         "price": 980000,
-        "sale_price": null,
-        "effective_price": 980000,
-        "discount_percent": 0,
+        "sale_price": 830000,
+        "effective_price": 830000,
+        "discount_percent": 15,
         "in_stock": true,
         "stock": 11,
         "price_is_placeholder": false,
@@ -1777,7 +1807,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": 980000,
+    "card_discount_percent": 15,
+    "quick_add_variant_id": 116,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 8,
@@ -1885,7 +1920,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 118,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 9,
@@ -1923,7 +1963,7 @@
       }
     ],
     "min_price": 540000,
-    "card_price": 890000,
+    "card_price": 760000,
     "card_format": "PRINT",
     "formats": [
       "PRINT",
@@ -1981,9 +2021,9 @@
         "type": "PRINT",
         "type_label": "نسخه چاپی",
         "price": 890000,
-        "sale_price": null,
-        "effective_price": 890000,
-        "discount_percent": 0,
+        "sale_price": 760000,
+        "effective_price": 760000,
+        "discount_percent": 15,
         "in_stock": true,
         "stock": 8,
         "price_is_placeholder": false,
@@ -2007,7 +2047,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": 890000,
+    "card_discount_percent": 15,
+    "quick_add_variant_id": 119,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 10,
@@ -2129,7 +2174,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 121,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 11,
@@ -2247,7 +2297,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": 123,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 12,
@@ -2366,7 +2421,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": 690000,
+    "card_discount_percent": 14,
+    "quick_add_variant_id": 124,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 13,
@@ -3065,7 +3125,12 @@
         "date": "2026-11-05",
         "days_left": 33
       }
-    }
+    },
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": null,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 14,
@@ -3178,7 +3243,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": null,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 15,
@@ -3299,7 +3369,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": null,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 16,
@@ -3418,7 +3493,12 @@
     "kit_placements": [],
     "is_featured": false,
     "updated_at": "2026-10-01T09:30:00Z",
-    "course_offer": null
+    "course_offer": null,
+    "card_compare_price": null,
+    "card_discount_percent": null,
+    "quick_add_variant_id": null,
+    "rating_avg": null,
+    "rating_count": 0
   },
   {
     "id": 17,
@@ -3455,8 +3535,8 @@
         "short_name": "مرکز"
       }
     ],
-    "min_price": 395000,
-    "card_price": 395000,
+    "min_price": 335000,
+    "card_price": 335000,
     "card_format": "PRINT",
     "formats": [
       "PRINT"
@@ -3513,9 +3593,9 @@
         "type": "PRINT",
         "type_label": "نسخه چاپی",
         "price": 395000,
-        "sale_price": null,
-        "effective_price": 395000,
-        "discount_percent": 0,
+        "sale_price": 335000,
+        "effective_price": 335000,
+        "discount_percent": 15,
         "in_stock": true,
         "stock": 9,
         "price_is_placeholder": false,
@@ -4305,6 +4385,11 @@
         "date": "2026-11-05",
         "days_left": 33
       }
-    }
+    },
+    "card_compare_price": 395000,
+    "card_discount_percent": 15,
+    "quick_add_variant_id": 170,
+    "rating_avg": null,
+    "rating_count": 0
   }
 ]

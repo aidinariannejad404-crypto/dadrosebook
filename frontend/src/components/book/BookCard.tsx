@@ -1,13 +1,18 @@
 import Link from "next/link";
 import type { BookCard as BookCardData } from "@/lib/types";
-import { formatToman } from "@/lib/format";
+import { formatToman, toPersianDigits } from "@/lib/format";
+import { formatAverage } from "@/lib/reviews";
 import { routes } from "@/lib/config";
 import { PRICE_SOON, cardPriceLabel, cardStockNote } from "@/lib/variants";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
+import { Stars } from "@/components/reviews/Stars";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { BookCover } from "./BookCover";
 import { Badges } from "./Badges";
 import { formatSummary } from "./FormatBadges";
 import { SubjectTag } from "./SubjectTag";
+import { QuickAddButton } from "./QuickAddButton";
+import { cardDiscount, cardRating, quickAddVariant } from "./card-model";
 
 interface BookCardProps {
   book: BookCardData;
@@ -19,10 +24,12 @@ interface BookCardProps {
 const MAX_EXAM_CHIPS = 3;
 
 /**
- * Catalog card. The title link is stretched over the whole card (after:inset-0), so the
- * card is one big link while the notify button can still sit on top of it.
+ * Catalog card. The title link is stretched over the whole card (after:inset-0), so the card is
+ * one big link; the heart, quick add and notify buttons are siblings of that link (never nested
+ * in it) lifted above it with `relative z-10`, so every control is its own tab stop.
  * Badges come from the server (max 2, P1-20); the meta line carries the resource type and the
- * exam fit (P1-2, P1-11).
+ * exam fit (P1-2, P1-11). A discounted card price shows the list price crossed out and a
+ * «٪ تخفیف» badge (white on danger red, ≈ 7:1); stars appear from 5 approved reviews up.
  */
 export function BookCard({ book, showNotify = false, priority = false }: BookCardProps) {
   const priceLabel = cardPriceLabel(book.card_format);
@@ -36,9 +43,13 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
   const typeLabel = book.badges.some((b) => b.code === "quick_review") ? "" : book.resource_type_label;
   const meta = typeLabel || exams.length > 0;
   const formats = book.badges.some((b) => b.code === "bundle") ? null : formatSummary(book.formats);
+  const discount = cardDiscount(book);
+  const rating = cardRating(book);
+  const quickAdd = quickAddVariant(book);
+  const notify = showNotify && printOut;
 
   return (
-    <article className="group relative flex h-full flex-col rounded-card bg-surface p-2.5 shadow-card transition-shadow focus-within:shadow-raised hover:shadow-raised">
+    <article className="group relative flex h-full flex-col rounded-card bg-surface p-2.5 shadow-card transition-[box-shadow,transform] duration-300 focus-within:shadow-raised hover:shadow-raised motion-safe:md:hover:-translate-y-1">
       <div className="relative">
         <BookCover
           title={book.title}
@@ -55,6 +66,26 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             ناموجود
           </span>
         )}
+        {discount && book.in_stock && (
+          <span className="absolute start-0 top-1 rounded-full bg-danger px-2 py-0.5 text-[0.6875rem] font-extrabold leading-5 text-white shadow-card">
+            {toPersianDigits(discount.percent)}٪ تخفیف
+          </span>
+        )}
+        <WishlistButton
+          bookId={book.id}
+          bookTitle={book.title}
+          className="absolute -end-1 -top-1 z-10 [&_button]:border-transparent [&_button]:shadow-card"
+        />
+        {quickAdd != null && (
+          <QuickAddButton
+            variantId={quickAdd}
+            bookId={book.id}
+            bookTitle={book.title}
+            price={book.card_price}
+            format={book.card_format}
+            className="absolute -bottom-1 -end-1 shadow-raised"
+          />
+        )}
       </div>
 
       <div className="mt-2.5 flex flex-1 flex-col gap-1.5">
@@ -68,6 +99,15 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
           </Link>
         </h3>
         {author && <p className="line-clamp-1 text-xs text-ink-muted">{author}</p>}
+        {rating && (
+          <p className="flex items-center gap-1 text-[0.6875rem] leading-5 text-ink-muted">
+            <Stars value={rating.avg} size={13} />
+            <span className="font-bold text-ink" aria-hidden="true">
+              {formatAverage(rating.avg)}
+            </span>
+            <span>({toPersianDigits(rating.count)} نظر)</span>
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-1">
           {book.subjects.slice(0, 2).map((s) => (
             <SubjectTag key={s.id} subject={s} />
@@ -82,11 +122,20 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             {moreExams > 0 && " و …"}
           </p>
         )}
-        <div className="mt-auto flex flex-col gap-1 border-t border-line pt-2">
+        <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-2">
           {book.card_price != null ? (
-            <p className={`text-sm font-extrabold ${book.in_stock ? "text-ink" : "text-ink-muted"}`}>
-              {formatToman(book.card_price)}
-            </p>
+            <>
+              {discount && (
+                <p className="text-xs text-ink-muted">
+                  <span className="sr-only">قیمت پیش از تخفیف: </span>
+                  <del className="decoration-danger">{formatToman(discount.compare)}</del>
+                </p>
+              )}
+              <p className={`text-sm font-extrabold ${book.in_stock ? "text-ink" : "text-ink-muted"}`}>
+                {discount && <span className="sr-only">قیمت با تخفیف: </span>}
+                {formatToman(book.card_price)}
+              </p>
+            </>
           ) : (
             <p className="text-sm font-bold text-ink-muted">{PRICE_SOON}</p>
           )}
@@ -96,7 +145,7 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             (priceLabel ?? formats) && <p className="text-xs text-ink-muted">{priceLabel ?? formats}</p>
           )}
         </div>
-        {showNotify && printOut && (
+        {notify && (
           <NotifyMeButton
             bookId={book.id}
             bookTitle={book.title}

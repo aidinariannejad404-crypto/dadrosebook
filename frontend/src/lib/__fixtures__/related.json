@@ -68,7 +68,12 @@
           "label": "پرفروش‌ترین #۳ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 12,
@@ -138,80 +143,16 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "آیین-دادرسی-مدنی-کاربردی-دکتر-حسینی": [
     {
-      "id": 14,
-      "title": "سریع‌خوان آیین دادرسی مدنی",
-      "subtitle": "",
-      "slug": "سریع-خوان-آیین-دادرسی-مدنی-دکتر-حسینی",
-      "cover": null,
-      "authors": [
-        {
-          "id": 2,
-          "name": "دکتر حسینی",
-          "slug": "دکتر-حسینی"
-        }
-      ],
-      "subjects": [
-        {
-          "id": 2,
-          "name": "آیین دادرسی مدنی",
-          "slug": "آیین-دادرسی-مدنی",
-          "color": "#2E6F9E"
-        }
-      ],
-      "exam_types": [
-        {
-          "id": 1,
-          "name": "کانون وکلا",
-          "slug": "کانون-وکلا",
-          "short_name": "کانون"
-        },
-        {
-          "id": 2,
-          "name": "مرکز وکلا",
-          "slug": "مرکز-وکلا",
-          "short_name": "مرکز"
-        }
-      ],
-      "min_price": null,
-      "card_price": null,
-      "card_format": null,
-      "formats": [
-        "PRINT"
-      ],
-      "in_stock": false,
-      "print_in_stock": false,
-      "is_quick_review": true,
-      "volumes": 1,
-      "resource_type": "QUICK_REVIEW",
-      "resource_type_label": "سریع‌خوان",
-      "has_sample": false,
-      "kit_role": null,
-      "edition_badge": null,
-      "law_updated_until": "",
-      "course_badge": null,
-      "social_proof": {
-        "subject_rank": 3,
-        "season_buyers": null
-      },
-      "badges": [
-        {
-          "code": "bestseller",
-          "label": "پرفروش‌ترین #۳ آیین دادرسی مدنی",
-          "tone": "accent"
-        },
-        {
-          "code": "quick_review",
-          "label": "سریع‌خوان",
-          "tone": "warning"
-        }
-      ]
-    },
-    {
       "id": 12,
       "title": "بانک تست طبقه‌بندی‌شده کانون وکلا",
       "subtitle": "",
@@ -279,7 +220,12 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "حقوق-تجارت-جامع-دکتر-کریمی": [
@@ -351,7 +297,12 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 15,
@@ -415,7 +366,12 @@
           "label": "پرفروش‌ترین #۳ حقوق تجارت",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "حقوق-جزای-عمومی-دکتر-رضایی": [
@@ -482,82 +438,12 @@
           "label": "پرفروش‌ترین #۲ حقوق جزا",
           "tone": "accent"
         }
-      ]
-    },
-    {
-      "id": 16,
-      "title": "سریع‌خوان حقوق جزا",
-      "subtitle": "",
-      "slug": "سریع-خوان-حقوق-جزا-دکتر-رضایی",
-      "cover": null,
-      "authors": [
-        {
-          "id": 4,
-          "name": "دکتر رضایی",
-          "slug": "دکتر-رضایی"
-        }
       ],
-      "subjects": [
-        {
-          "id": 4,
-          "name": "حقوق جزا",
-          "slug": "حقوق-جزا",
-          "color": "#A23B32"
-        },
-        {
-          "id": 5,
-          "name": "آیین دادرسی کیفری",
-          "slug": "آیین-دادرسی-کیفری",
-          "color": "#7A2B3A"
-        }
-      ],
-      "exam_types": [
-        {
-          "id": 1,
-          "name": "کانون وکلا",
-          "slug": "کانون-وکلا",
-          "short_name": "کانون"
-        },
-        {
-          "id": 2,
-          "name": "مرکز وکلا",
-          "slug": "مرکز-وکلا",
-          "short_name": "مرکز"
-        }
-      ],
-      "min_price": 620000,
-      "card_price": 620000,
-      "card_format": "PRINT",
-      "formats": [
-        "PRINT"
-      ],
-      "in_stock": false,
-      "print_in_stock": false,
-      "is_quick_review": true,
-      "volumes": 1,
-      "resource_type": "QUICK_REVIEW",
-      "resource_type_label": "سریع‌خوان",
-      "has_sample": false,
-      "kit_role": null,
-      "edition_badge": null,
-      "law_updated_until": "",
-      "course_badge": null,
-      "social_proof": {
-        "subject_rank": 3,
-        "season_buyers": null
-      },
-      "badges": [
-        {
-          "code": "bestseller",
-          "label": "پرفروش‌ترین #۳ حقوق جزا",
-          "tone": "accent"
-        },
-        {
-          "code": "quick_review",
-          "label": "سریع‌خوان",
-          "tone": "warning"
-        }
-      ]
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 112,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "حقوق-جزای-اختصاصی-دکتر-رضایی": [
@@ -603,7 +489,7 @@
         }
       ],
       "min_price": 760000,
-      "card_price": 1280000,
+      "card_price": 1090000,
       "card_format": "PRINT",
       "formats": [
         "PRINT",
@@ -636,161 +522,15 @@
           "label": "چاپی + الکترونیک",
           "tone": "info"
         }
-      ]
-    },
-    {
-      "id": 16,
-      "title": "سریع‌خوان حقوق جزا",
-      "subtitle": "",
-      "slug": "سریع-خوان-حقوق-جزا-دکتر-رضایی",
-      "cover": null,
-      "authors": [
-        {
-          "id": 4,
-          "name": "دکتر رضایی",
-          "slug": "دکتر-رضایی"
-        }
       ],
-      "subjects": [
-        {
-          "id": 4,
-          "name": "حقوق جزا",
-          "slug": "حقوق-جزا",
-          "color": "#A23B32"
-        },
-        {
-          "id": 5,
-          "name": "آیین دادرسی کیفری",
-          "slug": "آیین-دادرسی-کیفری",
-          "color": "#7A2B3A"
-        }
-      ],
-      "exam_types": [
-        {
-          "id": 1,
-          "name": "کانون وکلا",
-          "slug": "کانون-وکلا",
-          "short_name": "کانون"
-        },
-        {
-          "id": 2,
-          "name": "مرکز وکلا",
-          "slug": "مرکز-وکلا",
-          "short_name": "مرکز"
-        }
-      ],
-      "min_price": 620000,
-      "card_price": 620000,
-      "card_format": "PRINT",
-      "formats": [
-        "PRINT"
-      ],
-      "in_stock": false,
-      "print_in_stock": false,
-      "is_quick_review": true,
-      "volumes": 1,
-      "resource_type": "QUICK_REVIEW",
-      "resource_type_label": "سریع‌خوان",
-      "has_sample": false,
-      "kit_role": null,
-      "edition_badge": null,
-      "law_updated_until": "",
-      "course_badge": null,
-      "social_proof": {
-        "subject_rank": 3,
-        "season_buyers": null
-      },
-      "badges": [
-        {
-          "code": "bestseller",
-          "label": "پرفروش‌ترین #۳ حقوق جزا",
-          "tone": "accent"
-        },
-        {
-          "code": "quick_review",
-          "label": "سریع‌خوان",
-          "tone": "warning"
-        }
-      ]
+      "card_compare_price": 1280000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 109,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
-  "آیین-دادرسی-کیفری-دکتر-موسوی": [
-    {
-      "id": 16,
-      "title": "سریع‌خوان حقوق جزا",
-      "subtitle": "",
-      "slug": "سریع-خوان-حقوق-جزا-دکتر-رضایی",
-      "cover": null,
-      "authors": [
-        {
-          "id": 4,
-          "name": "دکتر رضایی",
-          "slug": "دکتر-رضایی"
-        }
-      ],
-      "subjects": [
-        {
-          "id": 4,
-          "name": "حقوق جزا",
-          "slug": "حقوق-جزا",
-          "color": "#A23B32"
-        },
-        {
-          "id": 5,
-          "name": "آیین دادرسی کیفری",
-          "slug": "آیین-دادرسی-کیفری",
-          "color": "#7A2B3A"
-        }
-      ],
-      "exam_types": [
-        {
-          "id": 1,
-          "name": "کانون وکلا",
-          "slug": "کانون-وکلا",
-          "short_name": "کانون"
-        },
-        {
-          "id": 2,
-          "name": "مرکز وکلا",
-          "slug": "مرکز-وکلا",
-          "short_name": "مرکز"
-        }
-      ],
-      "min_price": 620000,
-      "card_price": 620000,
-      "card_format": "PRINT",
-      "formats": [
-        "PRINT"
-      ],
-      "in_stock": false,
-      "print_in_stock": false,
-      "is_quick_review": true,
-      "volumes": 1,
-      "resource_type": "QUICK_REVIEW",
-      "resource_type_label": "سریع‌خوان",
-      "has_sample": false,
-      "kit_role": null,
-      "edition_badge": null,
-      "law_updated_until": "",
-      "course_badge": null,
-      "social_proof": {
-        "subject_rank": 3,
-        "season_buyers": null
-      },
-      "badges": [
-        {
-          "code": "bestseller",
-          "label": "پرفروش‌ترین #۳ حقوق جزا",
-          "tone": "accent"
-        },
-        {
-          "code": "quick_review",
-          "label": "سریع‌خوان",
-          "tone": "warning"
-        }
-      ]
-    }
-  ],
+  "آیین-دادرسی-کیفری-دکتر-موسوی": [],
   "اصول-فقه-کاربردی-استاد-محمدی": [],
   "متون-فقه-شرح-لمعه-استاد-محمدی": [],
   "حقوق-اساسی-در-نظم-حقوقی-ایران-دکتر-نوری": [],
@@ -872,7 +612,12 @@
           "label": "پرفروش‌ترین #۱ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 101,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 2,
@@ -949,7 +694,12 @@
           "label": "پرفروش‌ترین #۱ آیین دادرسی مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 1650000,
+      "card_discount_percent": 10,
+      "quick_add_variant_id": 104,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 3,
@@ -1020,7 +770,12 @@
           "label": "پرفروش‌ترین #۱ حقوق تجارت",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 107,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 13,
@@ -1090,76 +845,12 @@
           "label": "پرفروش‌ترین #۳ حقوق مدنی",
           "tone": "accent"
         }
-      ]
-    },
-    {
-      "id": 14,
-      "title": "سریع‌خوان آیین دادرسی مدنی",
-      "subtitle": "",
-      "slug": "سریع-خوان-آیین-دادرسی-مدنی-دکتر-حسینی",
-      "cover": null,
-      "authors": [
-        {
-          "id": 2,
-          "name": "دکتر حسینی",
-          "slug": "دکتر-حسینی"
-        }
       ],
-      "subjects": [
-        {
-          "id": 2,
-          "name": "آیین دادرسی مدنی",
-          "slug": "آیین-دادرسی-مدنی",
-          "color": "#2E6F9E"
-        }
-      ],
-      "exam_types": [
-        {
-          "id": 1,
-          "name": "کانون وکلا",
-          "slug": "کانون-وکلا",
-          "short_name": "کانون"
-        },
-        {
-          "id": 2,
-          "name": "مرکز وکلا",
-          "slug": "مرکز-وکلا",
-          "short_name": "مرکز"
-        }
-      ],
-      "min_price": null,
-      "card_price": null,
-      "card_format": null,
-      "formats": [
-        "PRINT"
-      ],
-      "in_stock": false,
-      "print_in_stock": false,
-      "is_quick_review": true,
-      "volumes": 1,
-      "resource_type": "QUICK_REVIEW",
-      "resource_type_label": "سریع‌خوان",
-      "has_sample": false,
-      "kit_role": null,
-      "edition_badge": null,
-      "law_updated_until": "",
-      "course_badge": null,
-      "social_proof": {
-        "subject_rank": 3,
-        "season_buyers": null
-      },
-      "badges": [
-        {
-          "code": "bestseller",
-          "label": "پرفروش‌ترین #۳ آیین دادرسی مدنی",
-          "tone": "accent"
-        },
-        {
-          "code": "quick_review",
-          "label": "سریع‌خوان",
-          "tone": "warning"
-        }
-      ]
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 15,
@@ -1223,7 +914,12 @@
           "label": "پرفروش‌ترین #۳ حقوق تجارت",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "سریع-خوان-حقوق-مدنی-دکتر-شکری": [
@@ -1302,7 +998,12 @@
           "label": "پرفروش‌ترین #۱ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 101,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 12,
@@ -1372,7 +1073,12 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "سریع-خوان-آیین-دادرسی-مدنی-دکتر-حسینی": [
@@ -1451,7 +1157,12 @@
           "label": "پرفروش‌ترین #۱ آیین دادرسی مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 1650000,
+      "card_discount_percent": 10,
+      "quick_add_variant_id": 104,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 12,
@@ -1521,7 +1232,12 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "سریع-خوان-حقوق-تجارت-دکتر-کریمی": [
@@ -1594,7 +1310,12 @@
           "label": "پرفروش‌ترین #۱ حقوق تجارت",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 107,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 12,
@@ -1664,7 +1385,12 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "سریع-خوان-حقوق-جزا-دکتر-رضایی": [
@@ -1710,7 +1436,7 @@
         }
       ],
       "min_price": 760000,
-      "card_price": 1280000,
+      "card_price": 1090000,
       "card_format": "PRINT",
       "formats": [
         "PRINT",
@@ -1743,7 +1469,12 @@
           "label": "چاپی + الکترونیک",
           "tone": "info"
         }
-      ]
+      ],
+      "card_compare_price": 1280000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 109,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 5,
@@ -1808,7 +1539,12 @@
           "label": "پرفروش‌ترین #۲ حقوق جزا",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 112,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 6,
@@ -1879,7 +1615,12 @@
           "label": "پرفروش‌ترین #۱ آیین دادرسی کیفری",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 114,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ],
   "حقوق-مدنی-نموداری": [
@@ -1958,7 +1699,12 @@
           "label": "پرفروش‌ترین #۱ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 101,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 13,
@@ -2028,7 +1774,12 @@
           "label": "پرفروش‌ترین #۳ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
     },
     {
       "id": 12,
@@ -2098,7 +1849,12 @@
           "label": "پرفروش‌ترین #۲ حقوق مدنی",
           "tone": "accent"
         }
-      ]
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
     }
   ]
 }
