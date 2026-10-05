@@ -108,3 +108,12 @@ export function ReaderThemeToggle({ value, onChange }: { value: ReaderTheme; onC
     </>
   );
 }
+
+/** The labelled light / sepia / dark choice (EPUB settings sheet). */
+export function ReaderThemeChoices({ value, onChange }: { value: ReaderTheme; onChange: (t: ReaderTheme) => void }) {
+  return (
+    <div role="group" aria-label="رنگ پس‌زمینه کتاب" className="flex gap-1">
+      <ThemeButtons value={value} onChange={onChange} labelled />
+    </div>
+  );
+}

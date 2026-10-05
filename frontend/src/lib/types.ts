@@ -558,6 +558,75 @@ export interface ReaderSession {
   };
   progress: ReadingProgress | null;
   watermark: string;
+  /** Phase 6: max characters one copy may take (the reader appends a citation) */
+  copy_limit: number;
+  /** Phase 6: present when file.format == "EPUB" */
+  epub: EpubInfo | null;
+}
+
+/* ---------- Phase 6: EPUB streaming, bookmarks, devices, search ---------- */
+
+export interface EpubChapterMeta {
+  index: number;
+  title: string;
+  /** first virtual page of the chapter (1-based) */
+  start_page: number;
+  pages: number;
+  chars: number;
+}
+
+export interface EpubTocItem {
+  title: string;
+  chapter: number;
+  /** "" = chapter start; else the element id is `epub-${anchor}` */
+  anchor: string;
+  level: number;
+}
+
+export interface EpubInfo {
+  language: string;
+  direction: "rtl" | "ltr";
+  total_pages: number;
+  chapters: EpubChapterMeta[];
+  toc: EpubTocItem[];
+}
+
+export interface EpubChapter extends EpubChapterMeta {
+  prev: number | null;
+  next: number | null;
+  /** sanitized server-side */
+  html: string;
+}
+
+export interface Bookmark {
+  id: number;
+  page: number;
+  /** "epub:<chapter>:<offset>" for EPUB, "" for PDF */
+  location: string;
+  label: string;
+  created_at: string;
+}
+
+export interface ReaderDevice {
+  id: number;
+  label: string;
+  last_seen: string;
+  current: boolean;
+}
+
+export interface SearchResult {
+  chapter: number;
+  title: string;
+  /** nth folded match in that chapter (0-based) */
+  occurrence: number;
+  before: string;
+  match: string;
+  after: string;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  truncated: boolean;
 }
 
 /** A rectangle as fractions (0..1) of the page box. */

@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { routes } from "@/lib/config";
 import { formatNumber, formatPercent, toPersianDigits } from "@/lib/format";
 import {
-  HIGHLIGHT_COLORS,
   PROGRESS_SAVE_DELAY_MS,
   clampPage,
+  createBookmark,
   createHighlight,
   debounce,
+  deleteBookmark,
   deleteHighlight,
   getReaderSession,
+  listBookmarks,
   listHighlights,
   mergeRects,
   needsUrlRefresh,
@@ -23,20 +25,23 @@ import {
   updateHighlight,
   type ReaderError,
 } from "@/lib/reader";
-import type { FractionRect, Highlight, HighlightColor, ReaderSession } from "@/lib/types";
+import { buildCopyText } from "@/lib/reader-epub";
+import type { Bookmark, FractionRect, Highlight, HighlightColor, ReaderSession } from "@/lib/types";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ChevronIcon, HighlighterIcon, MinusIcon, NoteIcon, PlusIcon } from "@/components/ui/Icons";
+import { BookmarkIcon, ChevronIcon, HighlighterIcon, MinusIcon, PlusIcon } from "@/components/ui/Icons";
 import { PdfPageView, type PdfPageHandle } from "./PdfPageView";
 import { HighlightsDrawer } from "./HighlightsDrawer";
 import { HighlightEditor } from "./HighlightEditor";
 import { isInvalidPdfError, openPdf, type PdfDocument } from "./pdfjs";
 import { ReaderThemeToggle } from "./ReaderThemeToggle";
+import { EpubReader } from "./EpubReader";
+import { ReaderErrorView, ReaderNotice, ReaderShell, SelectionPopover, type ReaderFatalError } from "./ReaderChrome";
 import { initialReaderTheme, saveReaderTheme, type ReaderTheme } from "./theme";
 
 type State =
   | { status: "loading" }
-  | { status: "error"; error: ReaderError | { kind: "load" } }
-  | { status: "epub"; session: ReaderSession }
+  | { status: "error"; error: ReaderFatalError }
+  | { status: "epub"; session: ReaderSession; epub: NonNullable<ReaderSession["epub"]> }
   | { status: "ready"; session: ReaderSession; doc: PdfDocument; total: number };
 
 interface PendingSelection {
@@ -95,6 +100,7 @@ export function Reader({ slug }: { slug: string }) {
   const [zoomIndex, setZoomIndex] = useState(1);
   const [stageWidth, setStageWidth] = useState(0);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [pending, setPending] = useState<PendingSelection | null>(null);
   const [editor, setEditor] = useState<Editor>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -137,7 +143,10 @@ export function Reader({ slug }: { slug: string }) {
       const res = await getReaderSession(slug);
       if (cancelled) return;
       if (!res.ok) return setState({ status: "error", error: res.error });
-      if (res.data.file.format !== "PDF") return setState({ status: "epub", session: res.data });
+      if (res.data.file.format !== "PDF") {
+        if (!res.data.epub) return setState({ status: "error", error: { kind: "load" } });
+        return setState({ status: "epub", session: res.data, epub: res.data.epub });
+      }
       const out = await openWithRefresh(slug, res.data);
       if ("error" in out) {
         if (!cancelled) setState({ status: "error", error: out.error });
@@ -153,8 +162,9 @@ export function Reader({ slug }: { slug: string }) {
       lastSaved.current = out.session.progress?.page ?? null;
       setPage(start);
       setState({ status: "ready", session: out.session, doc: out.doc, total: totalPages });
-      const hl = await listHighlights(slug);
+      const [hl, bm] = await Promise.all([listHighlights(slug), listBookmarks(slug)]);
       if (!cancelled && hl.ok) setHighlights(hl.data);
+      if (!cancelled && bm.ok) setBookmarks(bm.data);
     })().catch(() => {
       if (!cancelled) setState({ status: "error", error: { kind: "network" } });
     });
@@ -282,6 +292,8 @@ export function Reader({ slug }: { slug: string }) {
     };
   }, [ready]);
 
+  const onFatal = useCallback((error: ReaderFatalError) => setState({ status: "error", error }), []);
+
   const flash = useCallback((msg: string) => {
     setNotice(msg);
     window.setTimeout(() => setNotice(""), 4000);
@@ -334,6 +346,55 @@ export function Reader({ slug }: { slug: string }) {
     flash("هایلایت حذف شد.");
   }, [editor, slug, flash]);
 
+  /* ---------- bookmarks ---------- */
+  const currentBookmark = bookmarks.find((b) => b.page === page) ?? null;
+  const toggleBookmark = useCallback(async () => {
+    setBusy(true);
+    if (currentBookmark) {
+      const res = await deleteBookmark(slug, currentBookmark.id);
+      setBusy(false);
+      if (!res.ok) return flash("حذف نشانک انجام نشد. دوباره تلاش کنید.");
+      setBookmarks((list) => list.filter((b) => b.id !== currentBookmark.id));
+      return flash("نشانک برداشته شد.");
+    }
+    const res = await createBookmark(slug, { page: pageNow.current });
+    setBusy(false);
+    if (!res.ok) return flash("افزودن نشانک انجام نشد. دوباره تلاش کنید.");
+    setBookmarks((list) => [...list.filter((b) => b.id !== res.data.id), res.data]);
+    flash("این صفحه نشانک‌گذاری شد.");
+  }, [currentBookmark, slug, flash]);
+
+  const removeBookmark = useCallback(
+    async (b: Bookmark) => {
+      const res = await deleteBookmark(slug, b.id);
+      if (!res.ok) return flash("حذف نشانک انجام نشد. دوباره تلاش کنید.");
+      setBookmarks((list) => list.filter((x) => x.id !== b.id));
+    },
+    [slug, flash],
+  );
+
+  /* ---------- copy: limited selection + citation ---------- */
+  const onCopy = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      if (!ready) return;
+      const sel = window.getSelection();
+      const text = sel?.toString() ?? "";
+      if (!sel || !text || sel.rangeCount === 0) return;
+      const node = sel.getRangeAt(0).commonAncestorContainer;
+      const el = node instanceof Element ? node : node.parentElement;
+      if (!el?.closest(".textLayer")) return;
+      e.preventDefault();
+      const out = buildCopyText(text.replace(/\s+/g, " ").trim(), ready.session.copy_limit, ready.session.book);
+      e.clipboardData.setData("text/plain", out.text);
+      flash(
+        out.truncated
+          ? `فقط ${formatNumber(ready.session.copy_limit)} نویسه نخست، همراه با ذکر منبع، کپی شد.`
+          : "متن همراه با ذکر منبع کپی شد.",
+      );
+    },
+    [ready, flash],
+  );
+
   const pageHighlights = useMemo(() => highlights.filter((h) => h.page === page), [highlights, page]);
   const nextHighlights = useMemo(() => highlights.filter((h) => h.page === page + 1), [highlights, page]);
 
@@ -351,61 +412,22 @@ export function Reader({ slug }: { slug: string }) {
   if (state.status === "loading") return <ReaderSkeleton slug={slug} theme={theme} />;
 
   if (state.status === "error") {
-    const e = state.error;
-    if (e.kind === "auth") {
-      const loginHref = `${routes.login}?next=${encodeURIComponent(routes.read(slug))}`;
-      return (
-        <ReaderMessage theme={theme} title="برای مطالعه وارد حساب خود شوید">
-          <ActionLink href={loginHref} primary>
-            ورود / ثبت‌نام
-          </ActionLink>
-          <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
-        </ReaderMessage>
-      );
-    }
-    if (e.kind === "forbidden") {
-      return (
-        <ReaderMessage
-          theme={theme}
-          title="این کتاب الکترونیک در کتابخانه شما نیست"
-          body="برای مطالعه، نسخه الکترونیک این کتاب را از صفحه کتاب تهیه کنید."
-        >
-          <ActionLink href={productHref} primary>
-            مشاهده و خرید کتاب
-          </ActionLink>
-        </ReaderMessage>
-      );
-    }
-    if (e.kind === "no_ebook") {
-      return (
-        <ReaderMessage theme={theme} title="نسخه الکترونیک این کتاب هنوز آماده نیست">
-          <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
-        </ReaderMessage>
-      );
-    }
     return (
-      <ReaderMessage
-        theme={theme}
-        title={e.kind === "load" ? "باز کردن کتاب ممکن نشد" : "اتصال برقرار نشد"}
-        body="اینترنت خود را بررسی کنید و دوباره تلاش کنید."
-      >
-        <button
-          type="button"
-          onClick={() => setAttempt((n) => n + 1)}
-          className="inline-flex min-h-11 items-center justify-center rounded-control bg-primary px-5 font-bold text-surface hover:bg-primary-hover"
-        >
-          تلاش دوباره
-        </button>
-        <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
-      </ReaderMessage>
+      <ReaderErrorView slug={slug} theme={theme} error={state.error} onRetry={() => setAttempt((n) => n + 1)} />
     );
   }
 
   if (state.status === "epub") {
     return (
-      <ReaderMessage theme={theme} title="نسخه EPUB به‌زودی در کتابخوان پشتیبانی می‌شود" body={state.session.book.title}>
-        <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
-      </ReaderMessage>
+      <EpubReader
+        key={attempt}
+        slug={slug}
+        session={state.session}
+        epub={state.epub}
+        theme={theme}
+        onTheme={setTheme}
+        onFatal={onFatal}
+      />
     );
   }
 
@@ -434,12 +456,22 @@ export function Reader({ slug }: { slug: string }) {
           <ReaderThemeToggle value={theme} onChange={setTheme} />
           <button
             type="button"
+            onClick={() => void toggleBookmark()}
+            disabled={busy}
+            aria-pressed={currentBookmark !== null}
+            aria-label={currentBookmark ? "برداشتن نشانک این صفحه" : "نشانک‌گذاری این صفحه"}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-primary hover:bg-primary-soft disabled:opacity-60"
+          >
+            <BookmarkIcon size={22} filled={currentBookmark !== null} />
+          </button>
+          <button
+            type="button"
             onClick={() => setDrawerOpen(true)}
             className="relative inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-sm font-bold text-primary hover:bg-primary-soft"
           >
             <HighlighterIcon size={22} />
-            <span className="hidden md:inline">هایلایت‌ها و یادداشت‌ها</span>
-            <span className="sr-only md:hidden">هایلایت‌ها و یادداشت‌ها</span>
+            <span className="hidden md:inline">هایلایت‌ها و نشانک‌ها</span>
+            <span className="sr-only md:hidden">هایلایت‌ها و نشانک‌ها</span>
             {highlights.length > 0 && (
               <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-[color:var(--color-on-accent)]">{formatNumber(highlights.length)}</span>
             )}
@@ -462,6 +494,8 @@ export function Reader({ slug }: { slug: string }) {
       <div
         ref={stageRef}
         className="relative flex-1 overflow-auto bg-surface-muted py-4"
+        onCopy={onCopy}
+        onCut={onCopy}
         onTouchStart={(e) => {
           const t = e.touches[0];
           touchStart.current = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
@@ -618,132 +652,24 @@ export function Reader({ slug }: { slug: string }) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         highlights={highlights}
+        bookmarks={bookmarks}
         currentPage={page}
-        onJump={goTo}
+        onJump={(h) => goTo(h.page)}
         onEdit={(h) => {
           setDrawerOpen(false);
           goTo(h.page);
           setEditor({ mode: "edit", highlight: h });
         }}
+        onJumpBookmark={(b) => goTo(b.page)}
+        onDeleteBookmark={(b) => void removeBookmark(b)}
       />
 
-      <p
-        role="status"
-        className={`pointer-events-none fixed inset-x-4 bottom-24 z-50 mx-auto w-fit max-w-sm rounded-control bg-ink px-4 py-2 text-center text-sm text-surface shadow-raised transition-opacity ${
-          notice ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {notice}
-      </p>
+      <ReaderNotice text={notice} />
     </ReaderShell>
   );
 }
 
 /* ---------- pieces ---------- */
-
-function ReaderShell({ theme, children }: { theme: ReaderTheme; children: ReactNode }) {
-  return (
-    <>
-      <div data-reader-theme={theme} className="reader-root fixed inset-0 z-40 flex flex-col bg-surface-muted text-ink">
-        {children}
-      </div>
-      <p className="reader-print-block hidden p-8 text-center text-lg font-bold">چاپ کتاب الکترونیک امکان‌پذیر نیست.</p>
-    </>
-  );
-}
-
-function SelectionPopover({
-  anchor,
-  busy,
-  onColor,
-  onNote,
-}: {
-  anchor: { x: number; y: number };
-  busy: boolean;
-  onColor: (c: HighlightColor) => void;
-  onNote: () => void;
-}) {
-  const WIDTH = 288;
-  const vw = typeof window === "undefined" ? 360 : window.innerWidth;
-  const vh = typeof window === "undefined" ? 640 : window.innerHeight;
-  // physical coordinates from the selection's client rect (positioning only; classes stay logical)
-  const x = Math.min(Math.max(anchor.x - WIDTH / 2, 8), vw - WIDTH - 8);
-  const y = Math.min(anchor.y + 12, vh - 140);
-  return (
-    <div
-      role="toolbar"
-      aria-label="هایلایت متن انتخاب‌شده"
-      className="fixed z-50 flex items-center gap-1 rounded-card border border-line bg-surface p-1.5 shadow-raised"
-      style={{ left: x, top: y, width: WIDTH }}
-      // keep the text selection alive while pressing a button
-      onMouseDown={(e) => e.preventDefault()}
-      onPointerDown={(e) => e.preventDefault()}
-    >
-      {HIGHLIGHT_COLORS.map((c) => (
-        <button
-          key={c.value}
-          type="button"
-          disabled={busy}
-          onClick={() => onColor(c.value)}
-          aria-label={`هایلایت ${c.label}`}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-primary-soft disabled:opacity-60"
-        >
-          <span aria-hidden="true" className="size-7 rounded-full border-2 border-line-strong" style={{ backgroundColor: c.swatch }} />
-        </button>
-      ))}
-      <button
-        type="button"
-        disabled={busy}
-        onClick={onNote}
-        className="ms-auto inline-flex min-h-11 items-center justify-center gap-1 rounded-control px-3 text-sm font-bold text-primary hover:bg-primary-soft disabled:opacity-60"
-      >
-        <NoteIcon size={18} />
-        یادداشت
-      </button>
-    </div>
-  );
-}
-
-function ReaderMessage({
-  theme,
-  title,
-  body,
-  children,
-}: {
-  theme: ReaderTheme;
-  title: string;
-  body?: string;
-  children: ReactNode;
-}) {
-  return (
-    <ReaderShell theme={theme}>
-      <div className="flex flex-1 items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-card bg-surface p-6 text-center shadow-card">
-          <span aria-hidden="true" className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-primary-soft text-primary">
-            <HighlighterIcon size={28} />
-          </span>
-          <h1 className="text-lg font-bold leading-8">{title}</h1>
-          {body && <p className="mt-2 text-sm leading-7 text-ink-muted">{body}</p>}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">{children}</div>
-        </div>
-      </div>
-    </ReaderShell>
-  );
-}
-
-function ActionLink({ href, primary = false, children }: { href: string; primary?: boolean; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      prefetch={false}
-      className={`inline-flex min-h-11 items-center justify-center rounded-control px-5 font-bold ${
-        primary ? "bg-primary text-surface hover:bg-primary-hover" : "text-primary hover:bg-primary-soft"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}
 
 function ReaderSkeleton({ slug, theme }: { slug: string; theme: ReaderTheme }) {
   return (

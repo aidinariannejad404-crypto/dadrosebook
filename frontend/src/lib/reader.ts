@@ -1,12 +1,20 @@
 import { slugSegment } from "./api";
 import { apiFetch } from "./session";
+import type { ApiErrorBody } from "./session";
+import { findNthFolded, foldText, isDeviceId, uuidFromBytes } from "./reader-epub";
+import { EPUB_FIXTURE, EPUB_FIXTURE_SLUG, fixtureText } from "./reader-fixture-epub";
 import type {
+  Bookmark,
+  EpubChapter,
   FractionRect,
   Highlight,
   HighlightColor,
   HighlightCreate,
+  ReaderDevice,
   ReaderSession,
   ReadingProgress,
+  SearchResponse,
+  SearchResult,
 } from "./types";
 
 /**
@@ -21,6 +29,8 @@ export type ReaderError =
   | { kind: "forbidden" }
   | { kind: "no_ebook" }
   | { kind: "network" }
+  | { kind: "device_limit"; devices: ReaderDevice[] }
+  | { kind: "throttled" }
   | { kind: "http"; status: number };
 
 export type ReaderResult<T> = { ok: true; data: T } | { ok: false; error: ReaderError };
@@ -49,7 +59,58 @@ export function errorForStatus(status: number): ReaderError {
   if (status === 401) return { kind: "auth" };
   if (status === 403) return { kind: "forbidden" };
   if (status === 404) return { kind: "no_ebook" };
+  if (status === 429) return { kind: "throttled" };
   return { kind: "http", status };
+}
+
+/** Status + DRF body → typed error (Phase 6 adds 409 device_limit with the device list, 429). */
+export function errorFromResponse(status: number, body: ApiErrorBody | null | undefined): ReaderError {
+  if (status === 409 && body?.code === "device_limit") {
+    const devices = Array.isArray(body.devices) ? (body.devices as ReaderDevice[]) : [];
+    return { kind: "device_limit", devices };
+  }
+  return errorForStatus(status);
+}
+
+/* ---------- device id (X-Reader-Device) ---------- */
+
+export const DEVICE_KEY = "dadrose.reader.device";
+export const DEVICE_HEADER = "X-Reader-Device";
+let deviceId: string | null = null;
+
+function newDeviceId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+      return uuidFromBytes(crypto.getRandomValues(new Uint8Array(16)));
+    }
+  } catch {
+    /* fall through */
+  }
+  return uuidFromBytes(Array.from({ length: 16 }, () => Math.floor(Math.random() * 256)));
+}
+
+/** This browser's persistent reader device id (localStorage; per-visit when storage is blocked). */
+export function readerDeviceId(): string {
+  if (deviceId) return deviceId;
+  let stored: string | null = null;
+  try {
+    stored = window.localStorage.getItem(DEVICE_KEY);
+  } catch {
+    stored = null;
+  }
+  if (isDeviceId(stored)) {
+    deviceId = stored;
+    return stored;
+  }
+  const id = newDeviceId();
+  try {
+    window.localStorage.setItem(DEVICE_KEY, id);
+  } catch {
+    /* storage unavailable */
+  }
+  deviceId = id;
+  return id;
 }
 
 /** Reading percent with two decimals (matches the server's `percent`). */
@@ -203,21 +264,65 @@ export function groupHighlightsByPage(items: Highlight[]): { page: number; items
 /* ---------- fixtures ---------- */
 
 let fixtureHighlights: Highlight[] = [];
-let fixtureProgress: ReadingProgress | null = null;
+let fixtureBookmarks: Bookmark[] = [];
+const fixtureProgressBySlug = new Map<string, ReadingProgress>();
 let fixtureNextId = 1;
 
+/** Fixture slug that answers 409 device_limit until one device is removed. */
+export const DEVICE_LIMIT_FIXTURE_SLUG = "device-limit-sample";
+let fixtureDevices: ReaderDevice[] = [
+  { id: 1, label: "Chrome · Android", last_seen: "2026-10-04T08:12:00Z", current: false },
+  { id: 2, label: "Safari · iPhone", last_seen: "2026-09-28T19:40:00Z", current: false },
+  { id: 3, label: "Firefox · Windows", last_seen: "2026-09-02T11:05:00Z", current: false },
+];
+
 function fixtureSession(slug: string): ReaderSession {
+  const epub = slug === EPUB_FIXTURE_SLUG;
   return {
-    book: { slug, title: "نمونه کتاب الکترونیک", subtitle: "", cover: null, authors: ["دادرُز"], subjects: [] },
-    file: {
-      format: "PDF",
-      version: 1,
-      url: "/fixtures/reader-sample.pdf",
-      expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+    book: {
+      slug,
+      title: epub ? "قانون مدنی در نظم کنونی" : "نمونه کتاب الکترونیک",
+      subtitle: "",
+      cover: null,
+      authors: epub ? ["گروه مؤلفان دادرُز"] : ["دادرُز"],
+      subjects: [],
     },
-    progress: fixtureProgress,
+    file: epub
+      ? { format: "EPUB", version: 1, url: "", expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }
+      : {
+          format: "PDF",
+          version: 1,
+          url: "/fixtures/reader-sample.pdf",
+          expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+        },
+    progress: fixtureProgressBySlug.get(slug) ?? null,
     watermark: "0912***4567 · ۱۴۰۵/۰۷/۱۰",
+    copy_limit: 1000,
+    epub: epub ? EPUB_FIXTURE.info : null,
   };
+}
+
+const delay = <T>(v: T, ms = 120) => new Promise<T>((r) => setTimeout(() => r(v), ms));
+
+function fixtureSearch(q: string): SearchResponse {
+  const results: SearchResult[] = [];
+  const needle = foldText(q.trim());
+  for (const ch of EPUB_FIXTURE.chapters) {
+    const text = fixtureText(ch.html);
+    for (let n = 0; results.length < 100; n++) {
+      const hit = findNthFolded(text, q, n);
+      if (!hit) break;
+      results.push({
+        chapter: ch.index,
+        title: ch.title,
+        occurrence: n,
+        before: (hit.start > 40 ? "…" : "") + text.slice(Math.max(0, hit.start - 40), hit.start),
+        match: text.slice(hit.start, hit.end),
+        after: text.slice(hit.end, hit.end + 40) + (hit.end + 40 < text.length ? "…" : ""),
+      });
+    }
+  }
+  return { results: needle ? results : [], truncated: results.length >= 100 };
 }
 
 /* ---------- HTTP ---------- */
@@ -227,17 +332,24 @@ function fixtureSession(slug: string): ReaderSession {
  * one silent token refresh on 401, never cached.
  */
 async function call<T>(path: string, init: RequestInit = {}): Promise<ReaderResult<T>> {
-  const res = await apiFetch<T>(`/library${path}`, init);
+  const headers = new Headers(init.headers);
+  headers.set(DEVICE_HEADER, readerDeviceId());
+  const res = await apiFetch<T>(`/library${path}`, { ...init, headers });
   if (res.ok) return { ok: true, data: res.data };
   if (res.status === 0) return { ok: false, error: { kind: "network" } };
-  return { ok: false, error: errorForStatus(res.status) };
+  return { ok: false, error: errorFromResponse(res.status, res.error) };
 }
 
 const ok = <T>(data: T): ReaderResult<T> => ({ ok: true, data });
 
 /** GET /library/<slug>/read/ — book, signed file URL, progress and watermark. */
 export function getReaderSession(slug: string): Promise<ReaderResult<ReaderSession>> {
-  if (readerFixtureEnabled()) return Promise.resolve(ok(fixtureSession(slug)));
+  if (readerFixtureEnabled()) {
+    if (slug === DEVICE_LIMIT_FIXTURE_SLUG && fixtureDevices.length >= 3) {
+      return Promise.resolve({ ok: false, error: { kind: "device_limit", devices: fixtureDevices } });
+    }
+    return Promise.resolve(ok(fixtureSession(slug)));
+  }
   return call<ReaderSession>(`/${slugSegment(slug)}/read/`);
 }
 
@@ -248,14 +360,15 @@ export function saveProgress(
   { keepalive = false } = {},
 ): Promise<ReaderResult<ReadingProgress>> {
   if (readerFixtureEnabled()) {
-    fixtureProgress = {
+    const saved: ReadingProgress = {
       page: body.page,
       total_pages: body.total_pages,
       percent: progressPercent(body.page, body.total_pages),
       location: body.location ?? "",
       updated_at: new Date().toISOString(),
     };
-    return Promise.resolve(ok(fixtureProgress));
+    fixtureProgressBySlug.set(slug, saved);
+    return Promise.resolve(ok(saved));
   }
   return call<ReadingProgress>(`/${slugSegment(slug)}/progress/`, {
     method: "PUT",
@@ -321,4 +434,71 @@ export function deleteHighlight(slug: string, id: number): Promise<ReaderResult<
     return Promise.resolve(ok(undefined));
   }
   return call<void>(`/${slugSegment(slug)}/highlights/${id}/`, { method: "DELETE" });
+}
+
+/* ---------- Phase 6: EPUB chapters, search, bookmarks, devices ---------- */
+
+/** GET /library/<slug>/epub/chapters/<index>/ — one sanitized chapter. */
+export function getChapter(slug: string, index: number): Promise<ReaderResult<EpubChapter>> {
+  if (readerFixtureEnabled()) {
+    const ch = EPUB_FIXTURE.chapters[index];
+    return delay(ch ? ok(ch) : { ok: false, error: { kind: "http", status: 404 } });
+  }
+  return call<EpubChapter>(`/${slugSegment(slug)}/epub/chapters/${index}/`);
+}
+
+export const SEARCH_MIN = 2;
+export const SEARCH_MAX = 100;
+
+/** GET /library/<slug>/epub/search/?q= (2–100 characters after trimming). */
+export function searchBook(slug: string, q: string): Promise<ReaderResult<SearchResponse>> {
+  const query = q.trim().slice(0, SEARCH_MAX);
+  if (query.length < SEARCH_MIN) return Promise.resolve(ok({ results: [], truncated: false }));
+  if (readerFixtureEnabled()) return delay(ok(fixtureSearch(query)));
+  return call<SearchResponse>(`/${slugSegment(slug)}/epub/search/?q=${encodeURIComponent(query)}`);
+}
+
+export const MAX_BOOKMARK_LABEL = 120;
+
+export function listBookmarks(slug: string): Promise<ReaderResult<Bookmark[]>> {
+  if (readerFixtureEnabled()) return Promise.resolve(ok([...fixtureBookmarks].sort((a, b) => a.page - b.page)));
+  return call<Bookmark[]>(`/${slugSegment(slug)}/bookmarks/`);
+}
+
+export function createBookmark(
+  slug: string,
+  body: { page: number; location?: string; label?: string },
+): Promise<ReaderResult<Bookmark>> {
+  const clean = { page: body.page, location: body.location ?? "", label: (body.label ?? "").slice(0, MAX_BOOKMARK_LABEL) };
+  if (readerFixtureEnabled()) {
+    const same = fixtureBookmarks.find((b) => b.page === clean.page && b.location === clean.location);
+    if (same) return Promise.resolve(ok(same));
+    const b: Bookmark = { id: fixtureNextId++, ...clean, created_at: new Date().toISOString() };
+    fixtureBookmarks = [...fixtureBookmarks, b];
+    return Promise.resolve(ok(b));
+  }
+  return call<Bookmark>(`/${slugSegment(slug)}/bookmarks/`, { method: "POST", body: JSON.stringify(clean) });
+}
+
+export function deleteBookmark(slug: string, id: number): Promise<ReaderResult<void>> {
+  if (readerFixtureEnabled()) {
+    fixtureBookmarks = fixtureBookmarks.filter((b) => b.id !== id);
+    return Promise.resolve(ok(undefined));
+  }
+  return call<void>(`/${slugSegment(slug)}/bookmarks/${id}/`, { method: "DELETE" });
+}
+
+/** GET /library/devices/ */
+export function listDevices(): Promise<ReaderResult<ReaderDevice[]>> {
+  if (readerFixtureEnabled()) return Promise.resolve(ok(fixtureDevices));
+  return call<ReaderDevice[]>("/devices/");
+}
+
+/** DELETE /library/devices/<id>/ (the server allows a few removals per day → 429). */
+export function removeDevice(id: number): Promise<ReaderResult<void>> {
+  if (readerFixtureEnabled()) {
+    fixtureDevices = fixtureDevices.filter((d) => d.id !== id);
+    return Promise.resolve(ok(undefined));
+  }
+  return call<void>(`/devices/${id}/`, { method: "DELETE" });
 }

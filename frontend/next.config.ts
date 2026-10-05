@@ -30,6 +30,20 @@ const nextConfig: NextConfig = {
       { source: "/api/v1/:path*", destination: `${apiInternal}/:path*` },
     ];
   },
+  // Phase 6: the reader is private and must not be framed, cached, indexed or leak its URL.
+  async headers() {
+    return [
+      {
+        source: "/read/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   // Always render <title>/<meta>/Open Graph inside <head> (no metadata streaming): link previews in

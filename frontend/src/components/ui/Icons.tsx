@@ -235,3 +235,15 @@ export const NoteIcon = (p: IconProps) => (
     <path d="M14 3v6h6M8 13h8M8 17h5" />
   </Svg>
 );
+/** Bookmark ribbon; `filled` paints it (current page bookmarked). */
+export const BookmarkIcon = ({ filled = false, ...p }: IconProps & { filled?: boolean }) => (
+  <Svg {...p}>
+    <path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" fill={filled ? "currentColor" : "none"} />
+  </Svg>
+);
+/** Table of contents (lines with an indented sub-item). */
+export const ListIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 6h16M4 12h16M9 18h11" />
+  </Svg>
+);
