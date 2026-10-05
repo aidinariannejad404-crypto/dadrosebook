@@ -66,7 +66,9 @@ def resolve_exam_type(slug: str | None) -> ExamType | None:
     return ExamType.objects.filter(slug=slug, is_active=True).first()
 
 
-def discounted_books(books, exam_type: str | None = None, limit: int = DISCOUNTED_RAIL_SIZE) -> list[Book]:
+def discounted_books(
+    books, exam_type: str | None = None, limit: int = DISCOUNTED_RAIL_SIZE
+) -> list[Book]:
     """In-stock books whose card price is discounted (the «پیشنهاد ویژه» rail), biggest first.
 
     The DB narrows to books with any discounted, sellable variant; the card variant (print first)

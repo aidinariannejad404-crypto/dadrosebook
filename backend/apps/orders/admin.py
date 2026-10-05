@@ -1,7 +1,15 @@
+import csv
+import datetime as dt
+
 import jdatetime
 from django import forms
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.widgets import UnfoldAdminCheckboxSelectMultipleWidget
 
@@ -56,10 +64,47 @@ class OrderStatusLogInline(ReadOnlyInline):
         return jalali_dt(obj.created_at)
 
 
+class FollowupFilter(admin.SimpleListFilter):
+    """The dashboard's work queue links here."""
+
+    title = "پیگیری"
+    parameter_name = "followup"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("prepare", "پرداخت‌شده، منتظر آماده‌سازی"),
+            ("ship", "آماده‌شده، منتظر ارسال"),
+            ("overdue", "مرسوله دیرکرد دارد"),
+        )
+
+    def queryset(self, request, queryset):
+        from apps.core.services.store_settings import get_store_settings
+
+        value = self.value()
+        if value == "prepare":
+            return queryset.filter(status=Order.Status.PAID, needs_shipping=True)
+        if value == "ship":
+            return queryset.filter(status=Order.Status.PROCESSING)
+        if value == "overdue":
+            days = get_store_settings().shipping_overdue_days
+            return queryset.filter(
+                status=Order.Status.SHIPPED,
+                shipped_at__lt=timezone.now() - dt.timedelta(days=days),
+            )
+        return queryset
+
+
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
     inlines = (OrderItemInline, OrderStatusLogInline)
-    actions = ("to_processing", "to_shipped", "to_delivered", "to_cancelled")
+    actions = (
+        "to_processing",
+        "to_shipped",
+        "to_delivered",
+        "to_cancelled",
+        "print_slips",
+        "export_csv",
+    )
     list_display = (
         "number",
         "user_phone",
@@ -69,8 +114,8 @@ class OrderAdmin(ModelAdmin):
         "created_jalali",
         "paid_jalali",
     )
-    list_filter = ("status", "needs_shipping", "created_at")
-    search_fields = ("number", "user__phone")
+    list_filter = (FollowupFilter, "status", "needs_shipping", "shipping_method", "created_at")
+    search_fields = ("number", "user__phone", "tracking_code")
     list_select_related = ("user",)
     date_hierarchy = "created_at"
     list_per_page = 50
@@ -94,9 +139,22 @@ class OrderAdmin(ModelAdmin):
         "delivered_at",
         "cancelled_at",
         "checkout_key",
+        "print_link",
     )
     fieldsets = (
-        ("سفارش", {"fields": ("number", "user", "status", "created_jalali", "paid_jalali")}),
+        (
+            "سفارش",
+            {
+                "fields": (
+                    "number",
+                    "user",
+                    "status",
+                    "created_jalali",
+                    "paid_jalali",
+                    "print_link",
+                )
+            },
+        ),
         (
             "مبالغ",
             {
@@ -159,6 +217,88 @@ class OrderAdmin(ModelAdmin):
             f"{a.get('province', '')}، {a.get('city', '')}، {a.get('address_line', '')} — "
             f"کد پستی {a.get('postal_code', '')}"
         )
+
+    @admin.display(description="چاپ")
+    def print_link(self, obj):
+        if not obj.pk:
+            return "—"
+        url = reverse("admin:orders_order_print", args=[obj.pk])
+        return format_html('<a href="{}" target="_blank">فاکتور و برگه بسته‌بندی</a>', url)
+
+    def get_urls(self):
+        custom = [
+            path(
+                "<int:pk>/print/",
+                self.admin_site.admin_view(self.print_view),
+                name="orders_order_print",
+            )
+        ]
+        return custom + super().get_urls()
+
+    def print_view(self, request, pk):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        return self._render_slips(request, Order.objects.filter(pk=pk))
+
+    def _render_slips(self, request, queryset):
+        from apps.core.services.store_settings import get_store_settings
+
+        orders = queryset.select_related("user").prefetch_related("items").order_by("created_at")
+        return TemplateResponse(
+            request,
+            "backoffice/order_print.html",
+            {
+                "orders": [
+                    {
+                        "order": o,
+                        "created": jalali_dt(o.created_at),
+                        "paid": jalali_dt(o.paid_at),
+                        "address": o.shipping_address or {},
+                    }
+                    for o in orders
+                ],
+                "settings": get_store_settings(),
+                "title": "چاپ سفارش",
+            },
+        )
+
+    @admin.action(description="چاپ فاکتور و برگه بسته‌بندی")
+    def print_slips(self, request, queryset):
+        return self._render_slips(request, queryset)
+
+    @admin.action(description="خروجی اکسل (CSV)")
+    def export_csv(self, request, queryset):
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="orders.csv"'
+        response.write("\ufeff")  # BOM so Excel reads Persian text as UTF-8
+        writer = csv.writer(response)
+        writer.writerow(
+            ["شماره", "ثبت", "پرداخت", "موبایل", "وضعیت", "اقلام", "مبلغ", "روش ارسال",
+             "گیرنده", "استان", "شهر", "نشانی", "کد پستی", "کد رهگیری"]
+        )  # fmt: skip
+        for o in queryset.select_related("user").prefetch_related("items"):
+            a = o.shipping_address or {}
+            writer.writerow(
+                [
+                    o.number,
+                    jalali_dt(o.created_at),
+                    jalali_dt(o.paid_at),
+                    o.user.phone,
+                    o.get_status_display(),
+                    " | ".join(
+                        f"{i.title} ({i.variant_type}) ×{i.quantity}" for i in o.items.all()
+                    ),
+                    o.total,
+                    o.shipping_method_name,
+                    a.get("recipient_name", ""),
+                    a.get("province", ""),
+                    a.get("city", ""),
+                    a.get("address_line", ""),
+                    a.get("postal_code", ""),
+                    o.tracking_code,
+                ]
+            )
+        return response
 
     def _move(self, request, queryset, to_status):
         done, errors = 0, []

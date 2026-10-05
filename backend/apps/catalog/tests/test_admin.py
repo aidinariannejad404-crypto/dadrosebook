@@ -37,7 +37,7 @@ def test_admin_is_rtl_with_vazirmatn(admin_client, client):
     assert "admin_theme/admin.css" in html
     assert "admin_theme/unfold-rtl.css" in html
     assert "پنل مدیریت دادرُز" in html
-    for label in ("کاتالوگ", "محتوای صفحه اصلی", "کاربران"):
+    for label in ("کاتالوگ", "محتوای سایت", "مشتریان و بازاریابی"):
         assert label in html
     admin_client.logout()
     login = admin_client.get(reverse("admin:login")).content.decode()

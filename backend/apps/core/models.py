@@ -64,6 +64,17 @@ class StoreSettings(models.Model):
         help_text="مثلاً «+۱۵٬۰۰۰ دانشجوی آکادمی دادرُز». فقط با تأیید مالک پر شود؛ "
         "خالی یعنی نمایش داده نشود.",
     )
+    low_stock_threshold = models.PositiveSmallIntegerField(
+        "حد هشدار موجودی کم",
+        default=3,
+        help_text="نسخه‌های چاپی با موجودی برابر یا کمتر از این عدد در پیشخوان هشدار می‌گیرند.",
+    )
+    shipping_overdue_days = models.PositiveSmallIntegerField(
+        "مهلت تحویل مرسوله (روز)",
+        default=10,
+        help_text="سفارش ارسال‌شده‌ای که بیش از این تعداد روز «تحویل‌شده» نشود در پیشخوان "
+        "پیگیری می‌شود.",
+    )
     updated_at = models.DateTimeField("به‌روزرسانی", auto_now=True)
 
     class Meta:

@@ -499,6 +499,12 @@ class BookVariant(TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.book} — {self.get_type_display()}"
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.sale_price is not None and self.price and self.sale_price >= self.price:
+            raise ValidationError({"sale_price": "قیمت با تخفیف باید کمتر از قیمت اصلی باشد."})
+
     @property
     def effective_price(self) -> int:
         from .services.pricing import effective_price

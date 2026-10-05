@@ -16,6 +16,7 @@ class StoreSettingsAdmin(ModelAdmin):
                               "delivery_tehran_note", "delivery_province_note")}),
         ("مشاوره و پشتیبانی", {"fields": ("consult_whatsapp", "consult_telegram",
                                          "support_hours")}),
+        ("پیشخوان مدیریت", {"fields": ("low_stock_threshold", "shipping_overdue_days")}),
         ("اعتماد", {"fields": ("enamad_html", "students_count_claim")}),
     )  # fmt: skip
 
