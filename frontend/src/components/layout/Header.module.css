@@ -1,0 +1,41 @@
+/*
+ * Sticky header, pure CSS.
+ * Mobile: the header is two rows (logo/actions + search). It sticks with a negative top equal to
+ * the first row (padding 0.625rem + 2.75rem row + 0.5rem gap) so only the search row stays on screen.
+ * Desktop: one row, sticks at the top.
+ * Where scroll-driven animations exist, a shadow fades in over the first 64px of scroll.
+ */
+.header {
+  position: sticky;
+  top: -3.875rem;
+  z-index: 40;
+}
+
+@media (min-width: 768px) {
+  .header {
+    top: 0;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .header {
+    animation: header-shadow linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 64px;
+  }
+}
+
+@keyframes header-shadow {
+  from {
+    box-shadow: 0 0 0 rgb(16 24 43 / 0);
+  }
+  to {
+    box-shadow: 0 6px 18px rgb(16 24 43 / 0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    animation: none;
+  }
+}

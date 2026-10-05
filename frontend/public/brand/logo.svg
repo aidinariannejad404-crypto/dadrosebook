@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 64">
+  <!-- PLACEHOLDER lockup (mark + wordmark) for off-site use (email, print, social).
+       The website renders logo-mark.svg + an HTML wordmark; see README.md. -->
+  <rect x="172" width="64" height="64" rx="15" fill="#12264A"/>
+  <g transform="translate(172 0)">
+    <g fill="none" stroke="#C8A24B" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M32 15.5V44" stroke-width="3"/>
+      <path d="M17 20.5h30" stroke-width="3"/>
+      <path d="M17 20.5 12.5 31M17 20.5 21.5 31M47 20.5 42.5 31M47 20.5 51.5 31" stroke-width="1.6"/>
+      <path d="M11 44.5c7-3.2 14.5-2.6 21 1.8 6.5-4.4 14-5 21-1.8" stroke-width="3"/>
+      <path d="M11 50.5c7-3.2 14.5-2.6 21 1.8 6.5-4.4 14-5 21-1.8" stroke-width="3"/>
+    </g>
+    <g fill="#C8A24B">
+      <circle cx="32" cy="13" r="3"/>
+      <path d="M11.5 31h12a6 4 0 0 1-12 0Z"/>
+      <path d="M40.5 31h12a6 4 0 0 1-12 0Z"/>
+    </g>
+  </g>
+  <text x="158" y="36" direction="rtl" font-family="Vazirmatn, Tahoma, sans-serif" font-size="30" font-weight="900" fill="#12264A">دادرُز</text>
+  <text x="158" y="56" direction="rtl" font-family="Vazirmatn, Tahoma, sans-serif" font-size="12" font-weight="600" fill="#4A5163">کتاب و منابع آزمون حقوقی</text>
+</svg>

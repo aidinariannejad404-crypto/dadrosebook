@@ -2,12 +2,16 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { fixturesEnabled, getCategories, getStoreSettings } from "@/lib/api";
-import type { CategoryNode, StoreSettings } from "@/lib/types";
+import { fixturesEnabled, getCategories, getExamTypes, getStoreSettings, getSubjects } from "@/lib/api";
+import type { CategoryNode, ExamTypeMini, StoreSettings, SubjectMini } from "@/lib/types";
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/config";
 import { Header } from "@/components/layout/Header";
 import { CategoryNav } from "@/components/layout/CategoryNav";
 import { Footer } from "@/components/layout/Footer";
+import { HideOn } from "@/components/layout/HideOn";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { CategorySheet } from "@/components/layout/CategorySheet";
+import { CheckoutFooter, CheckoutHeader } from "@/components/layout/CheckoutChrome";
 import { CartProvider } from "@/components/cart/CartProvider";
 
 const vazirmatn = localFont({
@@ -51,6 +55,15 @@ async function loadCategories(): Promise<CategoryNode[]> {
   }
 }
 
+/** Exam types × subjects for the desktop mega menu and the mobile «دسته‌ها» sheet. */
+async function loadBrowse(): Promise<{ examTypes: ExamTypeMini[]; subjects: SubjectMini[] }> {
+  const [examTypes, subjects] = await Promise.all([
+    getExamTypes().catch(() => [] as ExamTypeMini[]),
+    getSubjects().catch(() => [] as SubjectMini[]),
+  ]);
+  return { examTypes, subjects };
+}
+
 async function loadStore(): Promise<StoreSettings | null> {
   try {
     return await getStoreSettings();
@@ -61,7 +74,9 @@ async function loadStore(): Promise<StoreSettings | null> {
 }
 
 export default async function RootLayout({ children, topbar }: { children: ReactNode; topbar: ReactNode }) {
-  const [categories, store] = await Promise.all([loadCategories(), loadStore()]);
+  const [categories, store, browse] = await Promise.all([loadCategories(), loadStore(), loadBrowse()]);
+  // the enclosed checkout (not /checkout/result) gets a minimal header/footer instead of the site chrome
+  const enclosed = { exact: ["/checkout"] };
   return (
     <html lang="fa" dir="rtl" className={vazirmatn.variable}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
@@ -73,12 +88,17 @@ export default async function RootLayout({ children, topbar }: { children: React
         </a>
         <CartProvider fixtures={fixturesEnabled()}>
           {topbar}
-          <Header fixtures={fixturesEnabled()} />
-          <CategoryNav categories={categories} />
+          <HideOn {...enclosed} fallback={<CheckoutHeader />}>
+            <Header fixtures={fixturesEnabled()} />
+            <CategoryNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
+          </HideOn>
           <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
             {children}
           </main>
-          <Footer store={store} />
+          <HideOn {...enclosed} fallback={<CheckoutFooter />}>
+            <Footer store={store} />
+          </HideOn>
+          <BottomNav sheet={<CategorySheet categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />} />
         </CartProvider>
       </body>
     </html>
