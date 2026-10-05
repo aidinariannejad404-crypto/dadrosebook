@@ -128,7 +128,10 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
               {discount && (
                 <p className="text-xs text-ink-muted">
                   <span className="sr-only">قیمت پیش از تخفیف: </span>
-                  <del className="decoration-danger">{formatToman(discount.compare)}</del>
+                  {/* a drawn line through the middle: text-decoration sits too low on Persian digits */}
+                  <del className="relative no-underline [text-decoration:none] before:absolute before:inset-x-0 before:top-1/2 before:h-px before:-rotate-6 before:bg-danger before:content-['']">
+                    {formatToman(discount.compare)}
+                  </del>
                 </p>
               )}
               <p className={`text-sm font-extrabold ${book.in_stock ? "text-ink" : "text-ink-muted"}`}>
