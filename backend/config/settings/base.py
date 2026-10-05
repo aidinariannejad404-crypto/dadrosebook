@@ -366,6 +366,12 @@ UNFOLD = {
                         "orders_order",
                         WQ + "orders_badge",
                     ),
+                    _nav(
+                        "مرجوعی و استرداد",
+                        "assignment_return",
+                        "orders_returnrequest",
+                        WQ + "returns_badge",
+                    ),
                     _nav("پرداخت‌ها", "payments", "payments_payment"),
                     _nav("کدهای تخفیف", "sell", "orders_discountcode"),
                     _nav("استفاده‌های کد تخفیف", "redeem", "orders_discountredemption"),

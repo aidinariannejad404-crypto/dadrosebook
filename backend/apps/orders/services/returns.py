@@ -394,6 +394,20 @@ def _revoke_ebooks(rr: ReturnRequest, order: Order) -> int:
     return revoked
 
 
+def _notify_refund(order: Order, amount: int, reference: str) -> None:
+    """Tell the customer by SMS once the refund is committed (text in «قالب پیامک‌ها»)."""
+    from apps.core.services.sms_templates import render_sms
+    from apps.core.sms_catalog import REFUND_DONE
+
+    from .state import _send_sms
+
+    phone = order.user.phone
+    text = render_sms(
+        REFUND_DONE, order=order.number, amount=format_toman(amount), reference=reference or "—"
+    )
+    transaction.on_commit(lambda: _send_sms(phone, text))
+
+
 def refund(rr: ReturnRequest, *, actor=None, note: str = "") -> ReturnRequest:
     """Pay the money back and close the case (``REFUNDED``).
 
@@ -471,6 +485,7 @@ def refund(rr: ReturnRequest, *, actor=None, note: str = "") -> ReturnRequest:
             if note:
                 notes.append(note)
             log(locked, from_status, R.REFUNDED, actor=actor, note=" — ".join(notes))
+            _notify_refund(order, amount, locked.refund_reference)
     _sync(rr, locked)
     if failure is not None:
         raise ReturnError(failure)

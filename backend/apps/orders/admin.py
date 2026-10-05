@@ -60,10 +60,25 @@ class OrderItemInline(ReadOnlyInline):
     readonly_fields = fields
 
 
+def status_label(choices, value: str) -> str:
+    try:
+        return choices(value).label
+    except ValueError:
+        return value or "—"
+
+
 class OrderStatusLogInline(ReadOnlyInline):
     model = OrderStatusLog
-    fields = ("from_status", "to_status", "note", "actor", "created_jalali")
+    fields = ("from_label", "to_label", "note", "actor", "created_jalali")
     readonly_fields = fields
+
+    @admin.display(description="از وضعیت")
+    def from_label(self, obj):
+        return status_label(Order.Status, obj.from_status)
+
+    @admin.display(description="به وضعیت")
+    def to_label(self, obj):
+        return status_label(Order.Status, obj.to_status)
 
     @admin.display(description="زمان")
     def created_jalali(self, obj):
@@ -613,12 +628,36 @@ class ReturnLineInline(TabularInline):
 
 class ReturnRequestLogInline(ReadOnlyInline):
     model = ReturnRequestLog
-    fields = ("from_status", "to_status", "note", "actor", "created_jalali")
+    fields = ("from_label", "to_label", "note", "actor", "created_jalali")
     readonly_fields = fields
+
+    @admin.display(description="از وضعیت")
+    def from_label(self, obj):
+        return status_label(ReturnRequest.Status, obj.from_status)
+
+    @admin.display(description="به وضعیت")
+    def to_label(self, obj):
+        return status_label(ReturnRequest.Status, obj.to_status)
 
     @admin.display(description="زمان")
     def created_jalali(self, obj):
         return jalali_dt(obj.created_at)
+
+
+class OpenReturnFilter(admin.SimpleListFilter):
+    """«در جریان»: what still needs staff (the dashboard links here)."""
+
+    title = "در جریان"
+    parameter_name = "open"
+
+    def lookups(self, request, model_admin):
+        return (("1", "منتظر اقدام"),)
+
+    def queryset(self, request, queryset):
+        if self.value() == "1":
+            R = ReturnRequest.Status
+            return queryset.filter(status__in=(R.REQUESTED, R.APPROVED, R.RECEIVED))
+        return queryset
 
 
 @admin.register(ReturnRequest)
@@ -644,7 +683,7 @@ class ReturnRequestAdmin(ModelAdmin):
         "window_label",
         "created_jalali",
     )
-    list_filter = ("status", "reason", "refund_method", "created_at")
+    list_filter = (OpenReturnFilter, "status", "reason", "refund_method", "created_at")
     search_fields = ("order__number", "order__user__phone", "refund_reference", "shaba")
     list_select_related = ("order", "order__user")
     date_hierarchy = "created_at"

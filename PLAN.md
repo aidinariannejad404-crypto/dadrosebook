@@ -14,7 +14,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
-| Admin | Back office, step 1: dashboard (work queue, KPIs, goal metrics), sales report + CSV, staff roles, audit log, order print/CSV, quick price/stock edit, customer summary, admin session timeout (`apps.backoffice`, see `docs/admin-panel-summary.md`); next: refunds/RMA, staff 2FA, SMS templates | 🚧 |
+| Admin | Back office, step 1: dashboard (work queue, KPIs, goal metrics), sales report + CSV, staff roles, audit log, order print/CSV, quick price/stock edit, customer summary, admin session timeout (`apps.backoffice`, see `docs/admin-panel-summary.md`); step 2: returns/refunds (`orders.ReturnRequest`), staff SMS 2FA + admin IP allowlist, editable SMS templates (`core.SmsTemplate`), abandoned-cart reminders; next: shipment API (paid), formal invoices | 🚧 |
 
 ---
 

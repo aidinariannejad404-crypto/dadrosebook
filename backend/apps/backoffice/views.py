@@ -51,7 +51,8 @@ def overview(window: metrics.Window) -> dict:
     return {
         "kpis": [
             kpi("فروش", format_toman(now["revenue"]), before=prev["revenue"],
-                now_raw=now["revenue"]),
+                now_raw=now["revenue"],
+                hint=f"خالص پس از استرداد: {format_toman(now['net'])}" if now["refunds"] else ""),
             kpi("سفارش موفق", format_number(now["orders"]), before=prev["orders"],
                 now_raw=now["orders"]),
             kpi("میانگین ارزش سفارش", format_toman(now["aov"]), before=prev["aov"],
@@ -153,6 +154,8 @@ def sales_report_view(request):
             "customers": format_number(summary["customers"]),
             "discounts": format_toman(summary["discounts"]),
             "shipping": format_toman(summary["shipping"]),
+            "refunds": format_toman(summary["refunds"]),
+            "net": format_toman(summary["net"]),
         },
         "codes": metrics.discount_codes(window),
         "query": request.GET.urlencode(),

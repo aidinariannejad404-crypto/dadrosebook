@@ -441,3 +441,19 @@ def test_admin_add_and_actions(admin_client, mixed_order, books):
     assert rr.status == R.REFUNDED
     assert mixed_order.refunded_total == 2_000_000
     assert admin_client.get(f"/admin/orders/returnrequest/{rr.pk}/change/").status_code == 200
+
+
+@mock.patch("apps.accounts.tasks.send_sms.delay")
+def test_refund_sends_customer_sms(send, mixed_order, django_capture_on_commit_callbacks):
+    rr = returns.create_return(
+        mixed_order, [(item_of(mixed_order, "PRINT"), 1)], reason=REASON, shaba=VALID_IBAN
+    )
+    returns.approve(rr)
+    returns.mark_received(rr)
+    rr.refund_reference = "77441"
+    rr.save()
+    with django_capture_on_commit_callbacks(execute=True):
+        returns.refund(rr)
+    phone, text = send.call_args.args
+    assert phone == mixed_order.user.phone
+    assert mixed_order.number in text and "77441" in text and "۲٬۰۰۰٬۰۰۰" in text

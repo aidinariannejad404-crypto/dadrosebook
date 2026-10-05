@@ -9,6 +9,7 @@
           {% if k.change >= 0 %}▲{% else %}▼{% endif %} {{ k.change_text }} نسبت به دوره قبل
         </div>
       {% endif %}
+      {% if k.hint %}<div class="bo-hint">{{ k.hint }}</div>{% endif %}
     </div>
   {% endfor %}
 </section>

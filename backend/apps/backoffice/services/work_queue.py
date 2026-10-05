@@ -37,6 +37,14 @@ def shipped_overdue(days: int, *, now=None) -> int:
     ).count()
 
 
+def open_returns() -> int:
+    """Returns waiting on staff: new requests and approved ones whose money isn't back yet."""
+    from apps.orders.models import ReturnRequest
+
+    R = ReturnRequest.Status
+    return ReturnRequest.objects.filter(status__in=(R.REQUESTED, R.APPROVED, R.RECEIVED)).count()
+
+
 def pending_reviews() -> int:
     return Review.objects.filter(status=Review.Status.PENDING).count()
 
@@ -98,6 +106,15 @@ def work_items(user=None) -> list[dict]:
             "url": _url("orders_order_changelist", "followup=overdue"),
             "icon": "schedule",
             "level": "warning",
+        },
+        {
+            "key": "returns",
+            "perm": "orders.view_returnrequest",
+            "title": "مرجوعی در جریان (بررسی، دریافت کالا یا استرداد)",
+            "count": open_returns(),
+            "url": _url("orders_returnrequest_changelist", "open=1"),
+            "icon": "assignment_return",
+            "level": "danger",
         },
         {
             "key": "reviews",
@@ -165,3 +182,7 @@ def reviews_badge(request) -> str:
 
 def low_stock_badge(request) -> str:
     return badge(low_stock_variants(get_store_settings().low_stock_threshold).count())
+
+
+def returns_badge(request) -> str:
+    return badge(open_returns())

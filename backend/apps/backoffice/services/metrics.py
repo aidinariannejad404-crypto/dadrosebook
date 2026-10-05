@@ -76,6 +76,7 @@ def sales_summary(window: Window) -> dict:
         revenue=Sum("total"),
         discounts=Sum("discount_total"),
         shipping=Sum("shipping_total"),
+        refunds=Sum("refunded_total"),
         customers=Count("user", distinct=True),
     )
     orders = agg["orders"] or 0
@@ -89,6 +90,8 @@ def sales_summary(window: Window) -> dict:
         "discounts": agg["discounts"] or 0,
         "shipping": agg["shipping"] or 0,
         "customers": agg["customers"] or 0,
+        "refunds": agg["refunds"] or 0,
+        "net": revenue - (agg["refunds"] or 0),
     }
 
 

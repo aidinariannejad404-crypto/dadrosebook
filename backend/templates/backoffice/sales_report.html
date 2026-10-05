@@ -22,7 +22,7 @@
   <section class="bo-grid bo-grid-4">
     <div class="bo-card"><div class="bo-kpi-title">مشتریان</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.customers }}</div></div>
     <div class="bo-card"><div class="bo-kpi-title">تخفیف داده‌شده</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.discounts }}</div></div>
-    <div class="bo-card"><div class="bo-kpi-title">هزینه ارسال دریافتی</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.shipping }}</div></div>
+    <div class="bo-card"><div class="bo-kpi-title">استرداد وجه</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.refunds }}</div><div class="bo-hint">فروش خالص: {{ summary.net }} — ارسال دریافتی: {{ summary.shipping }}</div></div>
     <div class="bo-card bo-actions">
       <a class="bo-btn" href="?{{ query }}{% if query %}&{% endif %}export=orders">خروجی اکسل سفارش‌ها</a>
       <a class="bo-btn bo-btn-ghost" href="?{{ query }}{% if query %}&{% endif %}export=books">خروجی اکسل کتاب‌ها</a>

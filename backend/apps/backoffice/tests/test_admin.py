@@ -154,3 +154,21 @@ def test_variant_quick_edit_validation(admin_client, books):
         {"_selected_action": [v.pk], "action": "confirm_prices"},
     )
     assert BookVariant.objects.get(pk=v.pk).price_is_placeholder is False
+
+
+def test_open_returns_in_work_queue_and_net_revenue(admin_client, user, books, buy):
+    from apps.backoffice.services import metrics
+    from apps.orders.services import returns
+
+    order = buy(user, books["civil_print"])
+    item = order.items.get()
+    rr = returns.create_return(order, [(item, 1)], reason="CHANGED_MIND")
+    items = {i["key"]: i for i in work_queue.work_items()}
+    assert items["returns"]["count"] == 1
+    assert admin_client.get(items["returns"]["url"]).status_code == 200
+    assert work_queue.returns_badge(None) == "۱"
+    Order.objects.filter(pk=order.pk).update(refunded_total=100)
+    s = metrics.sales_summary(metrics.window_for_days(7))
+    assert s["refunds"] == 100 and s["net"] == s["revenue"] - 100
+    assert "خالص پس از استرداد" in admin_client.get("/admin/").content.decode()
+    assert rr.pk

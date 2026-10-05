@@ -62,8 +62,14 @@ class SmsTemplateAdmin(ModelAdmin):
     form = SmsTemplateForm
     list_display = ("__str__", "kind_type", "short_body", "is_active")
     list_editable = ("is_active",)
-    readonly_fields = ("kind_label", "variables", "preview", "updated_at")
-    fields = ("kind_label", "body", "variables", "preview", "is_active", "updated_at")
+    readonly_fields = ("kind_label", "variables", "preview", "updated_jalali")
+    fields = ("kind_label", "body", "variables", "preview", "is_active", "updated_jalali")
+
+    @admin.display(description="آخرین ویرایش")
+    def updated_jalali(self, obj):
+        from apps.orders.admin import jalali_dt
+
+        return jalali_dt(obj.updated_at)
 
     def has_add_permission(self, request):
         return False
