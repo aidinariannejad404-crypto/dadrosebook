@@ -11,6 +11,7 @@ import {
   isValidPhone,
   normalizePhone,
 } from "@/lib/otp";
+import { receiveSmsCode } from "@/lib/webotp";
 import { announceAuth } from "./auth-events";
 
 interface OtpLoginProps {
@@ -72,6 +73,9 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
   const phoneRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const firstRender = useRef(true);
+  // Bumped on every sent code so WebOTP listens for the newest SMS.
+  const [sentNonce, setSentNonce] = useState(0);
+  const verifyRef = useRef<(value: string) => void>(() => {});
 
   const resendLeft = useSecondsLeft(resendUntil);
   const blockedLeft = useSecondsLeft(blockedUntil);
@@ -95,6 +99,7 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
       setLength(res.data.length > 0 ? res.data.length : 5);
       setResendUntil(Date.now() + Math.max(0, res.data.resend_in) * 1000);
       setBlockedUntil(null);
+      setSentNonce((n) => n + 1);
       return true;
     }
     if (res.status === 429) {
@@ -154,6 +159,21 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
     );
     codeRef.current?.focus();
   }
+
+  verifyRef.current = (value: string) => void verify(value);
+
+  // WebOTP (Android Chrome): fill and submit the code from the SMS's «@host #code» line.
+  useEffect(() => {
+    if (step !== "code") return;
+    const ac = new AbortController();
+    void receiveSmsCode(ac.signal, length).then((received) => {
+      if (!received || ac.signal.aborted) return;
+      setCode(received);
+      setError(null);
+      verifyRef.current(received);
+    });
+    return () => ac.abort();
+  }, [step, length, sentNonce]);
 
   async function onResend() {
     if (busy || resendLeft > 0) return;
