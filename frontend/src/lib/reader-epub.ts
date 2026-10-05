@@ -1,4 +1,4 @@
-import type { EpubChapterMeta } from "./types";
+import type { CopyQuota, EpubChapterMeta } from "./types";
 
 /**
  * Pure EPUB reader helpers (Phase 6, docs/api-contract.md «Phase 6»). No DOM, unit-tested.
@@ -141,18 +141,121 @@ export interface CopyResult {
  * "\n\n— «عنوان»، نویسندگان، کتابفروشی دادرُز".
  */
 export function buildCopyText(selection: string, limit: number, book: { title: string; authors: string[] }): CopyResult {
+  const { text, truncated } = cutCopy(selection, limit, book);
+  return { text, truncated };
+}
+
+function cutCopy(selection: string, limit: number, book: { title: string; authors: string[] }) {
   const max = Math.max(0, Math.floor(limit) || 0);
   const truncated = selection.length > max;
   let body = truncated ? selection.slice(0, max) : selection;
   // do not leave half of a surrogate pair at the cut
   if (truncated && /[\uD800-\uDBFF]$/.test(body)) body = body.slice(0, -1);
   body = body.trim();
+  const chars = body.length;
   if (truncated && body) body += "…";
+  return { text: `${body}\n\n${citationLine(book)}`, truncated, chars };
+}
+
+/** "— «عنوان»، نویسندگان، کتابفروشی دادرُز": the line every copy ends with (alone once the quota is used up). */
+export function citationLine(book: { title: string; authors: string[] }): string {
   const parts = [`«${book.title}»`];
   const authors = book.authors.filter(Boolean).join("، ");
   if (authors) parts.push(authors);
   parts.push(COPY_SOURCE);
-  return { text: `${body}\n\n— ${parts.join("، ")}`, truncated };
+  return `— ${parts.join("، ")}`;
+}
+
+/** Characters left in the book's total copy quota (never negative). */
+export function quotaRemaining(quota: CopyQuota | null | undefined): number {
+  if (!quota) return Number.POSITIVE_INFINITY;
+  return Math.max(0, Math.floor(quota.limit) - Math.floor(quota.used));
+}
+
+export interface CopyPlan {
+  /** what goes on the clipboard */
+  text: string;
+  /** selection characters taken (what the reader reports to POST /copies/) */
+  chars: number;
+  truncated: boolean;
+  /** the total quota is used up: only the citation line is copied */
+  exhausted: boolean;
+  /** which cap cut the selection: the per-copy `copy_limit` or the remaining total quota */
+  limitedBy: "copy" | "quota" | null;
+}
+
+/**
+ * Phase 6b copy rule: cut the selection to min(copy_limit, quota.limit − quota.used) (last known
+ * `used`), append the citation; when nothing is left only the citation is copied.
+ */
+export function planCopy(
+  selection: string,
+  copyLimit: number,
+  quota: CopyQuota | null | undefined,
+  book: { title: string; authors: string[] },
+): CopyPlan {
+  const perCopy = Math.max(0, Math.floor(copyLimit) || 0);
+  const remaining = quotaRemaining(quota);
+  if (remaining <= 0) return { text: citationLine(book), chars: 0, truncated: selection.length > 0, exhausted: true, limitedBy: "quota" };
+  const max = Math.min(perCopy, remaining);
+  const out = cutCopy(selection, max, book);
+  const limitedBy = out.truncated ? (remaining < perCopy ? "quota" : "copy") : null;
+  return { text: out.text, chars: out.chars, truncated: out.truncated, exhausted: false, limitedBy };
+}
+
+/** `used` after the server granted a copy (or optimistically, before it answers). */
+export function quotaAfterCopy(quota: CopyQuota, chars: number): CopyQuota {
+  return { limit: quota.limit, used: Math.min(quota.limit, quota.used + Math.max(0, Math.floor(chars))) };
+}
+
+/* ---------- paginated mode (CSS columns) ---------- */
+
+export type ReadingMode = "scroll" | "paged";
+/** Paginated by default from this viewport width (tablets/desktops); phones scroll by default. */
+export const PAGED_MIN_WIDTH = 768;
+
+export function defaultReadingMode(viewportWidth: number): ReadingMode {
+  return viewportWidth >= PAGED_MIN_WIDTH ? "paged" : "scroll";
+}
+
+/**
+ * Column geometry for the paged layout: one column = the text width the scroll mode would use
+ * (min(maxEm × font, box − 2 × padding)), gap = 2 × padding, so the next column starts exactly one
+ * box-width away. All values are whole pixels.
+ */
+export function pagedGeometry(
+  box: { width: number; height: number },
+  opts: { fontPx: number; maxEm: number; padding: number; padBlock: number },
+): { colWidth: number; gap: number; stride: number; height: number } {
+  const colWidth = Math.max(120, Math.floor(Math.min(opts.maxEm * opts.fontPx, box.width - 2 * opts.padding)));
+  const gap = Math.max(0, Math.round(2 * opts.padding));
+  const height = Math.max(160, Math.floor(box.height - 2 * opts.padBlock));
+  return { colWidth, gap, stride: colWidth + gap, height };
+}
+
+/** Number of columns of a multicol box whose scroll width is `scrollWidth`. */
+export function columnCount(scrollWidth: number, colWidth: number, gap: number): number {
+  const stride = colWidth + gap;
+  if (!(stride > 0) || !(scrollWidth > 0)) return 1;
+  return Math.max(1, Math.round((scrollWidth + gap) / stride));
+}
+
+/**
+ * Column (relative to the one on screen: 0 = visible, 1 = next, −1 = previous) holding a point
+ * at client x `cx`. RTL books flow their columns to the left, LTR ones to the right.
+ */
+export function relativeColumn(cx: number, frame: { left: number; right: number }, stride: number, rtl: boolean): number {
+  if (!(stride > 0)) return 0;
+  return Math.floor((rtl ? frame.right - cx : cx - frame.left) / stride);
+}
+
+/** Virtual page (the progress scale) of column `col` (0-based) out of `count` in a chapter. */
+export function columnPage(meta: Pick<EpubChapterMeta, "start_page" | "pages">, col: number, count: number): number {
+  const pages = Math.max(1, Math.floor(meta.pages) || 1);
+  const start = Math.max(1, Math.floor(meta.start_page) || 1);
+  const n = Math.max(1, Math.floor(count) || 1);
+  const c = Math.min(n - 1, Math.max(0, Math.floor(col) || 0));
+  return start + Math.min(pages - 1, Math.floor((c * pages) / n));
 }
 
 /* ---------- typography settings ---------- */
@@ -171,6 +274,8 @@ export interface EpubSettings {
   lineHeight: number; // index into LINE_HEIGHTS
   margin: number; // index into MARGINS
   justify: boolean;
+  /** «پیمایشی» / «صفحه‌ای»; absent = the default for this screen (defaultReadingMode) */
+  mode?: ReadingMode;
 }
 
 /**
@@ -192,6 +297,7 @@ export function sanitizeEpubSettings(raw: unknown): EpubSettings {
     lineHeight: idx(o.lineHeight, LINE_HEIGHTS.length, d.lineHeight),
     margin: idx(o.margin, MARGINS.length, d.margin),
     justify: typeof o.justify === "boolean" ? o.justify : d.justify,
+    mode: o.mode === "scroll" || o.mode === "paged" ? o.mode : undefined,
   };
 }
 

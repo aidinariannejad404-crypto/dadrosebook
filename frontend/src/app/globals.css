@@ -381,3 +381,26 @@ body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
 .reader-mark-pink { --mark: #f29cc4; }
 .reader-mark-active { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 .reader-root[data-reader-theme="dark"] .reader-mark { background: color-mix(in srgb, var(--mark) 32%, transparent); }
+
+/* Phase 6b: paginated EPUB mode (CSS columns, one screen per column) */
+.epub-content.epub-paged :is(img, figure) {
+  break-inside: avoid;
+}
+.epub-content.epub-paged img {
+  max-height: calc(var(--epub-page-h, 80vh) - 3em);
+  width: auto;
+  object-fit: contain;
+}
+.epub-content.epub-paged :is(h1, h2, h3, h4, h5, h6) {
+  break-after: avoid;
+  break-inside: avoid;
+}
+/* overflow:auto would make a table one unbreakable block: let rows flow across pages instead */
+.epub-content.epub-paged table {
+  display: table;
+  width: 100%;
+  overflow: visible;
+}
+.epub-content.epub-paged tr {
+  break-inside: avoid;
+}

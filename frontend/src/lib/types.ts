@@ -562,7 +562,21 @@ export interface ReaderSession {
   copy_limit: number;
   /** Phase 6: present when file.format == "EPUB" */
   epub: EpubInfo | null;
+  /** Phase 6b: total characters this user may copy from this book (all devices, all time) */
+  copy_quota?: CopyQuota | null;
 }
+
+/** Phase 6b: server-side total copy quota (`POST /library/<slug>/copies/` answers with `granted`). */
+export interface CopyQuota {
+  limit: number;
+  used: number;
+}
+
+export interface CopyRecorded extends CopyQuota {
+  granted: number;
+}
+
+export type NotesExportFormat = "md" | "html";
 
 /* ---------- Phase 6: EPUB streaming, bookmarks, devices, search ---------- */
 

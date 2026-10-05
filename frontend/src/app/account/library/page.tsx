@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/account/EmptyState";
 import { ContinueReading } from "@/components/account/ContinueReading";
 import { ReadingProgressMeter, isFinished, isInProgress, mostRecentInProgress } from "@/components/account/ReadingProgressMeter";
 import { BookOpenIcon, ChevronIcon } from "@/components/ui/Icons";
+import { NotesExportMenu } from "@/components/reader/NotesExport";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "کتابخانه من", robots: { index: false, follow: false } };
@@ -120,6 +121,7 @@ function LibraryCard({ entry: { book, granted_at, can_read, progress } }: { entr
               دسترسی به این کتاب غیرفعال است
             </p>
           )}
+          {can_read && <NotesExportMenu slug={book.slug} variant="card" />}
         </div>
       </div>
     </li>

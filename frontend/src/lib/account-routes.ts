@@ -6,6 +6,8 @@ export const accountRoutes = {
   order: (number: string) => `/account/orders/${encodeURIComponent(number)}`,
   addresses: "/account/addresses",
   library: "/account/library",
+  /** Phase 6b: ebook reading devices («دستگاه‌های من»). */
+  devices: "/account/devices",
   wishlist: "/account/wishlist",
   reviews: "/account/reviews",
   /** Phase 4 reader. */

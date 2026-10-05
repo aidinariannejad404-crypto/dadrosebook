@@ -105,6 +105,14 @@ export const BookOpenIcon = (p: IconProps) => (
     <path d="M12 6.5v13" />
   </Svg>
 );
+export const DevicesIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="2.5" y="4.5" width="13" height="10" rx="1.5" />
+    <path d="M6 18.5h6" />
+    <rect x="16.5" y="8" width="5" height="11.5" rx="1.2" />
+    <path d="M18.6 17.3h.8" />
+  </Svg>
+);
 export const TruckIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M3 6h11v10H3zM14 9.5h4l3 3.5v3h-7" />

@@ -1,15 +1,18 @@
 import { slugSegment } from "./api";
-import { apiFetch } from "./session";
+import { BROWSER_API, apiFetch, refreshSession } from "./session";
 import type { ApiErrorBody } from "./session";
 import { findNthFolded, foldText, isDeviceId, uuidFromBytes } from "./reader-epub";
 import { EPUB_FIXTURE, EPUB_FIXTURE_SLUG, fixtureText } from "./reader-fixture-epub";
 import type {
   Bookmark,
+  CopyQuota,
+  CopyRecorded,
   EpubChapter,
   FractionRect,
   Highlight,
   HighlightColor,
   HighlightCreate,
+  NotesExportFormat,
   ReaderDevice,
   ReaderSession,
   ReadingProgress,
@@ -270,11 +273,28 @@ let fixtureNextId = 1;
 
 /** Fixture slug that answers 409 device_limit until one device is removed. */
 export const DEVICE_LIMIT_FIXTURE_SLUG = "device-limit-sample";
-let fixtureDevices: ReaderDevice[] = [
+/** The three other devices that fill the limit for DEVICE_LIMIT_FIXTURE_SLUG. */
+let fixtureLimitDevices: ReaderDevice[] = [
   { id: 1, label: "Chrome · Android", last_seen: "2026-10-04T08:12:00Z", current: false },
   { id: 2, label: "Safari · iPhone", last_seen: "2026-09-28T19:40:00Z", current: false },
   { id: 3, label: "Firefox · Windows", last_seen: "2026-09-02T11:05:00Z", current: false },
 ];
+/** «دستگاه‌های من» (GET /library/devices/): this browser plus two others. */
+let fixtureDevices: ReaderDevice[] = [
+  { id: 11, label: "Chrome · Linux", last_seen: new Date().toISOString(), current: true },
+  { id: 12, label: "Safari · iPhone", last_seen: "2026-09-28T19:40:00Z", current: false },
+  { id: 13, label: "Firefox · Windows", last_seen: "2026-09-02T11:05:00Z", current: false },
+];
+/** Copy quota per book: nearly used up so exhaustion is easy to try (limit 2000, used 1900). */
+const fixtureQuota = new Map<string, CopyQuota>();
+function fixtureQuotaFor(slug: string): CopyQuota {
+  let q = fixtureQuota.get(slug);
+  if (!q) {
+    q = { limit: 2000, used: 1900 };
+    fixtureQuota.set(slug, q);
+  }
+  return q;
+}
 
 function fixtureSession(slug: string): ReaderSession {
   const epub = slug === EPUB_FIXTURE_SLUG;
@@ -299,6 +319,7 @@ function fixtureSession(slug: string): ReaderSession {
     watermark: "0912***4567 · ۱۴۰۵/۰۷/۱۰",
     copy_limit: 1000,
     epub: epub ? EPUB_FIXTURE.info : null,
+    copy_quota: { ...fixtureQuotaFor(slug) },
   };
 }
 
@@ -345,8 +366,8 @@ const ok = <T>(data: T): ReaderResult<T> => ({ ok: true, data });
 /** GET /library/<slug>/read/ — book, signed file URL, progress and watermark. */
 export function getReaderSession(slug: string): Promise<ReaderResult<ReaderSession>> {
   if (readerFixtureEnabled()) {
-    if (slug === DEVICE_LIMIT_FIXTURE_SLUG && fixtureDevices.length >= 3) {
-      return Promise.resolve({ ok: false, error: { kind: "device_limit", devices: fixtureDevices } });
+    if (slug === DEVICE_LIMIT_FIXTURE_SLUG && fixtureLimitDevices.length >= 3) {
+      return Promise.resolve({ ok: false, error: { kind: "device_limit", devices: fixtureLimitDevices } });
     }
     return Promise.resolve(ok(fixtureSession(slug)));
   }
@@ -490,7 +511,7 @@ export function deleteBookmark(slug: string, id: number): Promise<ReaderResult<v
 
 /** GET /library/devices/ */
 export function listDevices(): Promise<ReaderResult<ReaderDevice[]>> {
-  if (readerFixtureEnabled()) return Promise.resolve(ok(fixtureDevices));
+  if (readerFixtureEnabled()) return delay(ok(fixtureDevices));
   return call<ReaderDevice[]>("/devices/");
 }
 
@@ -498,7 +519,147 @@ export function listDevices(): Promise<ReaderResult<ReaderDevice[]>> {
 export function removeDevice(id: number): Promise<ReaderResult<void>> {
   if (readerFixtureEnabled()) {
     fixtureDevices = fixtureDevices.filter((d) => d.id !== id);
-    return Promise.resolve(ok(undefined));
+    fixtureLimitDevices = fixtureLimitDevices.filter((d) => d.id !== id);
+    return delay(ok(undefined));
   }
   return call<void>(`/devices/${id}/`, { method: "DELETE" });
+}
+
+/* ---------- Phase 6b: copy quota, notebook export ---------- */
+
+/** POST /library/<slug>/copies/ {chars} — report a copy the reader just made; answers the new quota. */
+export function recordCopy(slug: string, chars: number): Promise<ReaderResult<CopyRecorded>> {
+  const n = Math.max(0, Math.floor(chars));
+  if (readerFixtureEnabled()) {
+    const q = fixtureQuotaFor(slug);
+    const granted = Math.min(n, Math.max(0, q.limit - q.used));
+    q.used += granted;
+    return delay(ok({ limit: q.limit, used: q.used, granted }), 60);
+  }
+  return call<CopyRecorded>(`/${slugSegment(slug)}/copies/`, { method: "POST", body: JSON.stringify({ chars: n }) });
+}
+
+/** Default name for an exported notebook when the server sends no usable Content-Disposition. */
+export function notesFallbackName(slug: string, format: NotesExportFormat): string {
+  return `دفترچه-یادداشت-${slug}.${format}`;
+}
+
+/**
+ * File name from a Content-Disposition header: RFC 5987 `filename*=UTF-8''…` wins over
+ * `filename="…"`; path separators and control characters are dropped. Fallback when absent/empty.
+ */
+export function filenameFromDisposition(header: string | null | undefined, fallback: string): string {
+  if (!header) return fallback;
+  let name = "";
+  const star = /filename\*\s*=\s*([^']*)'[^']*'([^;]+)/i.exec(header);
+  if (star) {
+    try {
+      name = decodeURIComponent(star[2]!.trim().replace(/^"|"$/g, ""));
+    } catch {
+      name = "";
+    }
+  }
+  if (!name) {
+    const plain = /filename\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^;]+))/i.exec(header);
+    if (plain) name = (plain[1] ?? plain[2] ?? "").replace(/\\(.)/g, "$1").trim();
+  }
+  name = name.replace(/[\\/\u0000-\u001f]/g, "").replace(/^\.+/, "").trim();
+  return name || fallback;
+}
+
+export interface ExportedFile {
+  blob: Blob;
+  filename: string;
+}
+
+const escapeHtml = (v: string) =>
+  v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** Fixture notebook (the real one is built by the server: grouped by chapter/page, quotes cut). */
+function fixtureNotebook(slug: string, format: NotesExportFormat): ExportedFile {
+  const session = fixtureSession(slug);
+  const title = session.book.title;
+  const date = new Date().toLocaleDateString("fa-IR-u-ca-persian");
+  const hl = [...fixtureHighlights].sort((a, b) => a.page - b.page || a.id - b.id);
+  const bm = [...fixtureBookmarks].sort((a, b) => a.page - b.page || a.id - b.id);
+  const cut = (t: string) => (t.length > 300 ? `${t.slice(0, 300)}…` : t);
+  let body: string;
+  if (format === "md") {
+    const lines = [`# دفترچه یادداشت «${title}»`, "", `${session.book.authors.join("، ")} · تاریخ دریافت: ${date}`, "", "## هایلایت‌ها", ""];
+    if (!hl.length) lines.push("هنوز هایلایتی ندارید.", "");
+    for (const h of hl) {
+      lines.push(`- **صفحه ${h.page}** (${HIGHLIGHT_COLORS.find((c) => c.value === h.color)?.label ?? ""})`, `  > ${cut(h.text)}`);
+      if (h.note) lines.push(`  - یادداشت: ${h.note}`);
+      lines.push("");
+    }
+    lines.push("## نشانک‌ها", "");
+    if (!bm.length) lines.push("هنوز نشانکی ندارید.");
+    for (const b of bm) lines.push(`- صفحه ${b.page}${b.label ? ` — ${b.label}` : ""}`);
+    body = `${lines.join("\n")}\n`;
+  } else {
+    const items = hl
+      .map(
+        (h) =>
+          `<li><p class="page">صفحه ${h.page}</p><blockquote>${escapeHtml(cut(h.text))}</blockquote>${
+            h.note ? `<p class="note">یادداشت: ${escapeHtml(h.note)}</p>` : ""
+          }</li>`,
+      )
+      .join("");
+    const marks = bm.map((b) => `<li>صفحه ${b.page}${b.label ? ` — ${escapeHtml(b.label)}` : ""}</li>`).join("");
+    body =
+      `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>دفترچه یادداشت ${escapeHtml(title)}</title>` +
+      `<style>body{font-family:Vazirmatn,Tahoma,sans-serif;max-width:40em;margin:2em auto;padding:0 1em;line-height:1.9;color:#10182B}` +
+      `blockquote{margin:.3em 0;padding:.4em 1em;border-inline-start:4px solid #C8A24B;background:#F5F6F9}.page{font-weight:700;margin:0}.note{color:#3a4458}` +
+      `ul{list-style:none;padding:0}li{margin-bottom:1em}</style></head><body>` +
+      `<h1>دفترچه یادداشت «${escapeHtml(title)}»</h1><p>${escapeHtml(session.book.authors.join("، "))} · تاریخ دریافت: ${date}</p>` +
+      `<h2>هایلایت‌ها</h2>${items ? `<ul>${items}</ul>` : "<p>هنوز هایلایتی ندارید.</p>"}` +
+      `<h2>نشانک‌ها</h2>${marks ? `<ul>${marks}</ul>` : "<p>هنوز نشانکی ندارید.</p>"}</body></html>`;
+  }
+  const type = format === "md" ? "text/markdown;charset=utf-8" : "text/html;charset=utf-8";
+  return { blob: new Blob([body], { type }), filename: notesFallbackName(slug, format) };
+}
+
+/**
+ * GET /library/<slug>/notes/export/?format=md|html → the notebook file (same-origin, cookies, one
+ * silent refresh on 401). The name comes from Content-Disposition.
+ */
+export async function exportNotes(slug: string, format: NotesExportFormat): Promise<ReaderResult<ExportedFile>> {
+  if (readerFixtureEnabled()) return delay(ok(fixtureNotebook(slug, format)));
+  const url = `${BROWSER_API}/library/${slugSegment(slug)}/notes/export/?format=${format}`;
+  const send = () =>
+    fetch(url, {
+      credentials: "include",
+      cache: "no-store",
+      headers: { Accept: format === "md" ? "text/markdown, */*" : "text/html, */*", [DEVICE_HEADER]: readerDeviceId() },
+    });
+  let res: Response;
+  try {
+    res = await send();
+    if (res.status === 401 && (await refreshSession())) res = await send();
+  } catch {
+    return { ok: false, error: { kind: "network" } };
+  }
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
+    return { ok: false, error: errorFromResponse(res.status, body) };
+  }
+  const blob = await res.blob();
+  return {
+    ok: true,
+    data: { blob, filename: filenameFromDisposition(res.headers.get("Content-Disposition"), notesFallbackName(slug, format)) },
+  };
+}
+
+/** Save a Blob as a download (object URL + temporary <a download>). */
+export function saveBlob({ blob, filename }: ExportedFile): void {
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = filename;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 30_000);
 }

@@ -167,5 +167,5 @@ def render_html(user, book: Book) -> str:
 
 
 def content_disposition(book: Book, ext: str) -> str:
-    name = f"یادداشت‌ها-{book.slug}.{ext}"
+    name = f"دفترچه-یادداشت-{book.slug}.{ext}"
     return f"attachment; filename=\"notes.{ext}\"; filename*=UTF-8''{quote(name)}"

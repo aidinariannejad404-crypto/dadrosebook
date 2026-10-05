@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { routes } from "@/lib/config";
+import { accountRoutes } from "@/lib/account-routes";
 import { formatJalaliDate } from "@/lib/format";
 import { HIGHLIGHT_COLORS, removeDevice, type ReaderError } from "@/lib/reader";
 import type { HighlightColor, ReaderDevice } from "@/lib/types";
@@ -204,6 +205,7 @@ function DeviceLimitView({
       <p role="status" className="w-full text-sm leading-7 text-danger">
         {message}
       </p>
+      <ActionLink href={accountRoutes.devices}>مدیریت دستگاه‌های من</ActionLink>
       <ActionLink href={productHref}>بازگشت به صفحه کتاب</ActionLink>
     </ReaderMessage>
   );

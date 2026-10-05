@@ -203,3 +203,88 @@ export function watermarkTile(text: string, fill: string): string {
     `transform="rotate(-30 160 100)" font-family="Vazirmatn, Tahoma, sans-serif" font-size="15" font-weight="600" fill="${fill}">${esc}</text></svg>`;
   return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
 }
+
+/* ---------- paginated mode (CSS multi-column) ---------- */
+
+export interface ColumnFrame {
+  /** client box of the multicol element (one column wide) */
+  left: number;
+  right: number;
+  /** column width + gap */
+  stride: number;
+  rtl: boolean;
+}
+
+/** Column of a client rect relative to the visible one (0 = on screen, 1 = next, −1 = previous). */
+export function rectColumn(rect: { left: number; width: number }, f: ColumnFrame): number {
+  if (!(f.stride > 0)) return 0;
+  const cx = rect.left + rect.width / 2;
+  return Math.floor((f.rtl ? f.right - cx : cx - f.left) / f.stride);
+}
+
+function charRect(node: Text, i: number, r: Range): DOMRect {
+  r.setStart(node, i);
+  r.setEnd(node, Math.min(node.data.length, i + 1));
+  return r.getBoundingClientRect();
+}
+
+const isEmptyRect = (rect: DOMRect) => rect.width === 0 && rect.height === 0;
+
+/**
+ * Offset of the first text in the visible column (or a later one): binary search over text nodes
+ * by their last visible character, then over the characters of that node. Document order runs
+ * through the columns in order, so "column ≥ visible" is monotonic.
+ */
+export function firstOffsetInColumn(root: HTMLElement, f: ColumnFrame): number {
+  const nodes = textNodes(root).filter((t) => t.data.trim() !== "");
+  if (!nodes.length) return 0;
+  const r = document.createRange();
+  const reaches = (t: Text) => {
+    const last = t.data.trimEnd().length - 1;
+    const rect = charRect(t, Math.max(0, last), r);
+    return !isEmptyRect(rect) && rectColumn(rect, f) >= 0;
+  };
+  let lo = 0;
+  let hi = nodes.length - 1;
+  let found = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (reaches(nodes[mid]!)) {
+      found = mid;
+      hi = mid - 1;
+    } else lo = mid + 1;
+  }
+  if (found < 0) return Math.max(0, (root.textContent ?? "").length - 1);
+  const node = nodes[found]!;
+  let a = 0;
+  let b = node.data.length - 1;
+  let at = 0;
+  while (a <= b) {
+    const mid = (a + b) >> 1;
+    const rect = charRect(node, mid, r);
+    if (!isEmptyRect(rect) && rectColumn(rect, f) >= 0) {
+      at = mid;
+      b = mid - 1;
+    } else a = mid + 1;
+  }
+  return Math.max(0, textOffsetOf(root, node, at));
+}
+
+/** Relative column holding the text at `offset` (0 when it cannot be measured). */
+export function columnOfOffset(root: HTMLElement, offset: number, f: ColumnFrame): number {
+  const p = pointAtOffset(root, offset);
+  if (p.node.nodeType !== Node.TEXT_NODE) return 0;
+  const t = p.node as Text;
+  const r = document.createRange();
+  // the character at the offset (or the one before it at the very end of a node)
+  const i = p.offset < t.data.length ? p.offset : Math.max(0, p.offset - 1);
+  let rect = charRect(t, i, r);
+  if (isEmptyRect(rect) && t.parentElement) rect = t.parentElement.getClientRects()[0] ?? rect;
+  return isEmptyRect(rect) ? 0 : rectColumn(rect, f);
+}
+
+/** Relative column of an element's first box (TOC / link anchors). */
+export function columnOfElement(el: Element, f: ColumnFrame): number {
+  const rect = el.getClientRects()[0] ?? el.getBoundingClientRect();
+  return rectColumn(rect, f);
+}

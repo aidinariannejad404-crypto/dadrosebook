@@ -3,9 +3,10 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { formatNumber } from "@/lib/format";
 import { HIGHLIGHT_COLORS, groupHighlightsByPage } from "@/lib/reader";
-import type { Bookmark, Highlight } from "@/lib/types";
+import type { Bookmark, CopyQuota, Highlight } from "@/lib/types";
 import { BookmarkIcon, NoteIcon, TrashIcon } from "@/components/ui/Icons";
 import { ReaderDrawer } from "./ReaderChrome";
+import { CopyQuotaLine, NotesExportMenu } from "./NotesExport";
 
 const SWATCH = Object.fromEntries(HIGHLIGHT_COLORS.map((c) => [c.value, c]));
 
@@ -23,6 +24,10 @@ interface HighlightsDrawerProps {
   onJumpBookmark: (b: Bookmark) => void;
   onDeleteBookmark: (b: Bookmark) => void;
   initialTab?: NotesTab;
+  /** Phase 6b: notebook export («دریافت دفترچه یادداشت») for this book */
+  slug?: string;
+  /** Phase 6b: remaining total copy quota line */
+  copyQuota?: CopyQuota | null;
 }
 
 const TABS: { value: NotesTab; label: string }[] = [
@@ -45,6 +50,8 @@ export function HighlightsDrawer({
   onJumpBookmark,
   onDeleteBookmark,
   initialTab = "highlights",
+  slug,
+  copyQuota,
 }: HighlightsDrawerProps) {
   const [tab, setTab] = useState<NotesTab>(initialTab);
   const baseId = useId();
@@ -206,6 +213,13 @@ export function HighlightsDrawer({
           </ul>
         )}
       </div>
+
+      {(slug || copyQuota) && (
+        <div className="space-y-1 border-t border-line px-5 py-3">
+          {slug && <NotesExportMenu slug={slug} />}
+          <CopyQuotaLine quota={copyQuota} className="text-center" />
+        </div>
+      )}
     </ReaderDrawer>
   );
 }

@@ -25,7 +25,6 @@ import {
   updateHighlight,
   type ReaderError,
 } from "@/lib/reader";
-import { buildCopyText } from "@/lib/reader-epub";
 import type { Bookmark, FractionRect, Highlight, HighlightColor, ReaderSession } from "@/lib/types";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BookmarkIcon, ChevronIcon, HighlighterIcon, MinusIcon, PlusIcon } from "@/components/ui/Icons";
@@ -37,6 +36,7 @@ import { ReaderThemeToggle } from "./ReaderThemeToggle";
 import { EpubReader } from "./EpubReader";
 import { ReaderErrorView, ReaderNotice, ReaderShell, SelectionPopover, type ReaderFatalError } from "./ReaderChrome";
 import { initialReaderTheme, saveReaderTheme, type ReaderTheme } from "./theme";
+import { useCopyQuota } from "./useCopyQuota";
 
 type State =
   | { status: "loading" }
@@ -373,7 +373,8 @@ export function Reader({ slug }: { slug: string }) {
     [slug, flash],
   );
 
-  /* ---------- copy: limited selection + citation ---------- */
+  /* ---------- copy: limited selection + citation, counted against the book's total quota ---------- */
+  const { quota: copyQuota, copyText } = useCopyQuota(slug, ready?.session ?? null, flash);
   const onCopy = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
       if (!ready) return;
@@ -384,15 +385,10 @@ export function Reader({ slug }: { slug: string }) {
       const el = node instanceof Element ? node : node.parentElement;
       if (!el?.closest(".textLayer")) return;
       e.preventDefault();
-      const out = buildCopyText(text.replace(/\s+/g, " ").trim(), ready.session.copy_limit, ready.session.book);
-      e.clipboardData.setData("text/plain", out.text);
-      flash(
-        out.truncated
-          ? `فقط ${formatNumber(ready.session.copy_limit)} نویسه نخست، همراه با ذکر منبع، کپی شد.`
-          : "متن همراه با ذکر منبع کپی شد.",
-      );
+      const out = copyText(text.replace(/\s+/g, " ").trim());
+      if (out !== null) e.clipboardData.setData("text/plain", out);
     },
-    [ready, flash],
+    [ready, copyText],
   );
 
   const pageHighlights = useMemo(() => highlights.filter((h) => h.page === page), [highlights, page]);
@@ -662,6 +658,8 @@ export function Reader({ slug }: { slug: string }) {
         }}
         onJumpBookmark={(b) => goTo(b.page)}
         onDeleteBookmark={(b) => void removeBookmark(b)}
+        slug={slug}
+        copyQuota={copyQuota}
       />
 
       <ReaderNotice text={notice} />

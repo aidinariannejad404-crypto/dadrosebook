@@ -3,12 +3,13 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { formatNumber, toPersianDigits } from "@/lib/format";
 import { SEARCH_MAX, SEARCH_MIN, searchBook, type ReaderError } from "@/lib/reader";
-import { FONT_SIZES, LINE_HEIGHTS, MARGINS, type EpubSettings } from "@/lib/reader-epub";
-import type { EpubTocItem, SearchResult } from "@/lib/types";
+import { FONT_SIZES, LINE_HEIGHTS, MARGINS, type EpubSettings, type ReadingMode } from "@/lib/reader-epub";
+import type { CopyQuota, EpubTocItem, SearchResult } from "@/lib/types";
 import { Dialog } from "@/components/ui/Dialog";
 import { MinusIcon, PlusIcon, SearchIcon } from "@/components/ui/Icons";
 import { ReaderDrawer } from "./ReaderChrome";
 import { ReaderThemeChoices } from "./ReaderThemeToggle";
+import { CopyQuotaLine } from "./NotesExport";
 import type { ReaderTheme } from "./theme";
 
 /* ---------- table of contents ---------- */
@@ -236,7 +237,7 @@ function Stepper({
   );
 }
 
-function Segmented<T extends number>({
+function Segmented<T extends string | number>({
   label,
   value,
   options,
@@ -277,6 +278,8 @@ export function EpubSettingsSheet({
   open,
   onClose,
   settings,
+  mode,
+  copyQuota,
   onChange,
   theme,
   onTheme,
@@ -284,6 +287,9 @@ export function EpubSettingsSheet({
   open: boolean;
   onClose: () => void;
   settings: EpubSettings;
+  /** the mode in effect (the saved choice or this screen's default) */
+  mode: ReadingMode;
+  copyQuota?: CopyQuota | null;
   onChange: (s: EpubSettings) => void;
   theme: ReaderTheme;
   onTheme: (t: ReaderTheme) => void;
@@ -292,6 +298,15 @@ export function EpubSettingsSheet({
   return (
     <Dialog open={open} onClose={onClose} title="تنظیمات نمایش" placement="sheet">
       <div className="space-y-5">
+        <Segmented<ReadingMode>
+          label="نحوه نمایش"
+          value={mode}
+          options={[
+            { value: "scroll", label: "پیمایشی", aria: "نمایش پیمایشی (پیمایش عمودی فصل)" },
+            { value: "paged", label: "صفحه‌ای", aria: "نمایش صفحه‌ای (ورق زدن صفحه به صفحه)" },
+          ]}
+          onChange={(v) => set({ mode: v })}
+        />
         <Stepper
           label="اندازه قلم"
           value={settings.fontSize}
@@ -345,6 +360,7 @@ export function EpubSettingsSheet({
           <p className="mb-1.5 text-sm font-bold">رنگ پس‌زمینه</p>
           <ReaderThemeChoices value={theme} onChange={onTheme} />
         </div>
+        <CopyQuotaLine quota={copyQuota} className="border-t border-line pt-3" />
       </div>
     </Dialog>
   );

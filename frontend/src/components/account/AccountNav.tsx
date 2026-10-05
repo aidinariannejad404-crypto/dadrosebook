@@ -8,6 +8,7 @@ import { accountRoutes } from "@/lib/account-routes";
 import {
   BookOpenIcon,
   ChatIcon,
+  DevicesIcon,
   GridIcon,
   HeartIcon,
   LogoutIcon,
@@ -19,6 +20,7 @@ const ITEMS = [
   { href: accountRoutes.dashboard, label: "پیشخوان", Icon: GridIcon, exact: true },
   { href: accountRoutes.orders, label: "سفارش‌ها", Icon: PackageIcon },
   { href: accountRoutes.library, label: "کتابخانه من", Icon: BookOpenIcon },
+  { href: accountRoutes.devices, label: "دستگاه‌های من", Icon: DevicesIcon },
   { href: accountRoutes.addresses, label: "نشانی‌ها", Icon: MapPinIcon },
   { href: accountRoutes.wishlist, label: "علاقه‌مندی‌ها", Icon: HeartIcon },
   { href: accountRoutes.reviews, label: "نظرات من", Icon: ChatIcon },

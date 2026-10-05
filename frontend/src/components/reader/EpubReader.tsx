@@ -25,8 +25,10 @@ import {
   LINE_HEIGHTS,
   MARGINS,
   anchorElementId,
-  buildCopyText,
   chapterForPage,
+  columnCount,
+  columnPage,
+  defaultReadingMode,
   findNthFolded,
   formatEpubPoint,
   formatEpubRange,
@@ -34,10 +36,12 @@ import {
   locationStart,
   offsetForPage,
   parseEpubHref,
+  pagedGeometry,
   parseEpubLocation,
   saveEpubSettings,
   virtualPage,
   type EpubSettings,
+  type ReadingMode,
 } from "@/lib/reader-epub";
 import type { Bookmark, EpubChapter, EpubInfo, Highlight, HighlightColor, ReaderSession, SearchResult } from "@/lib/types";
 import { BookmarkIcon, ChevronIcon, HighlighterIcon, ListIcon, SearchIcon } from "@/components/ui/Icons";
@@ -48,6 +52,9 @@ import { EpubSearchDrawer, EpubSettingsSheet, EpubTocDrawer } from "./EpubPanels
 import { ReaderNotice, ReaderShell, SelectionPopover, type ReaderFatalError } from "./ReaderChrome";
 import {
   chapterFragment,
+  columnOfElement,
+  columnOfOffset,
+  firstOffsetInColumn,
   firstVisibleOffset,
   rangeForOffsets,
   scrollToElement,
@@ -56,7 +63,9 @@ import {
   unwrapAll,
   watermarkTile,
   wrapOffsets,
+  type ColumnFrame,
 } from "./epub-dom";
+import { useCopyQuota } from "./useCopyQuota";
 import type { ReaderTheme } from "./theme";
 
 /** Where to put the reader once a chapter is on screen. */
@@ -81,6 +90,11 @@ type Editor = { mode: "create"; selection: PendingSelection } | { mode: "edit"; 
 const FATAL: ReaderError["kind"][] = ["auth", "forbidden", "no_ebook", "device_limit"];
 /** Signed image URLs live ~5 minutes: cached chapters older than this are fetched again. */
 const CHAPTER_CACHE_MS = 4 * 60_000;
+/** Paged mode: space above and below the page (px). */
+const PAGE_PAD_BLOCK = 20;
+const SWIPE_MIN_PX = 50;
+/** Paged mode: one page per wheel gesture at most this often (ms). */
+const WHEEL_PAGE_MS = 350;
 
 function isTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
@@ -128,9 +142,22 @@ export function EpubReader({
   const [editor, setEditor] = useState<Editor>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  // paged mode: viewport width (default mode), reading box, visible column and column count
+  const [vw, setVw] = useState(0);
+  const [box, setBox] = useState({ width: 0, height: 0 });
+  const [col, setCol] = useState(0);
+  const [colCount, setColCount] = useState(1);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const articleRef = useRef<HTMLElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const colRef = useRef(0);
+  const colCountRef = useRef(1);
+  const pagedRef = useRef(false);
+  const geoRef = useRef({ colWidth: 0, gap: 0, stride: 0, height: 0 });
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const lastWheel = useRef(0);
+  const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cache = useRef(new Map<number, { data: EpubChapter; at: number }>());
   const targetRef = useRef<Target | null>(null);
   const chapterRef = useRef<EpubChapter | null>(null);
@@ -147,16 +174,43 @@ export function EpubReader({
   offsetRef.current = offset;
   pendingRef.current = pending;
 
-  const total = epub.total_pages;
-  const meta = chapter ? epub.chapters[chapter.index] ?? chapter : null;
-  const page = meta ? virtualPage(meta, offset) : 1;
-  const percent = progressPercent(page, total);
-
   const fontPx = FONT_SIZES[settings.fontSize] ?? 18;
   const lineHeight = LINE_HEIGHTS[settings.lineHeight] ?? 1.8;
   const margin = MARGINS[settings.margin] ?? MARGINS[1];
+  const rtl = epub.direction !== "ltr";
+
+  // «صفحه‌ای» splits the chapter into CSS columns one screen wide; «پیمایشی» scrolls it
+  const mode: ReadingMode = settings.mode ?? defaultReadingMode(vw);
+  const paged = mode === "paged" && box.width > 0 && box.height > 0;
+  const geo = pagedGeometry(box, { fontPx, maxEm: margin.maxEm, padding: margin.padding, padBlock: PAGE_PAD_BLOCK });
+  pagedRef.current = paged;
+  geoRef.current = geo;
+
+  const total = epub.total_pages;
+  const meta = chapter ? epub.chapters[chapter.index] ?? chapter : null;
+  // paged: the column on screen mapped onto the chapter's virtual pages; scroll: the first visible offset
+  const page = meta ? (paged ? columnPage(meta, col, colCount) : virtualPage(meta, offset)) : 1;
+  const percent = progressPercent(page, total);
 
   useEffect(() => setSettingsState(loadEpubSettings()), []);
+
+  // reading box size (paged geometry) and viewport width (default mode)
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const read = () => {
+      setVw(window.innerWidth);
+      setBox((b) =>
+        b.width === scroller.clientWidth && b.height === scroller.clientHeight
+          ? b
+          : { width: scroller.clientWidth, height: scroller.clientHeight },
+      );
+    };
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(scroller);
+    return () => ro.disconnect();
+  }, []);
   const setSettings = useCallback((s: EpubSettings) => {
     setSettingsState(s);
     saveEpubSettings(s);
@@ -188,10 +242,108 @@ export function EpubReader({
     [slug, onFatal],
   );
 
+  /* ---------- paged mode: columns ---------- */
+
+  const frame = useCallback((): ColumnFrame | null => {
+    const a = articleRef.current;
+    if (!a) return null;
+    const r = a.getBoundingClientRect();
+    return { left: r.left, right: r.right, stride: geoRef.current.stride, rtl };
+  }, [rtl]);
+
+  const measure = useCallback(() => {
+    const scroller = scrollerRef.current;
+    const root = rootRef.current;
+    if (!scroller || !root || !chapterRef.current) return;
+    let next: number;
+    if (pagedRef.current) {
+      const f = frame();
+      if (!f) return;
+      next = firstOffsetInColumn(root, f);
+    } else {
+      next = firstVisibleOffset(root, scroller.getBoundingClientRect().top + 4);
+    }
+    offsetRef.current = next;
+    setOffset(next);
+  }, [frame]);
+
+  /** Count the chapter's columns (after a chapter, size or typography change). */
+  const recount = useCallback(() => {
+    const a = articleRef.current;
+    if (!a) return 1;
+    const { colWidth, gap } = geoRef.current;
+    const n = columnCount(a.scrollWidth, colWidth, gap);
+    colCountRef.current = n;
+    setColCount(n);
+    return n;
+  }, []);
+
+  /** Show column `c` (clamped): RTL columns run to the left, i.e. negative scrollLeft. */
+  const showCol = useCallback(
+    (c: number) => {
+      const a = articleRef.current;
+      if (!a) return;
+      const n = colCountRef.current;
+      const next = Math.min(n - 1, Math.max(0, Math.round(c)));
+      colRef.current = next;
+      a.scrollLeft = (rtl ? -1 : 1) * next * geoRef.current.stride;
+      setCol(next);
+      measure();
+    },
+    [rtl, measure],
+  );
+
+  /** Put the text at `offset` on screen in either mode. */
+  const goToOffset = useCallback(
+    (off: number, margin = 4) => {
+      const scroller = scrollerRef.current;
+      const root = rootRef.current;
+      if (!scroller || !root) return;
+      if (!pagedRef.current) {
+        scrollToOffset(scroller, root, off, margin);
+        return;
+      }
+      recount();
+      const f = frame();
+      if (off <= 0 || !f) return showCol(0);
+      showCol(colRef.current + columnOfOffset(root, off, f));
+    },
+    [recount, frame, showCol],
+  );
+
   const applyTarget = useCallback((target: Target) => {
     const scroller = scrollerRef.current;
     const root = rootRef.current;
     if (!scroller || !root) return;
+    if (pagedRef.current) {
+      scroller.scrollTop = 0;
+      const n = recount();
+      const f = frame();
+      switch (target.kind) {
+        case "start":
+          return showCol(0);
+        case "end":
+          return showCol(n - 1);
+        case "offset":
+          return goToOffset(target.offset);
+        case "anchor": {
+          const el = target.anchor ? root.querySelector(`#${CSS.escape(anchorElementId(target.anchor))}`) : null;
+          return showCol(el && f ? colRef.current + columnOfElement(el, f) : 0);
+        }
+        case "search": {
+          const hit = findNthFolded(root.textContent ?? "", target.q, target.occurrence);
+          if (!hit) return showCol(0);
+          goToOffset(hit.start);
+          const sel = window.getSelection();
+          if (sel) {
+            suppressSelection.current = true;
+            sel.removeAllRanges();
+            sel.addRange(rangeForOffsets(root, hit.start, hit.end));
+          }
+          return;
+        }
+      }
+    }
     switch (target.kind) {
       case "start":
         scroller.scrollTop = 0;
@@ -225,7 +377,7 @@ export function EpubReader({
         break;
       }
     }
-  }, []);
+  }, [recount, frame, showCol, goToOffset]);
 
   const openChapter = useCallback(
     async (index: number, target: Target) => {
@@ -281,19 +433,13 @@ export function EpubReader({
       .sort((a, b) => a.start - b.start);
   }, [highlights, chapter]);
 
-  const measure = useCallback(() => {
-    const scroller = scrollerRef.current;
-    const root = rootRef.current;
-    if (!scroller || !root || !chapterRef.current) return;
-    const top = scroller.getBoundingClientRect().top + 4;
-    setOffset(firstVisibleOffset(root, top));
-  }, []);
-
   /* ---------- render a chapter (inert parse + defensive pass; html only ever comes from getChapter) ---------- */
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || !chapter) return;
     root.replaceChildren(chapterFragment(chapter.html));
+    // paged: off-screen columns are clipped, so lazy images would load (and reflow) only when shown
+    if (pagedRef.current) root.querySelectorAll("img").forEach((img) => img.setAttribute("loading", "eager"));
     const target = targetRef.current ?? { kind: "start" };
     targetRef.current = null;
     applyTarget(target);
@@ -316,13 +462,36 @@ export function EpubReader({
     }
   }, [chapter, chapterMarks, activeId]);
 
-  // typography changes reflow the text: keep the first visible offset on screen
+  // typography, mode and size changes reflow the text: keep the first visible offset on screen
   useLayoutEffect(() => {
     const root = rootRef.current;
     const scroller = scrollerRef.current;
+    const article = articleRef.current;
     if (!root || !scroller || !chapterRef.current) return;
-    scrollToOffset(scroller, root, offsetRef.current, 4);
-  }, [settings]);
+    if (!paged && article) article.scrollLeft = 0;
+    if (paged) scroller.scrollTop = 0;
+    goToOffset(offsetRef.current);
+  }, [settings, paged, geo.colWidth, geo.gap, geo.height, goToOffset]);
+
+  // paged: late images and web fonts change the column count — recount and stay at the same text
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !paged) return;
+    let raf = 0;
+    const relayout = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (pagedRef.current && chapterRef.current) goToOffset(offsetRef.current);
+      });
+    };
+    root.addEventListener("load", relayout, true);
+    void document.fonts?.ready.then(relayout);
+    return () => {
+      root.removeEventListener("load", relayout, true);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [paged, goToOffset]);
 
   // a signed image URL expired: fetch the chapter once more and stay in place
   useEffect(() => {
@@ -385,6 +554,11 @@ export function EpubReader({
 
   const scrollRaf = useRef(0);
   const onScroll = useCallback(() => {
+    if (pagedRef.current) {
+      // the page box never scrolls vertically in paged mode (e.g. focus moved into it)
+      if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
+      return;
+    }
     if (scrollRaf.current) return;
     scrollRaf.current = requestAnimationFrame(() => {
       scrollRaf.current = 0;
@@ -397,23 +571,65 @@ export function EpubReader({
     const s = scrollerRef.current;
     const c = chapterRef.current;
     if (!s || !c) return;
+    if (pagedRef.current) {
+      if (colRef.current < colCountRef.current - 1) return showCol(colRef.current + 1);
+      if (c.next !== null) void openChapter(c.next, { kind: "start" });
+      return;
+    }
     if (s.scrollTop + s.clientHeight >= s.scrollHeight - 4) {
       if (c.next !== null) void openChapter(c.next, { kind: "start" });
       return;
     }
     s.scrollBy({ top: s.clientHeight - fontPx * lineHeight });
-  }, [openChapter, fontPx, lineHeight]);
+  }, [openChapter, fontPx, lineHeight, showCol]);
 
   const back = useCallback(() => {
     const s = scrollerRef.current;
     const c = chapterRef.current;
     if (!s || !c) return;
+    if (pagedRef.current) {
+      if (colRef.current > 0) return showCol(colRef.current - 1);
+      if (c.prev !== null) void openChapter(c.prev, { kind: "end" });
+      return;
+    }
     if (s.scrollTop <= 4) {
       if (c.prev !== null) void openChapter(c.prev, { kind: "end" });
       return;
     }
     s.scrollBy({ top: -(s.clientHeight - fontPx * lineHeight) });
-  }, [openChapter, fontPx, lineHeight]);
+  }, [openChapter, fontPx, lineHeight, showCol]);
+
+  /** Paged: the browser scrolled the column box itself (focus, drag-selecting past the edge). */
+  const onArticleScroll = useCallback(() => {
+    const a = articleRef.current;
+    const stride = geoRef.current.stride;
+    if (!a || !pagedRef.current || !(stride > 0)) return;
+    const c = Math.round(Math.abs(a.scrollLeft) / stride);
+    if (c !== colRef.current) {
+      colRef.current = c;
+      setCol(c);
+      measure();
+    }
+    // settle on a whole page once the user is not selecting
+    if (snapTimer.current) clearTimeout(snapTimer.current);
+    snapTimer.current = setTimeout(() => {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      if (Math.abs(Math.abs(a.scrollLeft) - colRef.current * stride) > 1) showCol(colRef.current);
+    }, 160);
+  }, [measure, showCol]);
+
+  const onWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      if (!pagedRef.current || Math.abs(e.deltaY) < 4 || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+      const now = Date.now();
+      if (now - lastWheel.current < WHEEL_PAGE_MS) return;
+      lastWheel.current = now;
+      if (e.deltaY > 0) forward();
+      else back();
+    },
+    [forward, back],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -424,18 +640,20 @@ export function EpubReader({
       }
       if (e.altKey || e.ctrlKey || e.metaKey || isTypingTarget(e.target)) return;
       if (document.querySelector("dialog[open]")) return;
-      // RTL book: forward is to the left
-      if (e.key === "ArrowLeft" || e.key === "PageDown") {
+      // RTL book: forward is to the left (mirrored for LTR books)
+      const fwdArrow = rtl ? "ArrowLeft" : "ArrowRight";
+      const backArrow = rtl ? "ArrowRight" : "ArrowLeft";
+      if (e.key === fwdArrow || e.key === "PageDown" || (pagedRef.current && (e.key === "ArrowDown" || e.key === " "))) {
         e.preventDefault();
         forward();
-      } else if (e.key === "ArrowRight" || e.key === "PageUp") {
+      } else if (e.key === backArrow || e.key === "PageUp" || (pagedRef.current && e.key === "ArrowUp")) {
         e.preventDefault();
         back();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [forward, back]);
+  }, [forward, back, rtl]);
 
   /* ---------- selection → highlight popover ---------- */
   useEffect(() => {
@@ -593,28 +811,24 @@ export function EpubReader({
       }
       const box = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - box.left;
-      // physical thirds: RTL book, so the left third goes forward
-      if (x < box.width / 3) forward();
-      else if (x > (box.width * 2) / 3) back();
-      else setChrome((v) => !v);
+      // physical thirds: RTL book, so the left third goes forward (mirrored for LTR books)
+      const third = x < box.width / 3 ? "left" : x > (box.width * 2) / 3 ? "right" : "middle";
+      if (third === "middle") setChrome((v) => !v);
+      else if ((third === "left") === rtl) forward();
+      else back();
     },
-    [openChapter, highlights, forward, back],
+    [openChapter, highlights, forward, back, rtl],
   );
 
+  const { quota: copyQuota, copyText } = useCopyQuota(slug, session, flash);
   const onCopy = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
-      const text = window.getSelection()?.toString() ?? "";
-      if (!text) return;
+      const out = copyText(window.getSelection()?.toString() ?? "");
+      if (out === null) return;
       e.preventDefault();
-      const out = buildCopyText(text, session.copy_limit, session.book);
-      e.clipboardData.setData("text/plain", out.text);
-      flash(
-        out.truncated
-          ? `فقط ${formatNumber(session.copy_limit)} نویسه نخست، همراه با ذکر منبع، کپی شد.`
-          : "متن همراه با ذکر منبع کپی شد.",
-      );
+      e.clipboardData.setData("text/plain", out);
     },
-    [session.copy_limit, session.book, flash],
+    [copyText],
   );
 
   const onSearchOpen = useCallback(
@@ -694,13 +908,48 @@ export function EpubReader({
           ref={scrollerRef}
           onScroll={onScroll}
           onClick={onTextClick}
-          className="absolute inset-0 overflow-y-auto overscroll-contain bg-surface"
+          onWheel={onWheel}
+          onTouchStart={(e) => {
+            const t = e.touches[0];
+            touchStart.current = paged && e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+          }}
+          onTouchEnd={(e) => {
+            const start = touchStart.current;
+            const t = e.changedTouches[0];
+            touchStart.current = null;
+            if (!start || !t || !pagedRef.current) return;
+            const sel = window.getSelection();
+            if (sel && !sel.isCollapsed) return;
+            const dx = t.clientX - start.x;
+            const dy = t.clientY - start.y;
+            if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+            // RTL book (as in the PDF reader): dragging the page to the right brings in the next page from the left
+            if ((dx > 0) === rtl) forward();
+            else back();
+          }}
+          className={`absolute inset-0 overscroll-contain bg-surface ${paged ? "overflow-hidden" : "overflow-y-auto"}`}
         >
           <article
+            ref={articleRef}
             lang={epub.language || "fa"}
             dir={epub.direction}
-            className={`epub-content mx-auto py-6 ${settings.justify ? "epub-justify" : ""}`}
-            style={{ fontSize: `${fontPx}px`, lineHeight, maxWidth: `${margin.maxEm}em`, paddingInline: `${margin.padding}px` }}
+            onScroll={paged ? onArticleScroll : undefined}
+            className={`epub-content mx-auto ${paged ? "epub-paged overflow-hidden" : "py-6"} ${settings.justify ? "epub-justify" : ""}`}
+            style={
+              paged
+                ? ({
+                    fontSize: `${fontPx}px`,
+                    lineHeight,
+                    width: `${geo.colWidth}px`,
+                    height: `${geo.height}px`,
+                    marginBlock: `${PAGE_PAD_BLOCK}px`,
+                    columnWidth: `${geo.colWidth}px`,
+                    columnGap: `${geo.gap}px`,
+                    columnFill: "auto",
+                    "--epub-page-h": `${geo.height}px`,
+                  } as React.CSSProperties)
+                : { fontSize: `${fontPx}px`, lineHeight, maxWidth: `${margin.maxEm}em`, paddingInline: `${margin.padding}px` }
+            }
           >
             <h2 className="sr-only">{chapter?.title ?? "در حال بارگذاری فصل"}</h2>
             <div
@@ -715,7 +964,7 @@ export function EpubReader({
               }}
             />
             {chapter && !loading && (
-              <div className="mt-10 border-t border-line pt-6 text-center">
+              <div className="mt-10 border-t border-line pt-6 text-center [break-inside:avoid]">
                 {nextMeta ? (
                   <button
                     type="button"
@@ -780,6 +1029,9 @@ export function EpubReader({
         <footer className="pb-safe border-t border-line bg-surface">
           <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2 text-xs">
             <span className="min-w-0 flex-1 truncate font-bold">{chapter?.title ?? ""}</span>
+            {paged && chapter && (
+              <span className="shrink-0 tabular-nums text-ink-muted">{`صفحه ${formatNumber(col + 1)} از ${formatNumber(colCount)} این فصل`}</span>
+            )}
             <span className="shrink-0 tabular-nums text-ink-muted">{formatPercent(percent)}</span>
           </div>
         </footer>
@@ -829,11 +1081,15 @@ export function EpubReader({
         }}
         onJumpBookmark={(b) => jumpToLocation(b.location, b.page)}
         onDeleteBookmark={(b) => void removeBookmark(b)}
+        slug={slug}
+        copyQuota={copyQuota}
       />
       <EpubSettingsSheet
         open={panel === "settings"}
         onClose={() => setPanel(null)}
         settings={settings}
+        mode={mode}
+        copyQuota={copyQuota}
         onChange={setSettings}
         theme={theme}
         onTheme={onTheme}
