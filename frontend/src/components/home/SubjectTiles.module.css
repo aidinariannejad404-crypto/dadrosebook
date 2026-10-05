@@ -1,0 +1,36 @@
+/* Decorative spines on each subject tile (see SpineShelf). Physical "right" is not used: the shelf
+   sits at the logical end via inset-inline-end. */
+.shelf {
+  pointer-events: none;
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0.75rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+.shelf::after {
+  content: "";
+  position: absolute;
+  inset-inline: -0.75rem -100vw;
+  bottom: 0;
+  height: 0.25rem;
+  background: rgb(0 0 0 / 0.15);
+}
+.shelf > span {
+  display: block;
+  border-radius: 3px 3px 0 0;
+  transform-origin: bottom;
+  background:
+    linear-gradient(transparent 14%, rgb(214 180 100 / 0.6) 14% calc(14% + 3px), transparent 0 22%, rgb(214 180 100 / 0.45) 22% calc(22% + 1px), transparent 0),
+    radial-gradient(closest-side, rgb(255 255 255 / 0.12) 99%, transparent) center 60% / 36% 48% no-repeat,
+    rgb(255 255 255 / 0.1);
+}
+.shelf > span:nth-child(even) {
+  background-color: rgb(255 255 255 / 0.17);
+}
+.shelf > span:nth-child(1) { height: 40%; width: 11px; }
+.shelf > span:nth-child(2) { height: 52%; width: 13px; }
+.shelf > span:nth-child(3) { height: 45%; width: 10px; }
+.shelf > span:nth-child(4) { height: 56%; width: 14px; }
+.shelf > span:nth-child(5) { height: 42%; width: 12px; transform: rotate(-10deg); }

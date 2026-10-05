@@ -3,43 +3,22 @@ import type { HomeSubject } from "@/lib/types";
 import { routes } from "@/lib/config";
 import { toPersianDigits } from "@/lib/format";
 import { HomeSectionHeader } from "./HomeSectionHeader";
-
-/** [height %, width px, lean deg] of the decorative spines on each tile */
-const SPINES: [number, number, number][] = [
-  [40, 11, 0],
-  [52, 13, 0],
-  [45, 10, 0],
-  [56, 14, 0],
-  [42, 12, -10],
-];
+import styles from "./SubjectTiles.module.css";
 
 /**
  * Book-spine motif: a few translucent spines standing on a shelf at the tile's end edge, each with
  * gold head bands — the subject colour shows through, so every tile keeps its own colour code.
- * Purely decorative (aria-hidden); the text sits above it and keeps its contrast.
+ * Purely decorative (aria-hidden); the text sits above it and keeps its contrast. Sizes and bands
+ * live in SubjectTiles.module.css so the 10 tiles add no inline styles to the page payload.
  */
 function SpineShelf() {
   return (
-    <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-0">
-      <span className="absolute bottom-0 end-3 flex h-full items-end gap-[3px]">
-        {SPINES.map(([h, w, lean], i) => (
-          <span
-            key={i}
-            className={`relative block rounded-t-[3px] ${i % 2 ? "bg-white/[0.17]" : "bg-white/[0.1]"}`}
-            style={{
-              height: `${h}%`,
-              width: w,
-              transform: lean ? `rotate(${lean}deg)` : undefined,
-              transformOrigin: "bottom",
-            }}
-          >
-            <span className="absolute inset-x-0 top-[14%] h-[3px] bg-[rgb(214_180_100/0.6)]" />
-            <span className="absolute inset-x-0 top-[22%] h-px bg-[rgb(214_180_100/0.45)]" />
-            <span className="absolute inset-x-[32%] bottom-[18%] top-[34%] rounded-full bg-white/[0.12]" />
-          </span>
-        ))}
-      </span>
-      <span className="absolute inset-x-0 bottom-0 h-1 bg-black/15" />
+    <span aria-hidden="true" className={styles.shelf}>
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
     </span>
   );
 }

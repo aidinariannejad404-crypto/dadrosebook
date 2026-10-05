@@ -6,12 +6,11 @@ import { routes } from "@/lib/config";
 import { PRICE_SOON, cardPriceLabel, cardStockNote } from "@/lib/variants";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { Stars } from "@/components/reviews/Stars";
-import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { BookCover } from "./BookCover";
 import { Badges } from "./Badges";
 import { formatSummary } from "./FormatBadges";
 import { SubjectTag } from "./SubjectTag";
-import { QuickAddButton } from "./QuickAddButton";
+import { CardActions } from "./CardActions";
 import { cardDiscount, cardRating, quickAddVariant } from "./card-model";
 
 interface BookCardProps {
@@ -71,21 +70,13 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             {toPersianDigits(discount.percent)}٪ تخفیف
           </span>
         )}
-        <WishlistButton
+        <CardActions
           bookId={book.id}
           bookTitle={book.title}
-          className="absolute -end-1 -top-1 z-10 [&_button]:border-transparent [&_button]:shadow-card"
+          quickAdd={quickAdd ?? null}
+          price={book.card_price}
+          format={book.card_format}
         />
-        {quickAdd != null && (
-          <QuickAddButton
-            variantId={quickAdd}
-            bookId={book.id}
-            bookTitle={book.title}
-            price={book.card_price}
-            format={book.card_format}
-            className="absolute -bottom-1 -end-1 shadow-raised"
-          />
-        )}
       </div>
 
       <div className="mt-2.5 flex flex-1 flex-col gap-1.5">

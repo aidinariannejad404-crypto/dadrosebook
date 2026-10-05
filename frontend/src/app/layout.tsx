@@ -10,7 +10,6 @@ import { CategoryNav } from "@/components/layout/CategoryNav";
 import { Footer } from "@/components/layout/Footer";
 import { HideOn } from "@/components/layout/HideOn";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { CategorySheet } from "@/components/layout/CategorySheet";
 import { CheckoutFooter, CheckoutHeader } from "@/components/layout/CheckoutChrome";
 import { CartProvider } from "@/components/cart/CartProvider";
 
@@ -98,7 +97,7 @@ export default async function RootLayout({ children, topbar }: { children: React
           <HideOn {...enclosed} fallback={<CheckoutFooter />}>
             <Footer store={store} />
           </HideOn>
-          <BottomNav sheet={<CategorySheet categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />} />
+          <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
         </CartProvider>
       </body>
     </html>

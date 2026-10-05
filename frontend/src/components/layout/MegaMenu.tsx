@@ -1,20 +1,33 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
 import { ChevronIcon } from "@/components/ui/Icons";
+import { routes } from "@/lib/config";
+import type { ExamTypeMini, SubjectMini } from "@/lib/types";
 
 const OPEN_DELAY = 120;
 const CLOSE_DELAY = 300;
 
 /**
- * Desktop mega menu disclosure. The panel content is server-rendered (`children`).
+ * Desktop mega menu disclosure. The panel (exam × subject links) is built from plain data on first
+ * open, so its ~60 links do not weigh on every page's HTML and RSC payload (mobile LCP).
  * Opens on click / Enter / Space, or on hover with intent delays; closes on Esc (focus returns to
  * the button), on focus leaving the menu, on pointer leave (300ms) and on navigation.
  * The panel is positioned against the nearest `relative` ancestor (the CategoryNav bar).
  */
-export function MegaMenu({ label, children }: { label: string; children: ReactNode }) {
+export function MegaMenu({
+  label,
+  examTypes,
+  subjects,
+}: {
+  label: string;
+  examTypes: ExamTypeMini[];
+  subjects: SubjectMini[];
+}) {
   const [open, setOpen] = useState(false);
+  const [rendered, setRendered] = useState(false);
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -23,6 +36,7 @@ export function MegaMenu({ label, children }: { label: string; children: ReactNo
 
   const schedule = (next: boolean, delay: number) => {
     window.clearTimeout(timer.current);
+    if (next) setRendered(true);
     timer.current = window.setTimeout(() => setOpen(next), delay);
   };
 
@@ -56,6 +70,7 @@ export function MegaMenu({ label, children }: { label: string; children: ReactNo
         aria-controls={panelId}
         onClick={() => {
           window.clearTimeout(timer.current);
+          setRendered(true);
           setOpen((o) => !o);
         }}
         className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-control bg-primary px-3 text-sm font-bold text-white hover:bg-primary-hover aria-expanded:bg-primary-hover"
@@ -71,7 +86,72 @@ export function MegaMenu({ label, children }: { label: string; children: ReactNo
         }}
         className="absolute inset-x-0 top-full z-30 border-b border-line bg-surface shadow-raised"
       >
-        {children}
+        {rendered && <ExamSubjectPanel examTypes={examTypes} subjects={subjects} />}
+      </div>
+    </div>
+  );
+}
+
+/** Desktop mega menu panel: one column per exam, each listing the subjects (exam × subject search). */
+function ExamSubjectPanel({ examTypes, subjects }: { examTypes: ExamTypeMini[]; subjects: SubjectMini[] }) {
+  return (
+    <div className="mx-auto max-w-site px-4 py-5">
+      <div className="grid gap-x-6 gap-y-4" style={{ gridTemplateColumns: `repeat(${Math.min(examTypes.length, 5)}, minmax(0, 1fr))` }}>
+        {examTypes.map((exam) => {
+          const headingId = `mega-exam-${exam.id}`;
+          return (
+            <section key={exam.id} aria-labelledby={headingId}>
+              <h3 id={headingId} className="border-b border-line pb-1">
+                <Link
+                  prefetch={false}
+                  href={routes.search({ exam_type: exam.slug })}
+                  className="inline-flex min-h-11 items-center text-sm font-extrabold text-primary hover:underline"
+                >
+                  آزمون {exam.name}
+                </Link>
+              </h3>
+              <ul className="mt-1">
+                {subjects.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      prefetch={false}
+                      href={routes.search({ exam_type: exam.slug, subject: s.slug })}
+                      className="flex min-h-11 items-center rounded-control px-1 text-sm text-ink hover:bg-primary-soft hover:text-primary"
+                    >
+                      {s.name}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link
+                    prefetch={false}
+                    href={routes.search({ exam_type: exam.slug })}
+                    className="flex min-h-11 items-center px-1 text-sm font-bold text-primary underline-offset-4 hover:underline"
+                  >
+                    مشاهده همه منابع {exam.short_name || exam.name}
+                  </Link>
+                </li>
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
+        {[
+          { href: routes.kit, label: "بسته مطالعاتی آزمون" },
+          { href: routes.search({ quick_review: "true" }), label: "سریع‌خوان و جمع‌بندی" },
+          { href: routes.search({ format: "ebook" }), label: "کتاب‌های الکترونیک" },
+          { href: routes.search(), label: "همه کتاب‌ها" },
+        ].map((l) => (
+          <Link
+            key={l.href}
+            prefetch={false}
+            href={l.href}
+            className="inline-flex min-h-11 items-center rounded-full border border-line-strong px-4 text-sm font-bold text-ink hover:border-primary hover:bg-primary-soft"
+          >
+            {l.label}
+          </Link>
+        ))}
       </div>
     </div>
   );

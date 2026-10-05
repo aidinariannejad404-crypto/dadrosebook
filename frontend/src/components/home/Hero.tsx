@@ -72,7 +72,6 @@ export function Hero({
                     authors={b.authors}
                     volumes={b.volumes}
                     sizes="(min-width: 768px) 160px, 100px"
-                    priority={i === 0 && b.cover != null}
                     variant="hero"
                   />
                 </div>

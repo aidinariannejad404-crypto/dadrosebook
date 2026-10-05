@@ -14,6 +14,8 @@ from .editions import current_exam_year
 from .pricing import book_card_variant, card_discount
 
 RAIL_SIZE = 12
+# The «پیشنهاد ویژه» rail repeats books from other rails; kept short so the home HTML stays light.
+DISCOUNTED_RAIL_SIZE = 6
 GUIDE_VIDEO_LIMIT = 6
 TESTIMONIAL_LIMIT = 6
 TESTIMONIAL_MIN_RATING = 4
@@ -64,7 +66,7 @@ def resolve_exam_type(slug: str | None) -> ExamType | None:
     return ExamType.objects.filter(slug=slug, is_active=True).first()
 
 
-def discounted_books(books, exam_type: str | None = None, limit: int = RAIL_SIZE) -> list[Book]:
+def discounted_books(books, exam_type: str | None = None, limit: int = DISCOUNTED_RAIL_SIZE) -> list[Book]:
     """In-stock books whose card price is discounted (the «پیشنهاد ویژه» rail), biggest first.
 
     The DB narrows to books with any discounted, sellable variant; the card variant (print first)

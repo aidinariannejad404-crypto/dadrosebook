@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { CartIcon, CloseIcon, GridIcon, PackageIcon, UserIcon } from "@/components/ui/Icons";
 import { routes } from "@/lib/config";
@@ -10,6 +10,8 @@ import { toPersianDigits } from "@/lib/format";
 import { matchesPath } from "./HideOn";
 import { HomeIcon } from "./NavIcons";
 import styles from "./BottomNav.module.css";
+import { CategorySheet } from "./CategorySheet";
+import type { CategoryNode, ExamTypeMini, SubjectMini } from "@/lib/types";
 
 /** Routes with their own bottom UI (sticky buy bar, checkout bar, reader): no tab bar there. */
 export const BOTTOM_NAV_HIDDEN = { prefixes: ["/product", "/checkout", "/read"] };
@@ -35,9 +37,18 @@ function Indicator({ on }: { on: boolean }) {
 
 /**
  * Mobile bottom tab bar (below md): خانه / دسته‌ها (bottom sheet) / بسته مطالعاتی / سبد / حساب.
- * `sheet` is the server-rendered content of the «دسته‌ها» sheet.
+ * The «دسته‌ها» sheet is rendered from plain data only once opened, so its links do not weigh on
+ * every page's HTML and RSC payload.
  */
-export function BottomNav({ sheet }: { sheet: ReactNode }) {
+export function BottomNav({
+  categories,
+  examTypes,
+  subjects,
+}: {
+  categories: CategoryNode[];
+  examTypes: ExamTypeMini[];
+  subjects: SubjectMini[];
+}) {
   const pathname = usePathname() ?? "/";
   const { count } = useCart();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -161,7 +172,7 @@ export function BottomNav({ sheet }: { sheet: ReactNode }) {
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-            {sheetOpen && sheet}
+            {sheetOpen && <CategorySheet categories={categories} examTypes={examTypes} subjects={subjects} />}
           </div>
         </div>
       </dialog>
