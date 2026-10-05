@@ -28,6 +28,7 @@ from ..services.courses import (
     rating_shown,
     students_shown,
 )
+from ..services.description import clean_description
 from ..services.editions import current_exam_year
 from ..services.pricing import book_card_variant, book_min_price, bundle_saving
 
@@ -415,6 +416,12 @@ class BookDetailSerializer(BookCardSerializer):
     def get_kit_placements(self, obj: Book) -> list[dict]:
         placements = self.context.get("kit_placements", [])
         return KitPlacementSerializer(placements, many=True).data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # display clean-up of imported (Sazito) HTML: broken images, spec duplicate, empties
+        data["description"] = clean_description(data.get("description"))
+        return data
 
 
 class CategoryNodeSerializer(serializers.Serializer):
