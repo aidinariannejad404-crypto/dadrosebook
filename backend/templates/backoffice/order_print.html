@@ -1,0 +1,66 @@
+{% load static backoffice %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<link rel="stylesheet" href="{% static 'admin_theme/admin.css' %}">
+<style>
+  body { font-family: "Vazirmatn", sans-serif; color: #10182b; background: #f5f6f9; margin: 0; padding: 16px; }
+  .sheet { background: #fff; max-width: 780px; margin: 0 auto 24px; padding: 24px; border-radius: 8px; page-break-after: always; }
+  .sheet:last-child { page-break-after: auto; }
+  h1 { font-size: 18px; margin: 0; }
+  .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .muted { color: #475569; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; margin-block: 16px; font-size: 13px; }
+  th, td { text-align: start; padding: 6px 8px; border-block-end: 1px solid #e2e8f0; }
+  th { background: #f1f5f9; }
+  .totals { width: auto; margin-inline-start: auto; }
+  .totals td { border: 0; padding-block: 3px; }
+  .totals td:first-child { text-align: end; color: #475569; }
+  .box { border: 1px dashed #94a3b8; border-radius: 6px; padding: 12px; margin-block-start: 12px; font-size: 14px; line-height: 1.9; }
+  .bar { text-align: center; margin-block-end: 16px; }
+  .bar button { min-height: 44px; padding-inline: 24px; border: 0; border-radius: 8px; background: #12264a; color: #fff; font: inherit; cursor: pointer; }
+  @media print { body { background: #fff; padding: 0; } .bar { display: none; } .sheet { border-radius: 0; margin: 0; max-width: none; } }
+</style>
+</head>
+<body>
+<div class="bar"><button type="button" onclick="window.print()">چاپ</button></div>
+{% for row in orders %}{% with o=row.order a=row.address %}
+<section class="sheet">
+  <div class="row">
+    <div><h1>فروشگاه کتاب دادرُز</h1><div class="muted">فاکتور فروش و برگه بسته‌بندی</div></div>
+    <div class="muted">سفارش <strong dir="ltr">{{ o.number }}</strong><br>ثبت: {{ row.created }}<br>پرداخت: {{ row.paid }}</div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>کتاب</th><th>نسخه</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead>
+    <tbody>
+      {% for i in o.items.all %}
+        <tr>
+          <td>{{ forloop.counter|fa }}</td><td>{{ i.title }}</td>
+          <td>{% if i.variant_type == "PRINT" %}چاپی{% elif i.variant_type == "EBOOK" %}الکترونیک{% else %}چاپی + الکترونیک{% endif %}</td>
+          <td>{{ i.quantity|fa }}</td><td>{{ i.unit_price|toman }}</td><td>{{ i.line_total|toman }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="totals">
+    <tr><td>جمع اقلام</td><td>{{ o.items_total|toman }}</td></tr>
+    {% if o.discount_total %}<tr><td>تخفیف{% if o.discount_code_text %} ({{ o.discount_code_text }}){% endif %}</td><td>− {{ o.discount_total|toman }}</td></tr>{% endif %}
+    {% if o.needs_shipping %}<tr><td>ارسال ({{ o.shipping_method_name }})</td><td>{{ o.shipping_total|toman }}</td></tr>{% endif %}
+    <tr><td><strong>مبلغ پرداختی</strong></td><td><strong>{{ o.total|toman }}</strong></td></tr>
+  </table>
+  {% if o.needs_shipping %}
+    <div class="box">
+      <strong>گیرنده:</strong> {{ a.recipient_name }} — <span dir="ltr">{{ a.recipient_phone|fa }}</span><br>
+      <strong>نشانی:</strong> {{ a.province }}، {{ a.city }}، {{ a.address_line }}<br>
+      <strong>کد پستی:</strong> <span dir="ltr">{{ a.postal_code|fa }}</span>
+      {% if o.tracking_code %}<br><strong>کد رهگیری:</strong> <span dir="ltr">{{ o.tracking_code }}</span>{% endif %}
+    </div>
+  {% endif %}
+  {% if o.customer_note %}<div class="box"><strong>یادداشت مشتری:</strong> {{ o.customer_note }}</div>{% endif %}
+  {% if settings.support_hours %}<p class="muted">پشتیبانی: {{ settings.support_hours }}</p>{% endif %}
+</section>
+{% endwith %}{% endfor %}
+</body>
+</html>

@@ -15,6 +15,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
 | 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
+| Admin | Back office, step 1: dashboard (work queue, KPIs, goal metrics), sales report + CSV, staff roles, audit log, order print/CSV, quick price/stock edit, customer summary, admin session timeout (`apps.backoffice`, see `docs/admin-panel-summary.md`); step 2: returns/refunds (`orders.ReturnRequest`), staff SMS 2FA + admin IP allowlist, editable SMS templates (`core.SmsTemplate`), abandoned-cart reminders; next: shipment API (paid), formal invoices | 🚧 |
 
 ---
 
@@ -85,6 +86,7 @@ dadrosebook/
 │       ├── library/    (P3)    # EbookFile, EbookEntitlement (+ services/entitlements.has_entitlement)
 │       ├── reader/     (P4)    # ReadingProgress, Highlight, signed file URLs
 │       ├── engagement/ (P2)    # BackInStockRequest
+│       ├── backoffice/ (Admin) # dashboard + sales report services, staff roles, audit log admin
 │       ├── reviews/    (P3)    # Review (moderated)
 │       ├── wishlist/   (P3)    # WishlistItem
 │       └── seo/        (P5)    # Redirect (old Sazito path → new path)

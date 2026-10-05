@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.cart",
     "apps.engagement",
     "apps.reader",
+    "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.admin_security.AdminSecurityMiddleware",  # admin IP allowlist + staff 2FA
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -83,6 +85,12 @@ DATABASES = {
 }
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Django sessions are used only by the admin (the storefront uses JWT cookies): a staff session
+# ends after this many idle seconds (refreshed on every request) and when the browser closes.
+SESSION_COOKIE_AGE = env.int("ADMIN_SESSION_IDLE_SECONDS", default=2 * 60 * 60)
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CACHES = {
@@ -232,6 +240,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.cart.tasks.purge_stale_carts",
         "schedule": 24 * 3600.0,
     },
+    "abandoned-cart-reminders": {  # sends only when enabled in «تنظیمات فروشگاه»
+        "task": "apps.cart.tasks.send_abandoned_cart_reminders",
+        "schedule": 30 * 60.0,
+    },
 }
 
 # --- integrations -------------------------------------------------------------------------------
@@ -260,6 +272,16 @@ OTP_MAX_PER_PHONE_PER_HOUR = env.int("OTP_MAX_PER_PHONE_PER_HOUR", default=5)
 # Console provider only: also log the code at WARNING (easy to spot in `docker compose logs`).
 OTP_DEBUG_ECHO = env.bool("OTP_DEBUG_ECHO", default=DEBUG)
 
+# --- admin security -----------------------------------------------------------------------------
+# Staff must confirm an SMS code after the password (apps.accounts.admin_security).
+STAFF_2FA_REQUIRED = env.bool("STAFF_2FA_REQUIRED", default=True)
+STAFF_2FA_CODE_LENGTH = 6
+STAFF_2FA_TTL_SECONDS = 5 * 60
+STAFF_2FA_MAX_ATTEMPTS = 5
+STAFF_2FA_RESEND_SECONDS = 60
+# IPs or CIDR networks allowed to reach /admin/ (others get 404); empty = everyone.
+ADMIN_ALLOWED_IPS = env.list("ADMIN_ALLOWED_IPS", default=[])
+
 # --- payments (Phase 3) -------------------------------------------------------------------------
 # "zarinpal" (sandbox unless ZARINPAL_SANDBOX=false) or "fake" (local simulator, dev/tests only).
 PAYMENT_GATEWAY = env("PAYMENT_GATEWAY", default="zarinpal")
@@ -284,17 +306,38 @@ LOGGING = {
 }
 
 # --- Admin (django-unfold) ----------------------------------------------------------------------
+
+
+WQ = "apps.backoffice.services.work_queue."
+
+
+def _nav(title, icon, model, badge=None):
+    """A sidebar link to a model's changelist, shown only to staff who may view that model."""
+    app_label, model_name = model.split("_", 1)
+    item = {
+        "title": title,
+        "icon": icon,
+        "link": reverse_lazy(f"admin:{model}_changelist"),
+        "permission": lambda request: request.user.has_perm(f"{app_label}.view_{model_name}"),
+    }
+    if badge:
+        item["badge"] = badge
+    return item
+
+
 UNFOLD = {
     "SITE_TITLE": "پنل مدیریت دادرُز",
     "SITE_HEADER": "پنل مدیریت دادرُز",
     "SITE_SUBHEADER": "فروشگاه کتاب دادرُز",
     "SITE_URL": "/",
     "SITE_SYMBOL": "menu_book",
+    "DASHBOARD_CALLBACK": "apps.backoffice.views.dashboard_callback",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
     "STYLES": [
         lambda request: static("admin_theme/admin.css"),  # Vazirmatn
         lambda request: static("admin_theme/unfold-rtl.css"),  # see build_admin_rtl_css
+        lambda request: static("admin_theme/backoffice.css"),  # dashboard and reports
     ],
     "COLORS": {
         # Built around the brand navy #12264A (primary-800).
@@ -317,195 +360,112 @@ UNFOLD = {
         "show_all_applications": False,
         "navigation": [
             {
+                "title": "پیشخوان",
+                "items": [
+                    {
+                        "title": "پیشخوان فروشگاه",
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                    {
+                        "title": "گزارش فروش",
+                        "icon": "monitoring",
+                        "link": reverse_lazy("backoffice-sales-report"),
+                        "permission": "apps.backoffice.permissions.can_view_reports",
+                    },
+                ],
+            },
+            {
+                "title": "سفارش و فروش",
+                "separator": True,
+                "items": [
+                    _nav(
+                        "سفارش‌ها",
+                        "receipt_long",
+                        "orders_order",
+                        WQ + "orders_badge",
+                    ),
+                    _nav(
+                        "مرجوعی و استرداد",
+                        "assignment_return",
+                        "orders_returnrequest",
+                        WQ + "returns_badge",
+                    ),
+                    _nav("پرداخت‌ها", "payments", "payments_payment"),
+                    _nav("کدهای تخفیف", "sell", "orders_discountcode"),
+                    _nav("استفاده‌های کد تخفیف", "redeem", "orders_discountredemption"),
+                    _nav("روش‌های ارسال", "local_shipping", "orders_shippingmethod"),
+                    _nav("سبدهای خرید و رهاشده", "shopping_cart", "cart_cart"),
+                    _nav(
+                        "موجود شد خبرم کن", "notifications_active", "engagement_backinstockrequest"
+                    ),
+                ],
+            },
+            {
                 "title": "کاتالوگ",
                 "separator": True,
                 "items": [
-                    {
-                        "title": "کتاب‌ها",
-                        "icon": "menu_book",
-                        "link": reverse_lazy("admin:catalog_book_changelist"),
-                    },
-                    {
-                        "title": "نسخه‌ها و قیمت‌ها",
-                        "icon": "sell",
-                        "link": reverse_lazy("admin:catalog_bookvariant_changelist"),
-                    },
-                    {
-                        "title": "درس‌ها",
-                        "icon": "palette",
-                        "link": reverse_lazy("admin:catalog_subject_changelist"),
-                    },
-                    {
-                        "title": "آزمون‌ها",
-                        "icon": "school",
-                        "link": reverse_lazy("admin:catalog_examtype_changelist"),
-                    },
-                    {
-                        "title": "تاریخ آزمون‌ها",
-                        "icon": "event",
-                        "link": reverse_lazy("admin:catalog_examevent_changelist"),
-                    },
-                    {
-                        "title": "دسته‌بندی‌ها",
-                        "icon": "account_tree",
-                        "link": reverse_lazy("admin:catalog_category_changelist"),
-                    },
-                    {
-                        "title": "نویسندگان و مترجمان",
-                        "icon": "person_edit",
-                        "link": reverse_lazy("admin:catalog_person_changelist"),
-                    },
-                    {
-                        "title": "ناشران",
-                        "icon": "domain",
-                        "link": reverse_lazy("admin:catalog_publisher_changelist"),
-                    },
-                    {
-                        "title": "بسته‌های مطالعاتی",
-                        "icon": "library_books",
-                        "link": reverse_lazy("admin:catalog_studykitrecommendation_changelist"),
-                    },
-                    {
-                        "title": "دوره‌های مرتبط",
-                        "icon": "cast_for_education",
-                        "link": reverse_lazy("admin:catalog_relatedcourse_changelist"),
-                    },
+                    _nav("کتاب‌ها", "menu_book", "catalog_book"),
+                    _nav(
+                        "نسخه‌ها، قیمت و موجودی",
+                        "sell",
+                        "catalog_bookvariant",
+                        WQ + "low_stock_badge",
+                    ),
+                    _nav("درس‌ها", "palette", "catalog_subject"),
+                    _nav("آزمون‌ها", "school", "catalog_examtype"),
+                    _nav("تاریخ آزمون‌ها", "event", "catalog_examevent"),
+                    _nav("بسته‌های مطالعاتی", "inventory_2", "catalog_studykitrecommendation"),
+                    _nav("دسته‌بندی‌ها", "category", "catalog_category"),
+                    _nav("نویسندگان و مترجمان", "person", "catalog_person"),
+                    _nav("ناشران", "apartment", "catalog_publisher"),
+                    _nav("دوره‌های مرتبط", "smart_display", "catalog_relatedcourse"),
+                    _nav("کد تخفیف دوره‌ها", "percent", "catalog_subjectcoursediscount"),
                 ],
             },
             {
-                "title": "فروش",
+                "title": "کتاب الکترونیک",
                 "separator": True,
                 "items": [
-                    {
-                        "title": "سفارش‌ها",
-                        "icon": "receipt_long",
-                        "link": reverse_lazy("admin:orders_order_changelist"),
-                    },
-                    {
-                        "title": "پرداخت‌ها",
-                        "icon": "payments",
-                        "link": reverse_lazy("admin:payments_payment_changelist"),
-                    },
-                    {
-                        "title": "کدهای تخفیف",
-                        "icon": "sell",
-                        "link": reverse_lazy("admin:orders_discountcode_changelist"),
-                    },
-                    {
-                        "title": "استفاده‌های کد تخفیف",
-                        "icon": "redeem",
-                        "link": reverse_lazy("admin:orders_discountredemption_changelist"),
-                    },
-                    {
-                        "title": "روش‌های ارسال",
-                        "icon": "local_shipping",
-                        "link": reverse_lazy("admin:orders_shippingmethod_changelist"),
-                    },
-                    {
-                        "title": "دسترسی‌های کتاب الکترونیک",
-                        "icon": "local_library",
-                        "link": reverse_lazy("admin:library_ebookentitlement_changelist"),
-                    },
-                    {
-                        "title": "فایل‌های کتاب الکترونیک",
-                        "icon": "picture_as_pdf",
-                        "link": reverse_lazy("admin:library_ebookfile_changelist"),
-                    },
-                    {
-                        "title": "پیشرفت مطالعه",
-                        "icon": "auto_stories",
-                        "link": reverse_lazy("admin:reader_readingprogress_changelist"),
-                    },
-                    {
-                        "title": "هایلایت‌ها",
-                        "icon": "ink_highlighter",
-                        "link": reverse_lazy("admin:reader_highlight_changelist"),
-                    },
+                    _nav("فایل‌های کتاب الکترونیک", "picture_as_pdf", "library_ebookfile"),
+                    _nav("دسترسی‌های کتاب الکترونیک", "key", "library_ebookentitlement"),
+                    _nav("پیشرفت مطالعه", "auto_stories", "reader_readingprogress"),
+                    _nav("هایلایت‌ها", "border_color", "reader_highlight"),
                 ],
             },
             {
-                "title": "نظرات کاربران",
+                "title": "مشتریان و بازاریابی",
                 "separator": True,
                 "items": [
-                    {
-                        "title": "نظرات",
-                        "icon": "reviews",
-                        "link": reverse_lazy("admin:reviews_review_changelist"),
-                    },
-                    {
-                        "title": "علاقه‌مندی‌ها",
-                        "icon": "favorite",
-                        "link": reverse_lazy("admin:wishlist_wishlistitem_changelist"),
-                    },
+                    _nav("کاربران", "people", "accounts_user"),
+                    _nav(
+                        "نظرات",
+                        "rate_review",
+                        "reviews_review",
+                        WQ + "reviews_badge",
+                    ),
+                    _nav("سرنخ‌ها (برنامه مطالعه)", "contact_phone", "leads_lead"),
+                    _nav("علاقه‌مندی‌ها", "favorite", "wishlist_wishlistitem"),
+                    _nav("نشانی‌ها", "home_pin", "orders_address"),
                 ],
             },
             {
-                "title": "محتوای صفحه اصلی",
+                "title": "محتوای سایت",
                 "separator": True,
                 "items": [
-                    {
-                        "title": "بنرها",
-                        "icon": "web",
-                        "link": reverse_lazy("admin:content_banner_changelist"),
-                    },
-                    {
-                        "title": "ویدیوهای راهنما",
-                        "icon": "smart_display",
-                        "link": reverse_lazy("admin:content_guidevideo_changelist"),
-                    },
+                    _nav("بنرها", "view_carousel", "content_banner"),
+                    _nav("ویدیوهای راهنما", "play_circle", "content_guidevideo"),
                 ],
             },
             {
-                "title": "فروش",
+                "title": "تنظیمات و امنیت",
                 "separator": True,
                 "items": [
-                    {
-                        "title": "سبدهای خرید",
-                        "icon": "shopping_cart",
-                        "link": reverse_lazy("admin:cart_cart_changelist"),
-                    },
-                    {
-                        "title": "موجود شد خبرم کن",
-                        "icon": "notifications_active",
-                        "link": reverse_lazy("admin:engagement_backinstockrequest_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": "تنظیمات",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "تنظیمات فروشگاه",
-                        "icon": "storefront",
-                        "link": reverse_lazy("admin:core_storesettings_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": "کاربران",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "کاربران",
-                        "icon": "people",
-                        "link": reverse_lazy("admin:accounts_user_changelist"),
-                    },
-                    {
-                        "title": "نشانی‌ها",
-                        "icon": "home_pin",
-                        "link": reverse_lazy("admin:orders_address_changelist"),
-                    },
-                    {
-                        "title": "کدهای ورود",
-                        "icon": "password",
-                        "link": reverse_lazy("admin:accounts_otpcode_changelist"),
-                    },
-                    {
-                        "title": "گروه‌ها",
-                        "icon": "group",
-                        "link": reverse_lazy("admin:auth_group_changelist"),
-                    },
+                    _nav("تنظیمات فروشگاه", "settings", "core_storesettings"),
+                    _nav("قالب پیامک‌ها", "sms", "core_smstemplate"),
+                    _nav("نقش‌های کارکنان", "admin_panel_settings", "auth_group"),
+                    _nav("تاریخچه تغییرات پنل", "history", "admin_logentry"),
+                    _nav("کدهای ورود", "password", "accounts_otpcode"),
                 ],
             },
         ],

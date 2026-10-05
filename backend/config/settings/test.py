@@ -17,3 +17,6 @@ STORAGES = {
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 ALLOWED_HOSTS = ["testserver", "localhost"]
+# Admin tests use force_login; the 2FA tests turn this on with override_settings.
+STAFF_2FA_REQUIRED = False
+ADMIN_ALLOWED_IPS: list[str] = []

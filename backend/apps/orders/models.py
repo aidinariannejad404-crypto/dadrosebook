@@ -214,6 +214,12 @@ class Order(TimeStampedModel):
     discount_total = models.PositiveIntegerField("تخفیف (تومان)", default=0)
     shipping_total = models.PositiveIntegerField("هزینه ارسال (تومان)", default=0)
     total = models.PositiveIntegerField("مبلغ قابل پرداخت (تومان)", default=0)
+    refunded_total = models.PositiveIntegerField(
+        "مبلغ مسترد شده (تومان)",
+        default=0,
+        editable=False,
+        help_text="جمع استردادهای انجام‌شده (مرجوعی‌ها)؛ درآمد خالص = مبلغ سفارش منهای این.",
+    )
 
     discount_code = models.ForeignKey(
         DiscountCode,
@@ -264,6 +270,10 @@ class Order(TimeStampedModel):
     @property
     def is_paid(self) -> bool:
         return self.paid_at is not None
+
+    @property
+    def net_total(self) -> int:
+        return max(self.total - self.refunded_total, 0)
 
 
 class OrderItem(models.Model):
@@ -363,3 +373,156 @@ class DiscountRedemption(models.Model):
 
     def __str__(self) -> str:
         return f"{self.code} — {self.order}"
+
+
+class ReturnRequest(TimeStampedModel):
+    """One return case (مرجوعی) on a paid order; see ``apps.orders.services.returns``.
+
+    ``REQUESTED → APPROVED → RECEIVED → REFUNDED``; ``REQUESTED | APPROVED → REJECTED | CANCELLED``.
+    A return with no physical line may be refunded straight from APPROVED.
+    """
+
+    class Status(models.TextChoices):
+        REQUESTED = "REQUESTED", "ثبت‌شده"
+        APPROVED = "APPROVED", "تأییدشده"
+        RECEIVED = "RECEIVED", "کالا دریافت شد"
+        REFUNDED = "REFUNDED", "وجه مسترد شد"
+        REJECTED = "REJECTED", "ردشده"
+        CANCELLED = "CANCELLED", "لغوشده"
+
+    class Reason(models.TextChoices):
+        DAMAGED = "DAMAGED", "آسیب‌دیده یا معیوب"
+        WRONG_ITEM = "WRONG_ITEM", "ارسال کالای اشتباه"
+        CHANGED_MIND = "CHANGED_MIND", "انصراف از خرید"
+        LATE_DELIVERY = "LATE_DELIVERY", "تأخیر در تحویل"
+        OTHER = "OTHER", "سایر"
+
+    class RefundMethod(models.TextChoices):
+        GATEWAY = "GATEWAY", "بازگشت از طریق درگاه"
+        SHABA = "SHABA", "واریز به شبا"
+        CARD = "CARD", "واریز کارت‌به‌کارت"
+
+    order = models.ForeignKey(
+        Order, verbose_name="سفارش", related_name="returns", on_delete=models.PROTECT
+    )
+    status = models.CharField(
+        "وضعیت", max_length=12, choices=Status.choices, default=Status.REQUESTED, db_index=True
+    )
+    reason = models.CharField("دلیل", max_length=20, choices=Reason.choices)
+    description = models.TextField("توضیح دلیل", blank=True)
+    restock = models.BooleanField(
+        "بازگشت به موجودی",
+        default=True,
+        help_text="با «کالا دریافت شد» نسخه‌های چاپی و پکیج به موجودی انبار برمی‌گردند.",
+    )
+    revoke_ebook = models.BooleanField(
+        "لغو دسترسی کتاب الکترونیک",
+        default=False,
+        help_text="با استرداد وجه، دسترسی مشتری به کتاب‌های الکترونیک این اقلام برداشته می‌شود.",
+    )
+    refund_amount = models.PositiveIntegerField(
+        "مبلغ استرداد (تومان)",
+        null=True,
+        blank=True,
+        help_text="خالی یعنی سهم اقلام مرجوعی از مبلغ سفارش؛ بیشتر از مبلغ قابل استرداد سفارش "
+        "نمی‌شود.",
+    )
+    refund_method = models.CharField(
+        "روش استرداد", max_length=10, choices=RefundMethod.choices, default=RefundMethod.SHABA
+    )
+    shaba = models.CharField(
+        "شماره شبا", max_length=26, blank=True, help_text="با IR و ۲۴ رقم، مثلاً IR06…"
+    )
+    card_number = models.CharField("شماره کارت", max_length=16, blank=True)
+    account_holder = models.CharField("نام صاحب حساب", max_length=150, blank=True)
+    refund_reference = models.CharField(
+        "شماره پیگیری واریز",
+        max_length=64,
+        blank=True,
+        help_text="برای شبا و کارت پیش از «استرداد وجه» وارد شود.",
+    )
+    staff_note = models.TextField("یادداشت داخلی", blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="ثبت‌کننده",
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    approved_at = models.DateTimeField("زمان تأیید", null=True, blank=True)
+    received_at = models.DateTimeField("زمان دریافت کالا", null=True, blank=True)
+    refunded_at = models.DateTimeField("زمان استرداد", null=True, blank=True)
+    closed_at = models.DateTimeField("زمان رد/لغو", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "مرجوعی"
+        verbose_name_plural = "مرجوعی‌ها و استرداد وجه"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"مرجوعی {self.pk or ''} — {self.order}"
+
+    @property
+    def has_physical_lines(self) -> bool:
+        return any(line.order_item.needs_shipping for line in self.lines.all())
+
+
+class ReturnLine(models.Model):
+    return_request = models.ForeignKey(
+        ReturnRequest, verbose_name="مرجوعی", related_name="lines", on_delete=models.CASCADE
+    )
+    order_item = models.ForeignKey(
+        OrderItem, verbose_name="قلم سفارش", related_name="return_lines", on_delete=models.PROTECT
+    )
+    quantity = models.PositiveSmallIntegerField(
+        "تعداد", default=1, validators=[MinValueValidator(1)]
+    )
+
+    class Meta:
+        verbose_name = "قلم مرجوعی"
+        verbose_name_plural = "اقلام مرجوعی"
+        ordering = ["id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["return_request", "order_item"], name="one_line_per_item_per_return"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.order_item.title} × {self.quantity}"
+
+    @property
+    def amount_share(self) -> int:
+        """This line's share of the item's ``line_total`` (integer toman)."""
+        item = self.order_item
+        if not item.quantity:
+            return 0
+        return item.line_total * self.quantity // item.quantity
+
+
+class ReturnRequestLog(models.Model):
+    """Every change to a return: status moves, edits and refund attempts."""
+
+    return_request = models.ForeignKey(
+        ReturnRequest, verbose_name="مرجوعی", related_name="logs", on_delete=models.CASCADE
+    )
+    from_status = models.CharField("از وضعیت", max_length=12, blank=True)
+    to_status = models.CharField("به وضعیت", max_length=12, blank=True)
+    note = models.CharField("توضیح", max_length=500, blank=True)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="انجام‌دهنده",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    created_at = models.DateTimeField("زمان", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "رویداد مرجوعی"
+        verbose_name_plural = "تاریخچه مرجوعی"
+        ordering = ["created_at", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.return_request_id} {self.from_status} → {self.to_status}"

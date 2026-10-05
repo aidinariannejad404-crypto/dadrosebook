@@ -421,30 +421,56 @@ class BookAdmin(ModelAdmin):
         return "موجود" if any(v.in_stock for v in variants) else "ناموجود"
 
 
+class LowStockFilter(admin.SimpleListFilter):
+    title = "موجودی کم"
+    parameter_name = "low_stock"
+
+    def lookups(self, request, model_admin):
+        return (("1", "در حد هشدار یا کمتر"), ("0", "ناموجود"))
+
+    def queryset(self, request, queryset):
+        from apps.core.services.store_settings import get_store_settings
+
+        physical = queryset.exclude(type=BookVariant.Type.EBOOK)
+        if self.value() == "1":
+            return physical.filter(stock__lte=get_store_settings().low_stock_threshold)
+        if self.value() == "0":
+            return physical.filter(stock=0)
+        return queryset
+
+
 @admin.register(BookVariant)
 class BookVariantAdmin(ModelAdmin):
     list_display = (
         "book",
         "type",
-        "price_toman",
-        "sale_price_toman",
+        "price",
+        "sale_price",
+        "effective_price_toman",
         "stock",
         "price_is_placeholder",
         "is_active",
     )
-    list_filter = ("type", "price_is_placeholder", "is_active")
-    list_editable = ("stock", "is_active")
+    list_filter = (LowStockFilter, "type", "price_is_placeholder", "is_active")
+    list_editable = ("price", "sale_price", "stock", "is_active")
     search_fields = ("book__title",)
     autocomplete_fields = ("book",)
     list_select_related = ("book",)
+    actions = ("confirm_prices", "clear_sale_prices")
 
-    @admin.display(description="قیمت", ordering="price")
-    def price_toman(self, obj):
-        return format_toman(obj.price)
+    @admin.display(description="قیمت نهایی")
+    def effective_price_toman(self, obj):
+        return format_toman(obj.effective_price)
 
-    @admin.display(description="قیمت با تخفیف", ordering="sale_price")
-    def sale_price_toman(self, obj):
-        return format_toman(obj.sale_price) or "—"
+    @admin.action(description="تأیید قیمت (برداشتن «قیمت موقت»)")
+    def confirm_prices(self, request, queryset):
+        n = queryset.update(price_is_placeholder=False)
+        self.message_user(request, f"قیمت {to_persian_digits(n)} نسخه تأیید شد.")
+
+    @admin.action(description="حذف قیمت تخفیف")
+    def clear_sale_prices(self, request, queryset):
+        n = queryset.exclude(sale_price=None).update(sale_price=None)
+        self.message_user(request, f"تخفیف {to_persian_digits(n)} نسخه برداشته شد.")
 
 
 class ExamEventForm(forms.ModelForm):

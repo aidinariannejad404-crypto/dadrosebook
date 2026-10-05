@@ -1,0 +1,77 @@
+{% load backoffice %}
+<section class="bo-grid bo-grid-4" aria-label="شاخص‌های فروش">
+  {% for k in kpis %}
+    <div class="bo-card">
+      <div class="bo-kpi-title">{{ k.title }}</div>
+      <div class="bo-kpi-value">{{ k.value }}</div>
+      {% if k.change is not None %}
+        <div class="bo-change {% if k.change >= 0 %}bo-up{% else %}bo-down{% endif %}">
+          {% if k.change >= 0 %}▲{% else %}▼{% endif %} {{ k.change_text }} نسبت به دوره قبل
+        </div>
+      {% endif %}
+      {% if k.hint %}<div class="bo-hint">{{ k.hint }}</div>{% endif %}
+    </div>
+  {% endfor %}
+</section>
+
+<section class="bo-grid bo-grid-5" aria-label="شاخص‌های هدف کسب‌وکار">
+  {% for k in goals %}
+    <div class="bo-card bo-card-soft">
+      <div class="bo-kpi-title">{{ k.title }}</div>
+      <div class="bo-kpi-value bo-kpi-sm">{{ k.value }}</div>
+      {% if k.hint %}<div class="bo-hint">{{ k.hint }}</div>{% endif %}
+    </div>
+  {% endfor %}
+</section>
+
+<section class="bo-grid bo-grid-2">
+  <div class="bo-card">
+    <h2 class="bo-h2">فروش روزانه</h2>
+    <div class="bo-bars" role="img" aria-label="نمودار فروش روزانه">
+      {% for d in daily %}
+        <div class="bo-bar" title="{{ d.day|jalali }} — {{ d.revenue|toman }} ({{ d.orders|num }} سفارش)">
+          <span style="height: {{ d.height }}%"></span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="bo-bars-axis">
+      <span>{{ daily.0.day|jalali }}</span>{% with last=daily|last %}<span>{{ last.day|jalali }}</span>{% endwith %}
+    </div>
+  </div>
+  <div class="bo-card">
+    <h2 class="bo-h2">فروش به تفکیک نوع نسخه</h2>
+    <table class="bo-table">
+      <thead><tr><th>نوع</th><th>تعداد</th><th>فروش</th><th>سهم</th></tr></thead>
+      <tbody>
+        {% for f in formats %}
+          <tr>
+            <td>{{ f.label }}</td>
+            <td>{{ f.units|num }}</td>
+            <td>{{ f.revenue|toman }}</td>
+            <td><span class="bo-share"><span style="width: {{ f.share }}%"></span></span> {{ f.share|fa }}٪</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="bo-hint">نرخ تبدیل صفحه محصول به خرید به تفکیک نسخه در Umami (رویدادهای view_item و purchase) دیده می‌شود.</p>
+  </div>
+</section>
+
+<section class="bo-card">
+  <h2 class="bo-h2">پرفروش‌ترین کتاب‌ها</h2>
+  <table class="bo-table">
+    <thead><tr><th>#</th><th>کتاب</th><th>تعداد</th><th>فروش</th></tr></thead>
+    <tbody>
+      {% for b in top_books %}
+        <tr>
+          <td>{{ forloop.counter|fa }}</td>
+          <td>{% if b.book_id %}<a href="{% url 'admin:catalog_book_change' b.book_id %}">{{ b.title }}</a>{% else %}{{ b.title }}{% endif %}</td>
+          <td>{{ b.units|num }}</td>
+          <td>{{ b.revenue|toman }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="bo-empty">در این بازه فروشی ثبت نشده است.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>

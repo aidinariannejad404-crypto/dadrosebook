@@ -1,0 +1,58 @@
+{% extends "admin/index.html" %}
+{% comment %}Dashboard for پنل مدیریت دادرُز; data from apps.backoffice.views.dashboard_callback.{% endcomment %}
+{% load backoffice %}
+
+{% block content %}
+<div class="bo" dir="rtl">
+  <div class="bo-head">
+    <div>
+      <h1 class="bo-h1">پیشخوان فروشگاه</h1>
+      {% if today %}<p class="bo-sub">امروز: {{ today.revenue }} از {{ today.orders }} سفارش</p>{% endif %}
+    </div>
+    {% if can_report %}
+      <nav class="bo-tabs" aria-label="بازه زمانی">
+        {% for key, label in periods %}
+          <a href="?period={{ key }}" class="bo-tab{% if key == period %} bo-tab-on{% endif %}"{% if key == period %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+        <a href="{% url 'backoffice-sales-report' %}" class="bo-tab bo-tab-link">گزارش کامل فروش</a>
+      </nav>
+    {% endif %}
+  </div>
+
+  <section class="bo-grid bo-grid-2">
+    <div class="bo-card">
+      <h2 class="bo-h2">کارهای امروز</h2>
+      <ul class="bo-tasks">
+        {% for t in work_items %}
+          <li>
+            <a href="{{ t.url }}" class="bo-task bo-{{ t.level }}{% if not t.count %} bo-done{% endif %}">
+              <span class="material-symbols-outlined" aria-hidden="true">{{ t.icon }}</span>
+              <span class="bo-task-title">{{ t.title }}</span>
+              <span class="bo-count">{{ t.count|fa }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="bo-card">
+      <h2 class="bo-h2">آزمون‌های پیش رو</h2>
+      <ul class="bo-exams">
+        {% for e in upcoming_exams %}
+          <li><span>{{ e.name }}</span><span class="bo-muted">{{ e.date }}</span><strong>{{ e.days_left }} روز</strong></li>
+        {% empty %}
+          <li class="bo-empty">تا ۹۰ روز آینده آزمونی ثبت نشده است. <a href="{% url 'admin:catalog_examevent_add' %}">افزودن تاریخ آزمون</a></li>
+        {% endfor %}
+      </ul>
+      <h2 class="bo-h2 bo-mt">دسترسی سریع</h2>
+      <div class="bo-quick">
+        {% if perms.catalog.add_book %}<a href="{% url 'admin:catalog_book_add' %}">+ کتاب جدید</a>{% endif %}
+        {% if perms.orders.add_discountcode %}<a href="{% url 'admin:orders_discountcode_add' %}">+ کد تخفیف</a>{% endif %}
+        {% if perms.content.add_banner %}<a href="{% url 'admin:content_banner_add' %}">+ بنر</a>{% endif %}
+        {% if perms.catalog.change_bookvariant %}<a href="{% url 'admin:catalog_bookvariant_changelist' %}">ویرایش سریع قیمت و موجودی</a>{% endif %}
+      </div>
+    </div>
+  </section>
+
+  {% if can_report %}{% include "backoffice/_overview.html" %}{% endif %}
+</div>
+{% endblock %}

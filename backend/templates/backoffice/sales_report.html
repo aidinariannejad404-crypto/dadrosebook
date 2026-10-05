@@ -1,0 +1,48 @@
+{% extends "admin/base_site.html" %}
+{% load backoffice %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="bo" dir="rtl">
+  <div class="bo-head">
+    <div>
+      <h1 class="bo-h1">گزارش فروش</h1>
+      <p class="bo-sub">{{ range_text }}</p>
+    </div>
+    <form method="get" class="bo-filter">
+      {% for field in form %}
+        <label>{{ field.label }} {{ field }}</label>
+      {% endfor %}
+      <button type="submit" class="bo-btn">نمایش</button>
+    </form>
+  </div>
+  {% if form.errors %}<p class="bo-error">{% for e in form.non_field_errors %}{{ e }}{% endfor %}{% for f in form %}{{ f.errors.0 }} {% endfor %}</p>{% endif %}
+
+  <section class="bo-grid bo-grid-4">
+    <div class="bo-card"><div class="bo-kpi-title">مشتریان</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.customers }}</div></div>
+    <div class="bo-card"><div class="bo-kpi-title">تخفیف داده‌شده</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.discounts }}</div></div>
+    <div class="bo-card"><div class="bo-kpi-title">استرداد وجه</div><div class="bo-kpi-value bo-kpi-sm">{{ summary.refunds }}</div><div class="bo-hint">فروش خالص: {{ summary.net }} — ارسال دریافتی: {{ summary.shipping }}</div></div>
+    <div class="bo-card bo-actions">
+      <a class="bo-btn" href="?{{ query }}{% if query %}&{% endif %}export=orders">خروجی اکسل سفارش‌ها</a>
+      <a class="bo-btn bo-btn-ghost" href="?{{ query }}{% if query %}&{% endif %}export=books">خروجی اکسل کتاب‌ها</a>
+    </div>
+  </section>
+
+  {% include "backoffice/_overview.html" %}
+
+  <section class="bo-card">
+    <h2 class="bo-h2">کدهای تخفیف</h2>
+    <table class="bo-table">
+      <thead><tr><th>کد</th><th>دفعات استفاده</th><th>تخفیف</th><th>فروش سفارش‌ها</th></tr></thead>
+      <tbody>
+        {% for c in codes %}
+          <tr><td dir="ltr" class="bo-code">{{ c.code__code }}</td><td>{{ c.uses|num }}</td><td>{{ c.discount|toman }}</td><td>{{ c.revenue|toman }}</td></tr>
+        {% empty %}
+          <tr><td colspan="4" class="bo-empty">در این بازه کد تخفیفی استفاده نشده است.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

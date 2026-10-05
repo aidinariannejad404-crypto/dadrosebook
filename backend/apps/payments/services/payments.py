@@ -17,7 +17,7 @@ from django.utils import timezone
 from apps.core.money import to_rial
 
 from ..models import Payment, PaymentLog
-from .gateway import GatewayError, get_gateway
+from .gateway import GatewayError, GatewayRefundResult, get_gateway
 
 logger = logging.getLogger(__name__)
 
@@ -219,3 +219,44 @@ def handle_callback(authority: str, status_param: str):
         )
         _keep_order_payable(payment, "پرداخت در درگاه تأیید نشد")
         return order, OUTCOME_FAILED
+
+
+# --- refunds -------------------------------------------------------------------------------------
+
+
+def paid_payment(order) -> Payment | None:
+    return Payment.objects.filter(order=order, status=Payment.Status.PAID).first()
+
+
+def refund_payment(payment: Payment, amount_toman: int, *, note: str = "") -> GatewayRefundResult:
+    """Refund ``amount_toman`` of a PAID payment through its gateway (toman → Rial happens here).
+
+    Every attempt is logged on the payment (``refund_requested`` then ``refunded`` or
+    ``refund_failed``). Raises ``GatewayError`` (``RefundNotSupported`` for gateways without a
+    refund API). The payment's status does not change.
+    """
+    if payment.status != Payment.Status.PAID:
+        raise GatewayError("فقط پرداخت موفق قابل استرداد از طریق درگاه است.")
+    amount_rial = to_rial(amount_toman)
+    if amount_toman <= 0 or amount_rial > payment.amount_rial:
+        raise GatewayError("مبلغ استرداد معتبر نیست یا از مبلغ پرداخت بیشتر است.")
+    log_event(
+        payment,
+        "refund_requested",
+        {"amount_toman": amount_toman, "amount_rial": amount_rial, "note": note},
+    )
+    try:
+        result = get_gateway(payment.gateway).refund(payment, amount_rial)
+    except GatewayError as exc:
+        log_event(
+            payment,
+            "refund_failed",
+            {"amount_rial": amount_rial, "error": exc.message, "details": exc.details},
+        )
+        raise
+    log_event(
+        payment,
+        "refunded",
+        {"amount_rial": amount_rial, "ref_id": result.ref_id, "raw": result.raw},
+    )
+    return result

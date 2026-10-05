@@ -19,6 +19,10 @@ class Cart(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
+    reminded_at = models.DateTimeField(
+        "یادآوری پیامکی", null=True, blank=True, help_text="زمان پیامک یادآوری سبد رهاشده."
+    )
+
     class Meta:
         verbose_name = "سبد خرید"
         verbose_name_plural = "سبدهای خرید"

@@ -3,6 +3,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.accounts.admin_views import staff_2fa_view
+from apps.backoffice.views import sales_report_view
 from apps.core.views import HealthView, StoreSettingsView
 
 api_v1 = [
@@ -23,6 +25,12 @@ api_v1 = [
 ]
 
 urlpatterns = [
+    path("admin/2fa/", staff_2fa_view, name="staff-2fa"),
+    path(
+        "admin/reports/sales/",
+        admin.site.admin_view(sales_report_view),
+        name="backoffice-sales-report",
+    ),
     path("admin/", admin.site.urls),
     path("api/v1/", include(api_v1)),
 ]

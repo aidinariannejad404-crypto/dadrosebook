@@ -14,7 +14,9 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
-from apps.core.money import to_persian_digits
+from apps.core.money import format_toman, to_persian_digits
+from apps.core.services.sms_templates import render_sms
+from apps.core.sms_catalog import ORDER_PAID, ORDER_SHIPPED
 
 from ..models import DiscountRedemption, Order, OrderStatusLog
 
@@ -66,7 +68,10 @@ def _sync(target: Order, source: Order) -> None:
         setattr(target, f.attname, getattr(source, f.attname))
 
 
-def _send_sms(phone: str, message: str) -> None:
+def _send_sms(phone: str, message: str | None) -> None:
+    """Queue an SMS; ``None`` (template switched off in the admin) sends nothing."""
+    if not message:
+        return
     try:
         from apps.accounts.tasks import send_sms
 
@@ -110,10 +115,7 @@ def transition(order: Order, to_status: str, *, actor=None, note: str = "") -> O
         if to_status == S.SHIPPED:
             phone, number, tracking = locked.user.phone, locked.number, locked.tracking_code
             transaction.on_commit(
-                lambda: _send_sms(
-                    phone,
-                    f"سفارش {number} ارسال شد. کد رهگیری مرسوله: {tracking}\nدادرُز",
-                )
+                lambda: _send_sms(phone, render_sms(ORDER_SHIPPED, order=number, tracking=tracking))
             )
     _sync(order, locked)
     return order
@@ -233,9 +235,9 @@ def mark_paid(order: Order, *, payment=None, note: str = "") -> bool:
             locked.save(update_fields=fields)
             _log(locked, S.PAID, S.DELIVERED, note="کتاب الکترونیک به کتابخانه افزوده شد.")
 
-        phone, number = locked.user.phone, locked.number
+        phone, number, total = locked.user.phone, locked.number, format_toman(locked.total)
         transaction.on_commit(
-            lambda: _send_sms(phone, f"سفارش {number} با موفقیت پرداخت شد.\nدادرُز")
+            lambda: _send_sms(phone, render_sms(ORDER_PAID, order=number, total=total))
         )
         transaction.on_commit(lambda: _send_order_paid(locked))
     _sync(order, locked)
