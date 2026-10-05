@@ -75,6 +75,24 @@ class StoreSettings(models.Model):
         help_text="سفارش ارسال‌شده‌ای که بیش از این تعداد روز «تحویل‌شده» نشود در پیشخوان "
         "پیگیری می‌شود.",
     )
+    abandoned_cart_enabled = models.BooleanField(
+        "یادآوری سبد رهاشده",
+        default=False,
+        help_text="به مشتریانی که وارد حساب شده‌اند و سبدشان را رها کرده‌اند یک پیامک یادآوری "
+        "فرستاده می‌شود (هر سبد حداکثر یک بار). متن در «قالب پیامک‌ها».",
+    )
+    abandoned_cart_hours = models.PositiveSmallIntegerField(
+        "فاصله یادآوری (ساعت)",
+        default=6,
+        help_text="سبدی که این مدت دست نخورده و به خرید نرسیده رهاشده حساب می‌شود.",
+    )
+    abandoned_cart_code = models.CharField(
+        "کد تخفیف یادآوری",
+        max_length=40,
+        blank=True,
+        help_text="اختیاری: کدی که در پیامک با متغیر {code} می‌آید. خود کد را در «کدهای تخفیف» "
+        "بسازید.",
+    )
     updated_at = models.DateTimeField("به‌روزرسانی", auto_now=True)
 
     class Meta:
@@ -94,3 +112,29 @@ class StoreSettings(models.Model):
     def delete(self, *args, **kwargs):
         """The singleton is never deleted."""
         return 0, {}
+
+
+class SmsTemplate(models.Model):
+    """Editable text of one SMS the store sends (see ``apps.core.sms_catalog``)."""
+
+    key = models.CharField("پیامک", max_length=40, unique=True, editable=False)
+    body = models.TextField(
+        "متن پیامک",
+        help_text="متغیرها را با آکولاد بنویسید، مثلاً {order}. "
+        "فهرست متغیرهای مجاز زیر فرم آمده است.",
+    )
+    is_active = models.BooleanField(
+        "ارسال شود", default=True, help_text="اگر خاموش باشد این پیامک اصلاً فرستاده نمی‌شود."
+    )
+    updated_at = models.DateTimeField("به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        verbose_name = "قالب پیامک"
+        verbose_name_plural = "قالب پیامک‌ها"
+        ordering = ["id"]
+
+    def __str__(self) -> str:
+        from .sms_catalog import KINDS
+
+        kind = KINDS.get(self.key)
+        return kind.label if kind else self.key

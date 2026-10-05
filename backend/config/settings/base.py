@@ -220,6 +220,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.cart.tasks.purge_stale_carts",
         "schedule": 24 * 3600.0,
     },
+    "abandoned-cart-reminders": {  # sends only when enabled in «تنظیمات فروشگاه»
+        "task": "apps.cart.tasks.send_abandoned_cart_reminders",
+        "schedule": 30 * 60.0,
+    },
 }
 
 # --- integrations -------------------------------------------------------------------------------
@@ -355,7 +359,7 @@ UNFOLD = {
                     _nav("کدهای تخفیف", "sell", "orders_discountcode"),
                     _nav("استفاده‌های کد تخفیف", "redeem", "orders_discountredemption"),
                     _nav("روش‌های ارسال", "local_shipping", "orders_shippingmethod"),
-                    _nav("سبدهای خرید", "shopping_cart", "cart_cart"),
+                    _nav("سبدهای خرید و رهاشده", "shopping_cart", "cart_cart"),
                     _nav(
                         "موجود شد خبرم کن", "notifications_active", "engagement_backinstockrequest"
                     ),
@@ -422,6 +426,7 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     _nav("تنظیمات فروشگاه", "settings", "core_storesettings"),
+                    _nav("قالب پیامک‌ها", "sms", "core_smstemplate"),
                     _nav("نقش‌های کارکنان", "admin_panel_settings", "auth_group"),
                     _nav("تاریخچه تغییرات پنل", "history", "admin_logentry"),
                     _nav("کدهای ورود", "password", "accounts_otpcode"),

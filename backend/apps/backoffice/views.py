@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
+from apps.cart.services.abandoned import recovery as abandoned_recovery
 from apps.core.forms import JalaliDateField
 from apps.core.jalali import to_jalali_str
 from apps.core.money import format_number, format_toman, to_persian_digits
@@ -46,6 +47,7 @@ def overview(window: metrics.Window) -> dict:
     bundle = metrics.bundle_adoption(window)
     repeat = metrics.repeat_purchase(window)
     recovery = metrics.notify_me_recovery(window)
+    carts = abandoned_recovery(window.start, window.end)
     return {
         "kpis": [
             kpi("فروش", format_toman(now["revenue"]), before=prev["revenue"],
@@ -70,7 +72,10 @@ def overview(window: metrics.Window) -> dict:
                 f"{format_number(recovery['waiting'])} در انتظار موجودی"),
             kpi("مشتری جدید", format_number(metrics.first_time_customers(window)),
                 hint="اولین خرید در این بازه"),
-            kpi("تخفیف داده‌شده", format_toman(now["discounts"])),
+            kpi("بازگشت سبد رهاشده", rate_text(metrics.percent(carts["recovered"],
+                                                                 carts["reminded"])),
+                hint=f"{format_number(carts['recovered'])} خرید از "
+                f"{format_number(carts['reminded'])} پیامک یادآوری"),
         ],
         "formats": metrics.sales_by_format(window),
         "daily": bars(metrics.daily_revenue(window), "revenue"),

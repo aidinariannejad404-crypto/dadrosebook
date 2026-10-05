@@ -11,6 +11,8 @@ from django.utils import timezone
 from apps.accounts.phone import normalize_phone, validate_phone
 from apps.accounts.sms import get_sms_provider
 from apps.catalog.models import BookVariant
+from apps.core.services.sms_templates import render_sms
+from apps.core.sms_catalog import BACK_IN_STOCK
 
 from ..models import BackInStockRequest
 
@@ -79,10 +81,13 @@ def product_url(variant: BookVariant) -> str:
     return f"{base}/product/{variant.book.slug}"
 
 
-def restock_message(variant: BookVariant) -> str:
-    return (
-        f"دادرُز: «{variant.book.title}» ({variant.get_type_display()}) موجود شد. "
-        f"برای خرید: {product_url(variant)}"
+def restock_message(variant: BookVariant) -> str | None:
+    """The SMS text, or ``None`` when staff switched this SMS off in «قالب پیامک‌ها»."""
+    return render_sms(
+        BACK_IN_STOCK,
+        book=variant.book.title,
+        format=variant.get_type_display(),
+        link=product_url(variant),
     )
 
 
@@ -101,8 +106,11 @@ def notify_requests(requests) -> int:
             .select_for_update(skip_locked=True, of=("self",))
         )
         for request in rows:
+            message = restock_message(request.variant)
+            if message is None:  # switched off: leave requests pending
+                return sent
             try:
-                provider.send(request.phone, restock_message(request.variant))
+                provider.send(request.phone, message)
             except Exception:  # one failing number must not stop the rest
                 logger.exception("back-in-stock SMS failed for request %s", request.pk)
                 continue

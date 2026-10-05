@@ -7,6 +7,7 @@ from apps.core.jalali import to_jalali_str
 from apps.core.money import format_toman, to_persian_digits
 
 from .models import Cart, CartItem
+from .services.abandoned import abandoned_carts, send_reminders
 from .services.rules import line_issue
 
 ISSUE_LABELS = {
@@ -40,12 +41,36 @@ class CartItemInline(TabularInline):
         return "قابل خرید" if issue is None else ISSUE_LABELS.get(issue, issue)
 
 
+class AbandonedFilter(admin.SimpleListFilter):
+    title = "سبد رهاشده"
+    parameter_name = "abandoned"
+
+    def lookups(self, request, model_admin):
+        return (("1", "رهاشده (قابل یادآوری)"), ("reminded", "یادآوری‌شده"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "1":
+            return queryset.filter(pk__in=abandoned_carts().values("pk"))
+        if self.value() == "reminded":
+            return queryset.filter(reminded_at__isnull=False)
+        return queryset
+
+
 @admin.register(Cart)
 class CartAdmin(ModelAdmin):
-    list_display = ("__str__", "user", "is_guest", "lines", "units", "jalali_updated_at")
-    list_filter = (("user", admin.EmptyFieldListFilter), "updated_at")
+    list_display = (
+        "__str__",
+        "user",
+        "is_guest",
+        "lines",
+        "units",
+        "jalali_updated_at",
+        "jalali_reminded_at",
+    )
+    list_filter = (AbandonedFilter, ("user", admin.EmptyFieldListFilter), "updated_at")
+    actions = ("send_reminder",)
     search_fields = ("token", "user__phone")
-    readonly_fields = ("token", "user", "created_at", "updated_at")
+    readonly_fields = ("token", "user", "created_at", "updated_at", "reminded_at")
     list_select_related = ("user",)
     inlines = (CartItemInline,)
     date_hierarchy = "updated_at"
@@ -76,3 +101,25 @@ class CartAdmin(ModelAdmin):
     def jalali_updated_at(self, obj):
         local = timezone.localtime(obj.updated_at)
         return f"{to_jalali_str(local, persian_digits=True)} {local:%H:%M}"
+
+    @admin.display(description="یادآوری", ordering="reminded_at")
+    def jalali_reminded_at(self, obj):
+        if obj.reminded_at is None:
+            return "—"
+        local = timezone.localtime(obj.reminded_at)
+        return f"{to_jalali_str(local, persian_digits=True)} {local:%H:%M}"
+
+    @admin.action(description="ارسال پیامک یادآوری سبد")
+    def send_reminder(self, request, queryset):
+        sent = send_reminders(force=True, carts=queryset.filter(user__isnull=False))
+        skipped = queryset.count() - sent
+        self.message_user(
+            request,
+            f"برای {to_persian_digits(sent)} سبد پیامک یادآوری فرستاده شد."
+            + (
+                f" {to_persian_digits(skipped)} سبد مهمان، خالی، ناموجود یا از قبل یادآوری‌شده "
+                "بود (یا پیامک در «قالب پیامک‌ها» خاموش است)."
+                if skipped
+                else ""
+            ),
+        )

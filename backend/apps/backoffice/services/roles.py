@@ -44,6 +44,7 @@ ROLES: dict[str, dict[str, tuple[str, ...]]] = {
         "content.banner": ALL,
         "content.guidevideo": ALL,
         "core.storesettings": ("view", "change"),
+        "core.smstemplate": ("view", "change"),
         "accounts.user": ("view", "change"),
         "cart.cart": VIEW,
         "wishlist.wishlistitem": VIEW,
