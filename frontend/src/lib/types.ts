@@ -523,6 +523,8 @@ export interface BookQuery {
   ordering?: "-sales_count" | "price" | "-price" | "-created_at" | "title";
   page?: number;
   page_size?: number;
+}
+
 /* ---------- Phase 4: secure ebook reader (/library/<slug>/…) ---------- */
 
 export type EbookFormat = "PDF" | "EPUB";
