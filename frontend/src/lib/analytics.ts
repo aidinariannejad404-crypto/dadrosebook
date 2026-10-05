@@ -22,7 +22,9 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // Package الف۷ (SEO builder): sampled field Core Web Vitals
+  | "web_vitals";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -278,6 +280,20 @@ export function trackStudyPlanRequested(p: {
     hours_per_day: p.hours_per_day,
     book: p.book ?? undefined,
   });
+}
+
+/* ---------- Package الف۷ (SEO builder): field Core Web Vitals ---------- */
+
+/** One sampled Core Web Vital (lib/web-vitals.ts `vitalPayload`); no URL or personal data is sent. */
+export function trackWebVital(v: {
+  metric: string;
+  metric_value: number;
+  rating: string;
+  page_type: string;
+  connection: string;
+  navigation_type: string;
+}): void {
+  track("web_vitals", { ...v });
 }
 
 /** Test helper: reset the queue, dedupe set and poller. */

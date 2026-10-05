@@ -45,7 +45,6 @@ import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/co
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { getBookReviews } from "@/lib/reviews-api";
-import { aggregateRating } from "@/lib/reviews";
 
 type Params = Promise<{ slug: string }>;
 
@@ -63,18 +62,13 @@ async function optional<T>(p: Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-/** schema.org aggregateRating (only with ≥ 3 approved reviews and a real average). */
-function withRating(rating: Record<string, unknown> | null): Record<string, unknown> {
-  return rating ? { aggregateRating: rating } : {};
-}
-
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
   const book = await loadBook(slug, await selectedExamSlug());
   if (!book) return { title: "کتاب پیدا نشد" };
   const title = productTitle(book);
   const description = productDescription(book);
-  const path = `/product/${book.slug}`;
+  const path = routes.product(book.slug);
   return {
     title,
     description,
@@ -155,7 +149,8 @@ export default async function ProductPage({ params }: { params: Params }) {
     { name: book.title },
   ];
   const jsonLd = [
-    { ...bookJsonLd(book, url), ...withRating(aggregateRating(reviews?.summary)) },
+    // aggregateRating + up to 5 reviews only with ≥ 3 approved reviews (same rule as ReviewsSection)
+    bookJsonLd(book, url, reviews),
     breadcrumbJsonLd(crumbs.map((c) => ({ name: c.name, url: c.href ? `${siteUrl()}${c.href}` : url }))),
   ];
 

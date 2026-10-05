@@ -402,3 +402,19 @@ export async function getStudyKits(examType: string | null = null): Promise<Stud
   }
   return apiGet<StudyKit[]>(`/catalog/study-kits/${queryString({ exam_type: examType })}`);
 }
+
+/* ---------- Package الف (SEO builder): shipping methods for the /shipping ShippingService JSON-LD ---------- */
+
+/**
+ * GET /shipping-methods/?subtotal=0 (no province → nationwide methods only), cached like catalog reads.
+ * Never throws: [] when the API is down or in fixtures mode (no shipping markup then, no made-up rates).
+ */
+export async function getPublicShippingMethods(): Promise<import("./account-types").ShippingOption[]> {
+  if (fixturesEnabled()) return [];
+  try {
+    const data = await apiGet<unknown>("/shipping-methods/?subtotal=0", 3600);
+    return Array.isArray(data) ? (data as import("./account-types").ShippingOption[]) : [];
+  } catch {
+    return [];
+  }
+}

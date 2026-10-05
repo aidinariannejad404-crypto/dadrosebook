@@ -37,6 +37,7 @@ Call sites use the typed helpers, not `track()` directly.
 | `notify_me_requested` | `trackNotifyMeRequested(item)` | `item_id`, `item_name`, `variant` | «موجود شد خبرم کن» clicked | Existing — `components/ui/NotifyMeButton.tsx` (Phase 2 may move it to the successful registration) |
 | `course_cross_sell_click` | `trackCourseCrossSellClick(c)` | `course_id`, `course_title`, `book_slug?`, `placement` (`home`, `highlight`, `more`, `buy_box`, CourseCard `tier`/placement) | Click on a dadrose.com course link | Existing — `components/ui/TrackedLink.tsx` (`course` prop) used by CourseBanner, CourseCrossSell, CourseCard, PurchasePanel |
 | `study_plan_requested` | `trackStudyPlanRequested(p)` | `exam_type`, `subjects` (comma list of slugs), `subjects_count`, `hours_per_day`, `book?` (slug) | Study-plan form submitted successfully (the phone number is never sent) | Existing — `components/plan/StudyPlanForm.tsx` |
+| `web_vitals` | `trackWebVital(v)` | `metric` (`LCP` \| `INP` \| `CLS` \| `TTFB`), `metric_value` (ms; CLS unitless ×1 with 3 decimals), `rating` (`good` \| `needs-improvement` \| `poor`), `page_type` (`home`, `product`, `category`, `search`, `kit`, `policy`, …), `connection` (`4g`, `3g`, `…-save`, `unknown`), `navigation_type` | Sampled page loads (`NEXT_PUBLIC_WEB_VITALS_SAMPLE_RATE`, default 0.2), one event per metric when Next reports it (INP/CLS on page hide). No URL or slug is sent | Package الف۷ — `components/analytics/WebVitals.tsx` (root layout) |
 
 ## Adding an event
 

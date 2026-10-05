@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getBookFacets, getBooks, getSubjects } from "@/lib/api";
+import { searchRobots } from "@/lib/seo";
 import { PAGE_SIZE, clearFilters, hrefFor, isFiltered, parseBookQuery } from "@/lib/discovery";
 import type { BookCard, BookFacets, BookQuery, SubjectWithCount } from "@/lib/types";
 import { Breadcrumb } from "@/components/product/Breadcrumb";
@@ -18,7 +19,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const query = parseBookQuery(await searchParams);
   return {
     title: query.q ? `جستجوی «${query.q}»` : "جستجوی کتاب",
-    robots: { index: false, follow: true },
+    robots: searchRobots(),
     alternates: { canonical: BASE_PATH },
   };
 }

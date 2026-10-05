@@ -7,6 +7,7 @@ import type { CategoryNode, ExamTypeMini, StoreSettings, SubjectMini } from "@/l
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/config";
 import { DEFAULT_OPEN_GRAPH, INDEX } from "@/lib/seo";
 import { Umami } from "@/components/analytics/Umami";
+import { WebVitals } from "@/components/analytics/WebVitals";
 import { Header } from "@/components/layout/Header";
 import { CategoryNav } from "@/components/layout/CategoryNav";
 import { Footer } from "@/components/layout/Footer";
@@ -98,6 +99,7 @@ export default async function RootLayout({ children, topbar }: { children: React
           </HideOn>
           <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
           <Umami />
+          <WebVitals />
         </CartProvider>
       </body>
     </html>

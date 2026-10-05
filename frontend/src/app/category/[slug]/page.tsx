@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, cache } from "react";
-import { decodeSlug, getBookFacets, getBooks, getCategory } from "@/lib/api";
+import { ApiError, decodeSlug, getBookFacets, getBooks, getCategory } from "@/lib/api";
 import { SITE_NAME, routes, siteUrl } from "@/lib/config";
 import { breadcrumbJsonLd, serializeJsonLd, stripHtml } from "@/lib/jsonld";
 import { itemListJsonLd } from "@/lib/jsonld-discovery";
 import { PAGE_SIZE, clearFilters, hrefFor, isFiltered, parseBookQuery } from "@/lib/discovery";
 import { toPersianDigits } from "@/lib/format";
+import { NOINDEX_FOLLOW, canonicalPath } from "@/lib/seo";
+import { isEmptyFacetState } from "@/lib/facet-crawl";
 import type { BookFacets, BookQuery, CategoryDetail } from "@/lib/types";
 import { Breadcrumb, type Crumb } from "@/components/product/Breadcrumb";
 import { DiscoveryResults } from "@/components/discovery/DiscoveryResults";
@@ -31,7 +33,8 @@ export async function generateMetadata({ params, searchParams }: { params: Param
   const query = parseBookQuery(await searchParams);
   const page = query.page ?? 1;
   const path = routes.category(category.slug);
-  const canonical = page > 1 ? `${path}?page=${page}` : path;
+  // never utm_*/ref/filters/sort in the canonical; page ≥ 2 stays self-canonical
+  const canonical = canonicalPath(path, { page });
   const title = page > 1 ? `${category.name} — صفحه ${toPersianDigits(page)}` : `کتاب‌های ${category.name}`;
   const description = describe(category);
   return {
@@ -39,7 +42,7 @@ export async function generateMetadata({ params, searchParams }: { params: Param
     description,
     alternates: { canonical },
     // filtered/searched variants are thin duplicates: keep them out of the index but let links be followed
-    robots: isFiltered(query) ? { index: false, follow: true } : undefined,
+    robots: isFiltered(query) ? NOINDEX_FOLLOW : undefined,
     openGraph: { type: "website", locale: "fa_IR", title, description, url: canonical },
   };
 }
@@ -60,6 +63,16 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
   const query = parseBookQuery(await searchParams);
   const basePath = routes.category(category.slug);
+  // Package الف۴: an empty filter combination (or a page past the end) is a real 404, decided before the
+  // first byte is streamed. Unfiltered first pages never 404 (an empty category keeps its page).
+  // The request is deduplicated with the one in <CategoryResults> (same fetch URL and options).
+  if (isFiltered(query) || (query.page ?? 1) > 1) {
+    const probe = await getBooks({ ...query, category: category.slug, page_size: PAGE_SIZE }).catch((e: unknown) =>
+      // DRF answers 404 for a page past the end
+      e instanceof ApiError && e.status === 404 ? ({ count: 0, results: [] } as const) : null,
+    );
+    if (probe && isEmptyFacetState(query, probe)) notFound();
+  }
   const base = siteUrl();
   const crumbs: Crumb[] = [
     { name: "خانه", href: routes.home },

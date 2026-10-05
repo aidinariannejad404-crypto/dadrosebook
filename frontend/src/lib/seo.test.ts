@@ -3,7 +3,7 @@ import books from "./__fixtures__/books.json";
 import type { BookDetail } from "./types";
 import { bookJsonLd, isbn13, organizationJsonLd, sameAsLinks, websiteJsonLd } from "./jsonld";
 import { COURSE_SITE } from "./config";
-import { INDEX, NOINDEX_FOLLOW, isNoindexPath, searchRobots } from "./seo";
+import { NOINDEX_FOLLOW, isNoindexPath, searchRobots } from "./seo";
 
 const SITE = "https://dadrosebook.com";
 
@@ -46,8 +46,8 @@ describe("bookJsonLd offers", () => {
 describe("home JSON-LD", () => {
   it("Organization has logo and sameAs (telegram from store + academy site)", () => {
     const ld = organizationJsonLd(SITE, { consult_telegram: "@dadrose_support" });
-    expect(ld["@type"]).toBe("Organization");
-    expect(ld.logo).toBe(`${SITE}/icon.svg`);
+    expect(ld["@type"]).toBe("OnlineStore");
+    expect(ld.logo).toMatchObject({ "@type": "ImageObject", url: `${SITE}/logo.png`, width: 512, height: 512 });
     expect(ld.sameAs).toContain("https://t.me/dadrose_support");
     expect(ld.sameAs).toContain(COURSE_SITE);
   });
@@ -55,11 +55,10 @@ describe("home JSON-LD", () => {
     expect(sameAsLinks({ consult_telegram: "" })).toEqual([...new Set([COURSE_SITE])]);
     expect(sameAsLinks(null)).toContain(COURSE_SITE);
   });
-  it("WebSite has a SearchAction to /search?q=", () => {
+  it("WebSite has alternate names and no SearchAction (sitelinks search box is gone)", () => {
     const ld = websiteJsonLd(SITE);
-    const action = ld.potentialAction as { target: { urlTemplate: string }; "query-input": string };
-    expect(action.target.urlTemplate).toBe(`${SITE}/search?q={search_term_string}`);
-    expect(action["query-input"]).toBe("required name=search_term_string");
+    expect(ld.alternateName).toEqual(["دادرز بوک", "Dadrose Book"]);
+    expect(ld).not.toHaveProperty("potentialAction");
   });
 });
 
@@ -72,10 +71,8 @@ describe("robots helpers", () => {
       expect(isNoindexPath(p)).toBe(false);
     }
   });
-  it("indexes /search only with q (and page)", () => {
-    expect(searchRobots({})).toBe(INDEX);
-    expect(searchRobots({ q: "مدنی", page: "2" })).toBe(INDEX);
-    expect(searchRobots({ q: "مدنی", subject: "x" })).toBe(NOINDEX_FOLLOW);
-    expect(searchRobots({ ordering: "price", q: undefined })).toBe(NOINDEX_FOLLOW);
+  it("never indexes /search, with or without q", () => {
+    expect(searchRobots()).toBe(NOINDEX_FOLLOW);
+    expect(NOINDEX_FOLLOW).toMatchObject({ index: false, follow: true });
   });
 });

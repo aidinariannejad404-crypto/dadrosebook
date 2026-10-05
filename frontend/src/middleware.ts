@@ -1,6 +1,7 @@
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import fixtureRedirects from "./lib/__fixtures__/redirects.json";
 import { parseRedirectPayload, resolveRedirect, shouldCheckRedirect, type RedirectMap } from "./lib/redirects";
+import { trailingSlashRedirect } from "./lib/trailing-slash";
 
 /**
  * Old Sazito URLs → 301/302 (docs/phase-5-contract.md §2). The map comes from
@@ -85,14 +86,18 @@ export async function middleware(request: NextRequest, event: NextFetchEvent): P
   try {
     if (request.method !== "GET" && request.method !== "HEAD") return NextResponse.next();
     const { pathname, search } = request.nextUrl;
-    if (!shouldCheckRedirect(pathname)) return NextResponse.next();
-    const map = await redirectMap(event);
-    if (!map) return NextResponse.next();
-    const decision = resolveRedirect(map, pathname, search);
-    if (!decision) return NextResponse.next();
-    if (process.env.USE_API_FIXTURES !== "1") event.waitUntil(sendHitBeacon(pathname, request));
-    // Internal targets resolve against the request URL; Next relativises same-origin Locations itself.
-    return NextResponse.redirect(new URL(decision.location, request.nextUrl), decision.status);
+    // 1) old Sazito URL → its new page (checked first so "/old-path/" is a single hop)
+    const map = shouldCheckRedirect(pathname) ? await redirectMap(event) : null;
+    const decision = map ? resolveRedirect(map, pathname, search) : null;
+    if (decision) {
+      if (process.env.USE_API_FIXTURES !== "1") event.waitUntil(sendHitBeacon(pathname, request));
+      // Internal targets resolve against the request URL; Next relativises same-origin Locations itself.
+      return NextResponse.redirect(new URL(decision.location, request.nextUrl), decision.status);
+    }
+    // 2) package الف۵: "/x/" → 301 "/x" (one URL per page; /api/ is excluded by the matcher and the helper)
+    const slashless = trailingSlashRedirect(pathname, search);
+    if (slashless) return NextResponse.redirect(new URL(slashless, request.nextUrl), 301);
+    return NextResponse.next();
   } catch {
     return NextResponse.next();
   }

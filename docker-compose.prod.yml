@@ -152,6 +152,7 @@ services:
         NEXT_PUBLIC_SITE_ENV: ${NEXT_PUBLIC_SITE_ENV:-production}
         NEXT_PUBLIC_UMAMI_SRC: ${NEXT_PUBLIC_UMAMI_SRC:-}
         NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
+        NEXT_PUBLIC_WEB_VITALS_SAMPLE_RATE: ${NEXT_PUBLIC_WEB_VITALS_SAMPLE_RATE:-}
     restart: unless-stopped
     logging: *logging
     environment:
