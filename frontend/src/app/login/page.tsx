@@ -48,8 +48,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
           aria-labelledby="login-brand"
           className="relative hidden overflow-hidden bg-primary p-10 text-white md:flex md:flex-col"
         >
-          <span aria-hidden="true" className="pointer-events-none absolute -bottom-24 -start-24 size-72 rounded-full border-[28px] border-accent/20" />
-          <span aria-hidden="true" className="pointer-events-none absolute -end-10 top-10 size-24 rounded-full bg-accent/15" />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-28 -end-28 size-72 rounded-full border-[28px]"
+            style={{ borderColor: "color-mix(in srgb, var(--color-accent) 18%, transparent)" }}
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -end-8 top-8 size-20 rounded-full"
+            style={{ backgroundColor: "color-mix(in srgb, var(--color-accent) 14%, transparent)" }}
+          />
           <span aria-hidden="true" className="mb-6 block h-1 w-14 rounded-full bg-accent" />
           <p id="login-brand" className="text-2xl font-black leading-10">
             {SITE_NAME}

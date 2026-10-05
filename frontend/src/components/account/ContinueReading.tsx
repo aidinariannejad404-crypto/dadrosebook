@@ -26,7 +26,8 @@ export function ContinueReading({
     >
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -end-16 -top-16 size-48 rounded-full border-[18px] border-accent/25"
+        className="pointer-events-none absolute -end-24 -top-28 size-48 rounded-full border-[16px]"
+        style={{ borderColor: "color-mix(in srgb, var(--color-accent) 16%, transparent)" }}
       />
       <div className="relative flex items-center gap-4">
         <div className="w-20 shrink-0 md:w-24">
