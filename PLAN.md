@@ -13,7 +13,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
 | 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
-| 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation, 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
+| 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
 
 ---
@@ -177,7 +177,8 @@ watermark; `GET/PUT /library/<book>/progress/`; highlights CRUD under `/library/
 `GET /library/files/<token>/` (local storage only).
 Phase 6 (docs/api-contract.md «Phase 6»): `GET /library/<book>/epub/chapters/<n>/`, `GET /library/<book>/epub/search/?q=`,
 bookmarks CRUD under `/library/<book>/bookmarks/`, `GET/DELETE /library/devices/`, `GET /library/epub-assets/<token>/`;
-every reader call sends `X-Reader-Device`.
+every reader call sends `X-Reader-Device`. Phase 6b: `POST /library/<book>/copies/`, `GET /library/<book>/notes/export/?format=md|html`,
+`POST /library/<book>/offline/`, `GET/DELETE /library/offline/`.
 
 ## 5. Pages (Next.js)
 
