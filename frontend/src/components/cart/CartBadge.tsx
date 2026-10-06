@@ -3,19 +3,23 @@
 import Link from "next/link";
 import { toPersianDigits } from "@/lib/format";
 import { CartIcon } from "@/components/ui/Icons";
+import { useBump } from "@/components/ui/useBump";
 import { useCart } from "./CartProvider";
 
 /** Header cart link with the live item count. */
 export function CartBadge() {
-  const { count } = useCart();
+  const { count, cart } = useCart();
+  const bump = useBump(count, cart != null);
   return (
     <Link
       prefetch={false}
       href="/cart"
       aria-label={count > 0 ? `سبد خرید، ${toPersianDigits(count)} کالا` : "سبد خرید، خالی"}
-      className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-ink hover:bg-primary-soft"
+      className="press relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-ink hover:bg-primary-soft"
     >
-      <CartIcon size={24} />
+      <span key={bump} className={bump ? "motion-bump inline-flex" : "inline-flex"}>
+        <CartIcon size={24} />
+      </span>
       {count > 0 && (
         <span
           aria-hidden="true"

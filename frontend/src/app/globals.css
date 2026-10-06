@@ -404,3 +404,68 @@ body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
 .epub-content.epub-paged tr {
   break-inside: avoid;
 }
+
+/* ---------- ux stream (ج۸): motion utilities ----------
+ * Durations/easing come from tokens.css (they drop to 0 under prefers-reduced-motion, and the global
+ * reduced-motion rule above also clamps animations). transform/opacity only. */
+@layer components {
+  /* pressed state on tappables: a small scale-down, haptic-like */
+  .press {
+    transition: transform var(--motion-fast) var(--ease-out);
+  }
+  .press:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+  /* cart badge bump on add */
+  .motion-bump {
+    animation: dr-bump var(--motion-slow) var(--ease-out);
+  }
+  /* heart / check pop */
+  .motion-pop {
+    animation: dr-pop var(--motion-base) var(--ease-out);
+  }
+  /* menus and popovers */
+  .motion-pop-in:not([hidden]) {
+    animation: dr-pop-in var(--motion-base) var(--ease-out);
+  }
+  /* kit: «درس … کامل شد» pulse */
+  .motion-complete {
+    animation: dr-complete var(--motion-slow) var(--ease-out) 3;
+  }
+  /* undo row: the 6-second window shrinking */
+  .undo-timer {
+    animation-name: dr-undo-timer;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+}
+@keyframes dr-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+@keyframes dr-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes dr-pop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dr-complete {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.1); }
+}
+@keyframes dr-undo-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .press:active:not(:disabled) {
+    transform: none;
+  }
+  .undo-timer {
+    animation: none;
+  }
+}

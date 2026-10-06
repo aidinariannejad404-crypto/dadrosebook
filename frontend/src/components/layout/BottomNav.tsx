@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useBump } from "@/components/ui/useBump";
 import { CartIcon, CloseIcon, GridIcon, PackageIcon, UserIcon } from "@/components/ui/Icons";
 import { routes } from "@/lib/config";
 import { toPersianDigits } from "@/lib/format";
@@ -24,7 +25,7 @@ const LIFT_STICKY_BARS =
   "@media (max-width:767.98px){main .sticky.bottom-0{bottom:calc(3.5rem + env(safe-area-inset-bottom));padding-bottom:0}}";
 
 const tab = (on: boolean) =>
-  `relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 pt-1 text-[0.6875rem] font-bold ${on ? "text-primary" : "text-ink-muted"}`;
+  `press relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 pt-1 text-[0.6875rem] font-bold ${on ? "text-primary" : "text-ink-muted"}`;
 
 function Indicator({ on }: { on: boolean }) {
   return (
@@ -50,7 +51,8 @@ export function BottomNav({
   subjects: SubjectMini[];
 }) {
   const pathname = usePathname() ?? "/";
-  const { count } = useCart();
+  const { count, cart: cartState } = useCart();
+  const bump = useBump(count, cartState != null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -120,7 +122,7 @@ export function BottomNav({
               className={tab(cart)}
             >
               <Indicator on={cart} />
-              <span className="relative">
+              <span key={bump} className={`relative ${bump ? "motion-bump" : ""}`}>
                 <CartIcon size={24} />
                 {count > 0 && (
                   <span

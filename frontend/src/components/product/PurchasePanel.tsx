@@ -236,7 +236,7 @@ function BuyAction({ compact, helperId }: { compact: boolean; helperId?: string 
         type="button"
         onClick={() => void addSelected()}
         aria-disabled={busy || undefined}
-        className={`inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:opacity-80 ${size}`}
+        className={`press inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:opacity-80 ${size}`}
       >
         <CartIcon size={20} />
         {busy ? "در حال افزودن…" : "افزودن به سبد خرید"}

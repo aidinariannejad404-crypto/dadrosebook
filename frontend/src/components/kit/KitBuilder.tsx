@@ -25,6 +25,7 @@ import { CartIcon, CheckIcon, ClockIcon } from "@/components/ui/Icons";
 import { useCart } from "@/components/cart/CartProvider";
 import { AddToCalendar } from "@/components/calendar/AddToCalendar";
 import type { CalendarEvent } from "@/lib/calendar";
+import { completeSubjects, newlyComplete } from "@/lib/kit-complete";
 
 export interface KitBuilderProps {
   examTypes: ExamTypeMini[];
@@ -44,7 +45,7 @@ type AddState =
 
 export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, serverNow }: KitBuilderProps) {
   const router = useRouter();
-  const { bulk } = useCart();
+  const { bulk, cart } = useCart();
   const [pending, startTransition] = useTransition();
   const [pendingExam, setPendingExam] = useState(exam);
   const [subjects, setSubjects] = useState(() => parseSubjects(subjectsParam, kits));
@@ -55,6 +56,26 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
   const allSubjects = useMemo(() => kits.map((k) => k.subject.slug), [kits]);
 
   const lines = useMemo(() => selectedLines(kits, subjects, sel), [kits, subjects, sel]);
+
+  // ج۸ «درس … کامل شد»: every essential book of a subject is in the cart. Only a change the visitor
+  // just made is celebrated (pulse + one polite announcement), never the state found on load.
+  const cartBookKey = cart ? cart.items.map((i) => i.book.id).sort((a, b) => a - b).join(",") : null;
+  const complete = useMemo(
+    () => completeSubjects(kits, new Set(cartBookKey ? cartBookKey.split(",").map(Number) : [])),
+    [kits, cartBookKey],
+  );
+  const prevComplete = useRef<Set<string> | null>(null);
+  const [celebrate, setCelebrate] = useState<string[]>([]);
+  useEffect(() => {
+    if (cartBookKey == null) return;
+    const fresh = newlyComplete(prevComplete.current, complete);
+    prevComplete.current = complete;
+    if (fresh.length === 0) return;
+    setCelebrate(fresh);
+    const t = window.setTimeout(() => setCelebrate([]), 2400);
+    return () => window.clearTimeout(t);
+  }, [complete, cartBookKey]);
+  const celebrateNames = kits.filter((k) => celebrate.includes(k.subject.slug)).map((k) => k.subject.name);
   const totals = kitTotals(lines);
 
   function chooseExam(slug: string) {
@@ -104,11 +125,18 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
     if (add.kind === "done" || add.kind === "error") resultRef.current?.focus();
   }, [add.kind]);
 
+  const completeNote = (
+    <p role="status" aria-live="polite" className="sr-only">
+      {celebrateNames.length ? `درس ${celebrateNames.join(" و ")} کامل شد؛ همه منابع ضروری آن در سبد خرید است.` : ""}
+    </p>
+  );
+
   const titleOf = (variantId: number) =>
     kits.flatMap((k) => k.items).find((i) => i.book.variants.some((v) => v.id === variantId))?.book.title ?? "";
 
   return (
     <>
+      {completeNote}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-xl font-black text-ink md:text-2xl">کیت مطالعاتی آزمون</h1>
@@ -201,11 +229,21 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
                         .filter((k) => subjects.includes(k.subject.slug))
                         .map((k) => (
                           <section key={k.subject.slug} aria-labelledby={`kit-s-${k.subject.id}`}>
-                            <h3 id={`kit-s-${k.subject.id}`} className="mb-2 flex items-center gap-2 text-base font-black text-ink">
+                            <h3 id={`kit-s-${k.subject.id}`} className="mb-2 flex flex-wrap items-center gap-2 text-base font-black text-ink">
                               <span aria-hidden="true" className="h-5 w-1.5 rounded-full" style={{ background: k.subject.color }} />
                               {k.subject.name}
                               {k.weight != null && (
                                 <span className="text-xs font-bold text-ink-muted">· ضریب {toPersianDigits(k.weight)}</span>
+                              )}
+                              {complete.has(k.subject.slug) && (
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-extrabold text-success ${
+                                    celebrate.includes(k.subject.slug) ? "motion-complete" : ""
+                                  }`}
+                                >
+                                  <CheckIcon size={14} strokeWidth={2.8} className={celebrate.includes(k.subject.slug) ? "motion-pop" : ""} />
+                                  منابع ضروری در سبد
+                                </span>
                               )}
                             </h3>
                             {k.note && <p className="mb-2 text-sm leading-7 text-ink-muted">{k.note}</p>}
@@ -349,7 +387,7 @@ function AddAllButton({ totals, busy, onClick, className = "" }: { totals: KitTo
       type="button"
       onClick={onClick}
       aria-disabled={empty || busy || undefined}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-60 ${className}`}
+      className={`press inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-60 ${className}`}
     >
       <CartIcon size={20} className="shrink-0" />
       {busy ? "در حال افزودن…" : "افزودن همه به سبد"}
