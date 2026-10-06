@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from apps.accounts.phone import normalize_phone, validate_phone
-from apps.accounts.sms import get_sms_provider
+from apps.accounts.sms import deliver_sms, get_sms_provider
 from apps.catalog.models import BookVariant
 from apps.core.services.sms_templates import render_sms
 from apps.core.sms_catalog import BACK_IN_STOCK
@@ -110,7 +110,13 @@ def notify_requests(requests) -> int:
             if message is None:  # switched off: leave requests pending
                 return sent
             try:
-                provider.send(request.phone, message)
+                deliver_sms(
+                    request.phone,
+                    message,
+                    kind=BACK_IN_STOCK,
+                    link=f"/product/{request.variant.book.slug}",
+                    provider=provider,
+                )
             except Exception:  # one failing number must not stop the rest
                 logger.exception("back-in-stock SMS failed for request %s", request.pk)
                 continue

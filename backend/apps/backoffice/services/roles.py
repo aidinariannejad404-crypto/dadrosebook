@@ -53,6 +53,12 @@ ROLES: dict[str, dict[str, tuple[str, ...]]] = {
         "wishlist.wishlistitem": VIEW,
         "backoffice.salesreport": VIEW,
         "admin.logentry": VIEW,
+        # platform stream
+        "support.supportticket": ("view", "change"),
+        "support.ticketmessage": VIEW,
+        "inbox.changelogentry": ALL,
+        "inbox.notification": ("view", "add"),
+        "inbox.userstudyprofile": VIEW,
     },
     "انبار و ارسال": {
         "orders.order": ("view", "change"),
@@ -86,6 +92,10 @@ ROLES: dict[str, dict[str, tuple[str, ...]]] = {
         "cart.cart": VIEW,
         "catalog.book": VIEW,
         "catalog.bookvariant": VIEW,
+        # platform stream
+        "support.supportticket": ("view", "change"),
+        "support.ticketmessage": VIEW,
+        "inbox.notification": ("view", "add"),
     },
     "محتوا و کاتالوگ": {
         "catalog.book": EDIT,

@@ -405,7 +405,8 @@ def _notify_refund(order: Order, amount: int, reference: str) -> None:
     text = render_sms(
         REFUND_DONE, order=order.number, amount=format_toman(amount), reference=reference or "—"
     )
-    transaction.on_commit(lambda: _send_sms(phone, text))
+    link = f"/account/orders/{order.number}"
+    transaction.on_commit(lambda: _send_sms(phone, text, kind=REFUND_DONE, link=link))
 
 
 def refund(rr: ReturnRequest, *, actor=None, note: str = "") -> ReturnRequest:

@@ -479,7 +479,7 @@ class Migration(migrations.Migration):
                     "user",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="study_profile",
+                        related_name="study_settings",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),

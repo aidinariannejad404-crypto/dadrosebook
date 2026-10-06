@@ -7,6 +7,7 @@ import type { ExamTypeMini, StoreSettings } from "@/lib/types";
 import { Logo } from "@/components/brand/Logo";
 import { BadgeIcon, TruckIcon } from "@/components/ui/Icons";
 import { InstagramIcon, LockIcon, TelegramIcon, WhatsappIcon } from "./NavIcons";
+import { OfficialChannelsNote } from "@/components/platform/OfficialChannelsNote"; // platform stream (PF-3)
 
 const shopLinks = [
   { href: routes.kit, label: "بسته مطالعاتی آزمون" },
@@ -21,6 +22,12 @@ export const POLICY_LINKS = [
   { href: "/shipping", label: "شیوه‌ها و هزینه ارسال" },
   { href: "/returns", label: "بازگشت کالا" },
   { href: "/faq", label: "پرسش‌های متداول" },
+];
+
+/** platform stream (PF-11/PF-17): site footer only (not the checkout footer). */
+const PLATFORM_HELP_LINKS = [
+  { href: "/support", label: "پشتیبانی و پیگیری درخواست" },
+  { href: "/changelog", label: "تازه‌های دادرُز" },
 ];
 
 export const TRUST_BADGES = [
@@ -127,7 +134,7 @@ export function Footer({ store, examTypes = [] }: { store: StoreSettings | null;
             راهنمای خرید
           </h2>
           <ul className="mt-2">
-            {POLICY_LINKS.map((l) => (
+            {[...POLICY_LINKS, ...PLATFORM_HELP_LINKS].map((l) => (
               <li key={l.href}>
                 <Link prefetch={false} href={l.href} className={footerLink}>
                   {l.label}
@@ -184,6 +191,9 @@ export function Footer({ store, examTypes = [] }: { store: StoreSettings | null;
             dangerouslySetInnerHTML={{ __html: enamad }}
           />
         )}
+      </div>
+      <div className="mx-auto max-w-site px-4 pb-4">
+        <OfficialChannelsNote tone="dark" />
       </div>
       <div className="border-t border-white/15">
         <p className="mx-auto max-w-site px-4 py-4 text-center text-xs text-white/80">

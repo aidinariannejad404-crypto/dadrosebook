@@ -25,6 +25,8 @@ REFUND_DONE = "refund_done"
 EDITION_UPGRADE = "edition_upgrade"
 REVIEW_REQUEST = "review_request"
 # --- end retention stream ---
+# --- platform stream (PF-11): support ticket replies ---
+TICKET_REPLY = "ticket_reply"
 
 KINDS: dict[str, SmsKind] = {
     k.key: k
@@ -89,5 +91,12 @@ KINDS: dict[str, SmsKind] = {
             marketing=True,
         ),
         # --- end retention stream ---
+        # --- platform stream (PF-11) ---
+        SmsKind(
+            TICKET_REPLY,
+            "پاسخ به درخواست پشتیبانی",
+            {"code": "کد پیگیری درخواست", "link": "لینک مشاهده پاسخ"},
+            "دادرُز: درخواست پشتیبانی {code} پاسخ داده شد. مشاهده پاسخ: {link}",
+        ),
     )
 }

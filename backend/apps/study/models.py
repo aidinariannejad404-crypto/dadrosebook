@@ -20,7 +20,7 @@ DEFAULT_DAILY_GOAL_MINUTES = 20
 
 class StudyProfile(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_profile"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_settings"
     )
     daily_goal_minutes = models.PositiveSmallIntegerField(
         "هدف روزانه (دقیقه)",

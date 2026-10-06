@@ -162,6 +162,20 @@ def work_items(user=None) -> list[dict]:
             "level": "info",
         },
     ]
+    # --- platform stream (PF-11) ---
+    from apps.support.services.tickets import open_count as open_tickets
+
+    items.append(
+        {
+            "key": "tickets",
+            "perm": "support.view_supportticket",
+            "title": "درخواست پشتیبانی در انتظار پاسخ",
+            "count": open_tickets(),
+            "url": _url("support_supportticket_changelist", "status__exact=open"),
+            "icon": "support_agent",
+            "level": "danger",
+        }
+    )
     if user is not None:
         items = [i for i in items if user.has_perm(i["perm"])]
     return sorted(items, key=lambda i: i["count"] == 0)  # stable: open tasks first

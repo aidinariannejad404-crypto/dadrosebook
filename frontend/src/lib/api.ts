@@ -524,3 +524,12 @@ export async function getGuide(slug: string, preview: string | null = null): Pro
 export function getCuratedList(slug: string): Promise<CuratedListDetail | null> {
   return apiGetOrNull<CuratedListDetail>(`/content/lists/${slugSegment(slug)}/`);
 }
+
+/* ---------- platform stream (PF-17) ---------- */
+
+/** GET /changelog/ — public «تازه‌های دادرُز» (first page, newest first). */
+export async function getChangelog(): Promise<import("./platform-types").ChangelogEntry[]> {
+  if (fixturesEnabled()) return [];
+  const page = await apiGet<Paginated<import("./platform-types").ChangelogEntry>>("/changelog/", 300);
+  return page.results;
+}

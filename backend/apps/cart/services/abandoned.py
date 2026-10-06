@@ -99,7 +99,12 @@ def send_reminders(*, force: bool = False, carts=None, now=None) -> int:
             # update() keeps updated_at (the customer's last activity) unchanged.
             Cart.objects.filter(pk=cart.pk).update(reminded_at=now)
             phone = cart.user.phone
-            transaction.on_commit(lambda p=phone, t=text: send_sms.delay(p, t))
+            code = get_store_settings().abandoned_cart_code or ""
+            transaction.on_commit(
+                lambda p=phone, t=text, c=code: send_sms.delay(
+                    p, t, kind=ABANDONED_CART, link="/cart", code=c
+                )
+            )
             sent += 1
     return sent
 

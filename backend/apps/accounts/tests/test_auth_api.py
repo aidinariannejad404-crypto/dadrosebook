@@ -25,7 +25,14 @@ def login(api, sent_codes, phone=PHONE):
 def test_request_ok(api, sent_codes):
     res = api.post(REQUEST, {"phone": "+۹۸۹۱۲۱۲۳۴۵۶۷"}, format="json")
     assert res.status_code == 200
-    assert res.json() == {"phone": PHONE, "expires_in": 120, "resend_in": 60, "length": 5}
+    assert res.json() == {
+        "phone": PHONE,
+        "expires_in": 120,
+        "resend_in": 60,
+        "length": 5,
+        "channel": "sms",
+        "voice_available": False,
+    }
 
 
 def test_request_invalid_phone(api):

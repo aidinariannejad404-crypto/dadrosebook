@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { getMe, hasSessionCookie } from "@/lib/server-session";
 import { AccountNav } from "@/components/account/AccountNav";
 import { SessionGate } from "@/components/account/SessionGate";
+import { OfficialChannelsNote } from "@/components/platform/OfficialChannelsNote"; // platform stream (PF-3)
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
         <AccountNav />
         <div className="min-w-0">{children}</div>
       </div>
+      <OfficialChannelsNote className="mt-8" />
     </div>
   );
 }

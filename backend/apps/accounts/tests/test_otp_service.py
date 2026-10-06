@@ -16,7 +16,14 @@ pytestmark = pytest.mark.django_db
 
 def test_request_creates_hashed_code_and_sends_sms(sent_codes):
     data = otp.request_code("۰۹۱۲ ۱۲۳ ۴۵۶۷", ip="1.2.3.4")
-    assert data == {"phone": PHONE, "expires_in": 120, "resend_in": 60, "length": 5}
+    assert data == {
+        "phone": PHONE,
+        "expires_in": 120,
+        "resend_in": 60,
+        "length": 5,
+        "channel": "sms",
+        "voice_available": False,
+    }
     code = sent_codes[PHONE][0]
     assert len(code) == 5 and code.isdigit()
     row = OtpCode.objects.get()

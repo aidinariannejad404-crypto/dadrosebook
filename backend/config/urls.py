@@ -29,6 +29,9 @@ api_v1 = [
     # hubs, guides and curated lists (package ب, impl/hubs)
     path("content/", include("apps.content.api.urls")),
     path("study/", include("apps.study.api.urls")),  # retention stream
+    # --- platform stream: inbox/me/changelog (PF-2/3/8/17) and support tickets (PF-11) ---
+    path("", include("apps.inbox.api.urls")),
+    path("support/", include("apps.support.api.urls")),
 ]
 
 urlpatterns = [

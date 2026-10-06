@@ -51,6 +51,17 @@ table when a phase finishes.
 
 ## Secrets
 - `.env` (copy from `.env.example`). Never commit secrets.
+- **No static crypto keys or IVs in the frontend bundle** (PF-16; Fidibo's hard-coded keys are public on GitHub).
+  Offline reading uses a non-extractable WebCrypto key generated per browser plus server-issued, time-boxed
+  licences; keep it that way. `npm run lint` runs `scripts/check-crypto-keys.mjs` and the backend test
+  `apps/core/tests/test_frontend_crypto_guard.py` scans `frontend/src` too. Rotate the offline-licence signing
+  secret periodically.
+
+## Notifications and SMS (platform stream)
+- Store SMS go through `apps.accounts.sms.deliver_sms` (the `send_sms` task) with their `sms_catalog` kind and a
+  same-site deep link: that copies them into «پیام‌های من» (`apps.inbox`) and honours the customer's opt-outs
+  (marketing kinds only). Login codes use `SmsProvider.send_otp` on the provider's service/verify line, never the
+  bulk line.
 
 ## Definition of done for a phase
 Runs with one `docker compose up --build`; backend tests + lint, frontend lint + typecheck + tests pass;

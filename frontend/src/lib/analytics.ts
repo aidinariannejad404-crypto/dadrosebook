@@ -45,8 +45,16 @@ export type AnalyticsEvent =
   | "study_plan_item_checked"
   | "study_plan_compressed"
   | "edition_upgrade_offer_view"
-  | "review_prompt_rated";
+  | "review_prompt_rated"
 // --- end retention stream ---
+  // --- platform stream (PF-8/9/11/14/17) ---
+  | "onboarding_saved"
+  | "onboarding_skipped"
+  | "continue_reading_click"
+  | "install_prompt_shown"
+  | "install_prompt_result"
+  | "support_ticket_created"
+  | "otp_help_opened";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -343,6 +351,33 @@ export interface HubCtaClick {
 /** Click on a call to action inside a hub page (kit CTA, guide link…). */
 export function trackHubCtaClick(c: HubCtaClick): void {
   track("hub_cta_click", { hub: c.hub, slug: c.slug, cta: c.cta });
+}
+
+// --- platform stream (PF-8/9/11/14/17) ---
+
+/** Onboarding sheet saved (exam slug, year and the number of weak subjects only). */
+export function trackOnboarding(p: { saved: boolean; exam_type?: string | null; exam_year?: number | null; weak_subjects?: number }): void {
+  if (!p.saved) {
+    track("onboarding_skipped");
+    return;
+  }
+  track("onboarding_saved", { exam_type: p.exam_type ?? undefined, exam_year: p.exam_year ?? undefined, weak_subjects: p.weak_subjects ?? 0 });
+}
+
+export function trackContinueReading(p: { book_slug: string; placement: "home" | "bottom_nav" }): void {
+  track("continue_reading_click", p);
+}
+
+export function trackInstallPrompt(p: { platform: "prompt" | "ios"; placement: string; outcome?: "accepted" | "dismissed" | "closed" }): void {
+  track(p.outcome ? "install_prompt_result" : "install_prompt_shown", p);
+}
+
+export function trackSupportTicket(p: { topic: string; source: string; logged_in: boolean }): void {
+  track("support_ticket_created", p);
+}
+
+export function trackOtpHelp(p: { voice_available: boolean }): void {
+  track("otp_help_opened", p);
 }
 
 /** Test helper: reset the queue, dedupe set and poller. */

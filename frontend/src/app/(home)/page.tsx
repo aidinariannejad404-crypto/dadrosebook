@@ -21,6 +21,7 @@ import { BookRail } from "@/components/book/BookRail";
 import { orderRailsByStock } from "@/components/book/card-model";
 import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 import { CampaignBanner } from "@/components/growth/CampaignBanner"; // growth (و۶)
+import { HomeContinueReading } from "@/components/platform/HomeContinueReading"; // platform stream (PF-9)
 
 // SSR on each request (the «آزمون من» cookie picks the variant); the API response itself is cached
 // per URL — so per exam type — for 60s (fetch revalidate) and does not need the backend at build time.
@@ -115,6 +116,8 @@ export default async function HomePage() {
   return (
     <div className="mx-auto flex max-w-site flex-col gap-10 px-4 pt-4 md:gap-14 md:pt-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
+      {/* platform stream (PF-9): client-side, so the homepage HTML stays shared */}
+      <HomeContinueReading />
       <Hero banner={home.hero_banners[0]} books={home.bestsellers} store={home.store} examName={selected?.name} />
       {/* growth (و۶): running exam-calendar campaign */}
       <CampaignBanner />

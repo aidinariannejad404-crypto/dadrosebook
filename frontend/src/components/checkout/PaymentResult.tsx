@@ -9,6 +9,7 @@ import { routes } from "@/lib/config";
 import { formatJalaliDate, formatToman, toPersianDigits } from "@/lib/format";
 import { apiFetch, errorMessage } from "@/lib/session";
 import { BookOpenIcon, CheckIcon, ClockIcon, CloseIcon } from "@/components/ui/Icons";
+import { InstallPrompt } from "@/components/platform/InstallPrompt"; // platform stream (PF-14)
 import { clearCheckoutKeys } from "./checkout-key";
 // د۳ (impl/trust): post-purchase «شروع مطالعه»
 import { StartStudying } from "@/components/trust/StartStudying";
@@ -157,6 +158,12 @@ export function PaymentResult({ orderNumber, status: urlStatus }: { orderNumber:
               کتاب‌های الکترونیک شما آماده مطالعه است
             </p>
           )
+        )}
+        {/* platform stream (PF-14): «نصب کتابخوان» after an ebook purchase */}
+        {canRead && (
+          <div className="mt-4 text-start empty:hidden">
+            <InstallPrompt placement="purchase" />
+          </div>
         )}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
           {canRead && (

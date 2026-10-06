@@ -18,6 +18,12 @@ import {
   MapPinIcon,
   PackageIcon,
 } from "@/components/ui/Icons";
+// --- platform stream (PF-2/3/8/11) ---
+import { BellIcon } from "@/components/ui/Icons";
+import { SlidersIcon, SupportIcon } from "@/components/platform/PlatformIcons";
+import { SparkIcon } from "@/components/platform/PlatformIcons";
+import { platformRoutes } from "@/lib/platform-routes";
+import { unreadBadge, useNavSummary } from "@/lib/nav-summary";
 
 const ITEMS = [
   { href: accountRoutes.dashboard, label: "پیشخوان", Icon: GridIcon, exact: true },
@@ -32,6 +38,11 @@ const ITEMS = [
   { href: accountRoutes.addresses, label: "نشانی‌ها", Icon: MapPinIcon },
   { href: accountRoutes.wishlist, label: "علاقه‌مندی‌ها", Icon: HeartIcon },
   { href: accountRoutes.reviews, label: "نظرات من", Icon: ChatIcon },
+  // platform stream
+  { href: platformRoutes.messages, label: "پیام‌های من", Icon: BellIcon },
+  { href: platformRoutes.accountSupport, label: "پشتیبانی", Icon: SupportIcon },
+  { href: platformRoutes.studyProfile, label: "آزمون و درس‌های من", Icon: SparkIcon },
+  { href: platformRoutes.notifications, label: "تنظیم اعلان‌ها", Icon: SlidersIcon },
 ];
 
 /** Account sections: horizontally scrollable tabs on mobile, a side nav (start side) from md up. */
@@ -40,6 +51,7 @@ export function AccountNav() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const unread = unreadBadge(useNavSummary().data?.unread); // platform stream (PF-2)
 
   async function logout() {
     setBusy(true);
@@ -72,6 +84,12 @@ export function AccountNav() {
               >
                 <Icon size={18} className="shrink-0" />
                 {label}
+                {href === platformRoutes.messages && unread && (
+                  <span className="ms-auto rounded-full bg-danger px-1.5 text-[0.6875rem] font-extrabold leading-5 text-white">
+                    {unread}
+                    <span className="sr-only"> پیام خوانده‌نشده</span>
+                  </span>
+                )}
               </Link>
             </li>
           );

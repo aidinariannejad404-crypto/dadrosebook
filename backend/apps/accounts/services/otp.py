@@ -112,20 +112,40 @@ def _record_request(phone: str) -> None:
             cache.set(HOUR_RESET_KEY.format(phone=phone), now + HOUR, timeout=HOUR)
 
 
-def _send(phone: str, code: str) -> None:
-    from ..tasks import send_otp_sms
+def _send(phone: str, code: str, channel: str = "sms") -> None:
+    from ..tasks import send_otp_sms, send_voice_otp
 
+    task = send_voice_otp if channel == "voice" else send_otp_sms
     if settings.OTP_DEBUG_ECHO:
-        logger.warning("OTP for %s: %s", phone, code)
+        logger.warning(
+            "OTP for %s: %s%s", phone, code, " (voice call)" if channel == "voice" else ""
+        )
     try:
-        send_otp_sms.delay(phone, code)
+        task.delay(phone, code)
     except Exception:
-        logger.exception("Could not queue the OTP SMS; sending synchronously")
-        send_otp_sms(phone, code)
+        logger.exception("Could not queue the OTP %s; sending synchronously", channel)
+        task(phone, code)
 
 
-def request_code(phone: str, ip: str | None = None) -> dict:
-    """Create and send a new code. Raises ``ValidationError`` (bad phone) or ``OtpThrottled``."""
+# --- platform stream (PF-1): voice-call fallback ---
+MSG_VOICE_UNAVAILABLE = "دریافت کد با تماس صوتی فعلاً ممکن نیست؛ دوباره پیامک بگیرید."
+
+
+class VoiceUnavailable(Exception):
+    message = MSG_VOICE_UNAVAILABLE
+
+
+def request_code(phone: str, ip: str | None = None, channel: str = "sms") -> dict:
+    """Create and send a new code. Raises ``ValidationError`` (bad phone) or ``OtpThrottled``.
+
+    ``channel="voice"`` reads the code out in a phone call (PF-1); it raises ``VoiceUnavailable``
+    unless ``OTP_VOICE_ENABLED`` is on and the provider supports it. Both channels share the
+    same per-phone rate limits.
+    """
+    from ..sms import voice_otp_available
+
+    if channel == "voice" and not voice_otp_available():
+        raise VoiceUnavailable()
     phone = clean_phone(phone)
     _check_rate_limits(phone)
     now = timezone.now()
@@ -142,12 +162,14 @@ def request_code(phone: str, ip: str | None = None) -> dict:
             ip=ip or None,
         )
     _record_request(phone)
-    _send(phone, code)
+    _send(phone, code, channel)
     return {
         "phone": phone,
         "expires_in": settings.OTP_TTL_SECONDS,
         "resend_in": settings.OTP_RESEND_SECONDS,
         "length": settings.OTP_LENGTH,
+        "channel": channel,
+        "voice_available": voice_otp_available(),
     }
 
 

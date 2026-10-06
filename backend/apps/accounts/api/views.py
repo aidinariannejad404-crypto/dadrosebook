@@ -73,6 +73,26 @@ class OtpRequestView(AuthEndpoint):
         return Response(data)
 
 
+class OtpVoiceView(AuthEndpoint):
+    """PF-1: ``POST /auth/otp/voice/`` — a fresh code read out in a phone call (when enabled)."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "otp_request"
+
+    def post(self, request):
+        ser = s.OtpRequestSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        try:
+            data = otp.request_code(
+                ser.validated_data["phone"], ip=_client_ip(request), channel="voice"
+            )
+        except otp.VoiceUnavailable as exc:
+            return Response({"detail": exc.message}, status=status.HTTP_404_NOT_FOUND)
+        except otp.OtpThrottled as exc:
+            raise TooManyRequests(exc.message, exc.retry_after) from exc
+        return Response(data)
+
+
 class OtpVerifyView(AuthEndpoint):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "otp_verify"

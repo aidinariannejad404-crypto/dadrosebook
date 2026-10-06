@@ -17,6 +17,7 @@ import { OfflineBadge } from "@/components/account/OfflineBadge";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { forecastLine, type BookForecast, type ForecastPayload } from "@/lib/study";
 // --- end retention stream ---
+import { InstallPrompt } from "@/components/platform/InstallPrompt"; // platform stream (PF-14)
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "کتابخانه من", robots: { index: false, follow: false } };
@@ -68,6 +69,9 @@ export default async function LibraryPage() {
               <ContinueReading entry={current} />
             </div>
           )}
+          <div className="mb-5 empty:hidden">
+            <InstallPrompt placement="library" />
+          </div>
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {entries.map((entry) => (
               <LibraryCard
