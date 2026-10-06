@@ -29,6 +29,9 @@ import {
 } from "./CheckoutSummary";
 import { ShippingStep } from "./ShippingStep";
 import { STEP_LABEL, Stepper, type StepId, type StepState } from "./Stepper";
+// growth (و۴): gift orders
+import { giftPayload, type GiftRequest } from "@/lib/growth";
+import { GiftShippingMethods, GiftToggle } from "@/components/growth/GiftCheckout";
 
 const QUOTE_DEBOUNCE_MS = 300;
 const GATEWAY_ERROR = "اتصال به درگاه پرداخت برقرار نشد. چند لحظه بعد دوباره تلاش کنید.";
@@ -69,6 +72,9 @@ export function CheckoutFlow({ search }: { search: string }) {
   const [shippingNonce, setShippingNonce] = useState(0);
 
   const [note, setNote] = useState("");
+  // growth (و۴): «این خرید هدیه است» — no buyer address; the recipient claims a link
+  const [gift, setGift] = useState(false);
+  const [giftForm, setGiftForm] = useState<GiftRequest>({ sender_name: "", recipient_name: "", message: "" });
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -97,7 +103,9 @@ export function CheckoutFlow({ search }: { search: string }) {
     setQuoting(true);
     const t = window.setTimeout(async () => {
       const body: CheckoutRequest = { items, discount_code: discountCode };
-      if (loggedIn && selectedAddressId != null) {
+      if (gift) {
+        if (selectedMethodId != null) body.shipping_method_id = selectedMethodId;
+      } else if (loggedIn && selectedAddressId != null) {
         body.address_id = selectedAddressId;
         if (selectedMethodId != null) body.shipping_method_id = selectedMethodId;
       }
@@ -112,7 +120,7 @@ export function CheckoutFlow({ search }: { search: string }) {
       }
     }, QUOTE_DEBOUNCE_MS);
     return () => window.clearTimeout(t);
-  }, [items, me, loggedIn, selectedAddressId, selectedMethodId, discountCode, quoteNonce]);
+  }, [items, me, loggedIn, selectedAddressId, selectedMethodId, discountCode, quoteNonce, gift]);
 
   const needsShipping = quote?.needs_shipping ?? false;
 
@@ -144,15 +152,15 @@ export function CheckoutFlow({ search }: { search: string }) {
     };
   }, [loggedIn, needsShipping, shippingNonce]);
 
-  // 5. shipping methods for the chosen address
+  // 5. shipping methods for the chosen address (a gift has none yet: methods for any province)
   const province = selectedAddress?.province ?? null;
   const subtotal = quote?.items_total ?? 0;
   useEffect(() => {
-    if (!province || !needsShipping) return;
+    if ((!province && !gift) || !needsShipping) return;
     let alive = true;
     setOptionsLoading(true);
     setOptionsError(null);
-    const qs = new URLSearchParams({ province, subtotal: String(subtotal) });
+    const qs = new URLSearchParams(gift ? { subtotal: String(subtotal) } : { province: province ?? "", subtotal: String(subtotal) });
     void apiFetch<ShippingOption[]>(`/shipping-methods/?${qs}`).then((r) => {
       if (!alive) return;
       setOptionsLoading(false);
@@ -166,7 +174,7 @@ export function CheckoutFlow({ search }: { search: string }) {
     return () => {
       alive = false;
     };
-  }, [province, subtotal, needsShipping, shippingNonce]);
+  }, [province, subtotal, needsShipping, shippingNonce, gift]);
 
   // focus the step heading whenever the step changes (not on the first render)
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -194,8 +202,9 @@ export function CheckoutFlow({ search }: { search: string }) {
   }, [step, loggedIn, quote]);
 
   const blocked = !quote || quoting || quote.problems.length > 0 || (quote.needs_shipping && !quote.shipping);
-  const shippingReady =
-    selectedAddressId != null && selectedMethodId != null && !showForm && quote?.shipping?.id === selectedMethodId && !quoting;
+  const shippingReady = gift
+    ? selectedMethodId != null && quote?.shipping?.id === selectedMethodId && !quoting
+    : selectedAddressId != null && selectedMethodId != null && !showForm && quote?.shipping?.id === selectedMethodId && !quoting;
 
   async function pay() {
     if (!items || !quote || !me || blocked || paying) return;
@@ -205,8 +214,9 @@ export function CheckoutFlow({ search }: { search: string }) {
     const fingerprint = [
       itemsKey(items),
       `u${me.id}`,
-      quote.needs_shipping ? `a${selectedAddressId}m${selectedMethodId}` : "",
+      quote.needs_shipping ? `a${gift ? "gift" : selectedAddressId}m${selectedMethodId}` : "",
       code ?? "",
+      gift ? `g:${JSON.stringify(giftPayload(giftForm))}` : "",
     ].join("|");
     const body: CheckoutRequest = {
       items,
@@ -214,7 +224,10 @@ export function CheckoutFlow({ search }: { search: string }) {
       customer_note: note.trim().slice(0, 500),
       checkout_key: checkoutKeyFor(fingerprint),
     };
-    if (quote.needs_shipping) {
+    if (gift) {
+      body.gift = giftPayload(giftForm);
+      if (quote.needs_shipping) body.shipping_method_id = selectedMethodId;
+    } else if (quote.needs_shipping) {
       body.address_id = selectedAddressId;
       body.shipping_method_id = selectedMethodId;
     }
@@ -342,6 +355,16 @@ export function CheckoutFlow({ search }: { search: string }) {
             <Panel>
               <section aria-labelledby="co-step" className="space-y-4">
                 <div id="co-step">{heading("shipping", 2)}</div>
+                {/* growth (و۴) */}
+                <GiftToggle on={gift} onChange={setGift} value={giftForm} onValue={setGiftForm} needsShipping />
+                {gift ? (
+                  <GiftShippingMethods
+                    options={options}
+                    error={optionsError}
+                    selectedId={selectedMethodId}
+                    onSelect={setSelectedMethodId}
+                  />
+                ) : (
                 <ShippingStep
                   me={me}
                   addresses={addresses}
@@ -363,6 +386,7 @@ export function CheckoutFlow({ search }: { search: string }) {
                   onSelectMethod={setSelectedMethodId}
                   onRetry={() => setShippingNonce((n) => n + 1)}
                 />
+                )}
                 <FreeShippingHint quote={quote} />
               </section>
             </Panel>
@@ -373,7 +397,28 @@ export function CheckoutFlow({ search }: { search: string }) {
               <section aria-labelledby="co-step" className="space-y-5">
                 <div id="co-step">{heading("payment", 3)}</div>
 
-                {quote.needs_shipping && (
+                {/* growth (و۴): ebook-only orders choose «هدیه» here (print orders in the shipping step) */}
+                {!quote.needs_shipping && (
+                  <GiftToggle on={gift} onChange={setGift} value={giftForm} onValue={setGiftForm} needsShipping={false} />
+                )}
+                {gift && quote.needs_shipping && (
+                  <div className="flex items-start justify-between gap-3 rounded-control bg-accent-soft px-3 py-2.5 text-sm leading-7">
+                    <div className="min-w-0">
+                      <p className="font-bold text-ink">سفارش هدیه{giftForm.recipient_name.trim() ? ` برای ${giftForm.recipient_name.trim()}` : ""}</p>
+                      <p className="text-ink-muted">نشانی را گیرنده هنگام دریافت هدیه وارد می‌کند.</p>
+                      {quote.shipping && <p className="text-ink-muted">{quote.shipping.name}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep("shipping")}
+                      className="inline-flex min-h-11 shrink-0 items-center rounded-control px-2 font-bold text-primary hover:bg-primary-soft"
+                    >
+                      تغییر
+                    </button>
+                  </div>
+                )}
+
+                {quote.needs_shipping && !gift && (
                   <div className="flex items-start justify-between gap-3 rounded-control bg-bg px-3 py-2.5 text-sm leading-7">
                     <div className="min-w-0">
                       <p className="font-bold text-ink">ارسال به: {selectedAddress?.title || selectedAddress?.recipient_name}</p>

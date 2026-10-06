@@ -23,6 +23,7 @@ api_v1 = [
     path("back-in-stock/", include("apps.engagement.api.urls")),
     path("library/", include("apps.reader.api.urls")),
     path("seo/", include("apps.seo.api.urls")),
+    path("growth/", include("apps.growth.api.urls")),  # growth: Torob, kit links, gifts, campaigns
 ]
 
 urlpatterns = [

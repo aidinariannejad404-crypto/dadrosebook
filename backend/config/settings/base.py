@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.engagement",
     "apps.reader",
     "apps.seo",
+    "apps.growth",  # growth loops: Torob feed, kit links, gifts, partners, campaigns
     "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 
@@ -496,3 +497,22 @@ UNFOLD = {
         ],
     },
 }
+
+# --- growth (research package «و»: apps.growth) -------------------------------------------------
+# Torob product API v3 (POST /torob_api/v3/products on the storefront host). Confirm field names,
+# price unit and token claims in the Torob seller panel before going live (docs/growth-summary.md).
+# TOROB_PUBLIC_KEY: Torob's Ed25519 public key (PEM, base64 or hex). Empty → 403 in production,
+# open in DEBUG.
+TOROB_PUBLIC_KEY = env("TOROB_PUBLIC_KEY", default="")
+TOROB_JWT_AUDIENCE = env("TOROB_JWT_AUDIENCE", default="")
+TOROB_JWT_LEEWAY = env.int("TOROB_JWT_LEEWAY", default=60)
+TOROB_PRICE_UNIT = env("TOROB_PRICE_UNIT", default="toman")  # "toman" or "rial"
+TOROB_GUARANTEE = env("TOROB_GUARANTEE", default="ضمانت اصالت و سلامت فیزیکی کالا")
+# Gift links: days the recipient has to claim a paid gift.
+GIFT_CLAIM_DAYS = env.int("GIFT_CLAIM_DAYS", default=90)
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"].update(
+    {
+        "kit_share": env("KIT_SHARE_THROTTLE_RATE", default="30/hour"),
+        "gift_claim": env("GIFT_CLAIM_THROTTLE_RATE", default="20/hour"),
+    }
+)

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CampaignCartNote } from "@/components/growth/CampaignCartNote"; // growth (و۶)
 import { useState } from "react";
 import type { Cart, CartIssue, CartItem } from "@/lib/types";
 import { formatToman, toPersianDigits } from "@/lib/format";
@@ -266,6 +267,8 @@ function Summary({ cart }: { cart: Cart }) {
         </div>
       </dl>
       {cart.has_physical && <p className="mt-2 text-xs leading-6 text-ink-muted">هزینه ارسال در مرحله بعد محاسبه می‌شود.</p>}
+      {/* growth (و۶): a running campaign's discount, applied automatically at checkout */}
+      <CampaignCartNote cart={cart} />
 
       {showShipping && (
         <div className="mt-4 rounded-control bg-bg p-3">

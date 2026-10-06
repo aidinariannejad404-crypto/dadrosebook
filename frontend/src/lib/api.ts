@@ -22,6 +22,7 @@ import type {
   SubjectWithCount,
 } from "./types";
 import { fixtureStudyPlan, studyPlanErrors, type StudyPlanField } from "./study-plan";
+import type { CampaignDetail, CampaignSummary, Gift, SharedKit } from "./growth"; // growth
 
 /**
  * API client for /api/v1/.
@@ -402,3 +403,52 @@ export async function getStudyKits(examType: string | null = null): Promise<Stud
   }
   return apiGet<StudyKit[]>(`/catalog/study-kits/${queryString({ exam_type: examType })}`);
 }
+
+/* ---------- growth (research package «و», backend apps.growth) ---------- */
+
+/** GET /growth/campaigns/?placement=home — running campaigns for the home banner ([] when none or offline). */
+export async function getHomeCampaigns(): Promise<CampaignSummary[]> {
+  if (fixturesEnabled()) return [];
+  try {
+    return await apiGet<CampaignSummary[]>("/growth/campaigns/?placement=home");
+  } catch {
+    return [];
+  }
+}
+
+/** GET /growth/campaigns/<slug>/ — null on 404. */
+export async function getCampaign(slug: string): Promise<CampaignDetail | null> {
+  if (fixturesEnabled()) return null;
+  try {
+    return await apiGet<CampaignDetail>(`/growth/campaigns/${slugSegment(slug)}/`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+/** GET /growth/kit-shares/resolve/?k= | ?b=&exam= — a shared kit, null when unknown. */
+export async function getSharedKit(
+  params: { k: string } | { b: string[] },
+  exam: string | null = null,
+): Promise<SharedKit | null> {
+  if (fixturesEnabled()) return null;
+  const qs = "k" in params ? queryString({ k: params.k }) : queryString({ b: params.b.join(","), exam });
+  try {
+    return await apiGet<SharedKit>(`/growth/kit-shares/resolve/${qs}`, 300);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+/** GET /growth/gifts/<token>/ — the public gift preview (no cache: claim state changes). */
+export async function getGift(token: string): Promise<Gift | null> {
+  if (fixturesEnabled()) return null;
+  const url = `${apiBase()}/growth/gifts/${encodeURIComponent(token)}/`;
+  const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(res.status, url);
+  return (await res.json()) as Gift;
+}
+/* ---------- end growth ---------- */

@@ -22,7 +22,13 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // growth (research package «و»)
+  | "kit_shared"
+  | "shared_kit_added"
+  | "gift_link_shared"
+  | "gift_claimed"
+  | "campaign_viewed";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -291,3 +297,31 @@ export function _resetAnalyticsForTests(): void {
 export function _queuedEventsForTests(): number {
   return queue.length;
 }
+
+/* ---------- growth (research package «و») ---------- */
+
+/** A kit share link was created and sent («ارسال به گروه مطالعه» / copy). */
+export function trackKitShared(p: { exam_type: string | null; books: number; channel: "telegram" | "whatsapp" | "copy" | "native" }): void {
+  track("kit_shared", { exam_type: p.exam_type ?? undefined, books: p.books, channel: p.channel });
+}
+
+/** A recipient added a shared kit to the cart («افزودن همه»). */
+export function trackSharedKitAdded(p: { books: number; value: number; via: "token" | "slugs" }): void {
+  track("shared_kit_added", { books: p.books, value: p.value, via: p.via });
+}
+
+/** The buyer shared or printed a gift link. */
+export function trackGiftLinkShared(p: { channel: "telegram" | "whatsapp" | "copy" | "print" }): void {
+  track("gift_link_shared", { channel: p.channel });
+}
+
+/** A gift link was claimed (no identity is sent). */
+export function trackGiftClaimed(p: { has_ebook: boolean; needs_address: boolean; items: number }): void {
+  track("gift_claimed", { has_ebook: p.has_ebook, needs_address: p.needs_address, items: p.items });
+}
+
+/** A campaign landing was viewed. */
+export function trackCampaignViewed(p: { slug: string; state: string }): void {
+  track("campaign_viewed", { campaign: p.slug, state: p.state });
+}
+/* ---------- end growth ---------- */

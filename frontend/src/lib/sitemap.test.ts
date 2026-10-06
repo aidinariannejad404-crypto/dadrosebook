@@ -52,7 +52,7 @@ describe("buildRobots", () => {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/cart", "/checkout", "/account", "/login", "/read", "/plan", "/api/"],
+        disallow: ["/cart", "/checkout", "/account", "/login", "/read", "/plan", "/gift", "/api/"],
       },
     ]);
     expect(r.sitemap).toBe(`${SITE}/sitemap.xml`);

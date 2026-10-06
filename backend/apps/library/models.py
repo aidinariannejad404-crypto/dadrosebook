@@ -43,6 +43,7 @@ class EbookEntitlement(models.Model):
     class Source(models.TextChoices):
         PURCHASE = "PURCHASE", "خرید"
         ADMIN = "ADMIN", "اعطای دستی"
+        GIFT = "GIFT", "هدیه"  # growth (و۴): claimed gift link (apps.growth.services.gifts)
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

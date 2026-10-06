@@ -7,7 +7,7 @@ import { SITE_DESCRIPTION, SITE_NAME } from "./config";
  */
 
 /** Path prefixes that are never indexed; robots.txt disallows them in production too. */
-export const NOINDEX_ROUTES = ["/cart", "/checkout", "/account", "/login", "/read", "/plan"] as const;
+export const NOINDEX_ROUTES = ["/cart", "/checkout", "/account", "/login", "/read", "/plan", "/gift"] as const; // growth: /gift
 
 /** `noindex, nofollow` for personal/transactional pages (cart, checkout, account, login, reader, plan, 404). */
 export const NOINDEX: NonNullable<Metadata["robots"]> = { index: false, follow: false, nocache: true };
