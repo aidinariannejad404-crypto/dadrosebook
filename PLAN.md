@@ -9,7 +9,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Scaffold, docker-compose, Django settings split, unfold admin (fa/RTL), catalog models + admin, read-only catalog API, Persian normalisation, seed data, Next.js RTL shell, homepage, product page | ✅ |
-| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ✅ |
+| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ✅ (`docs/phase-2-summary.md`) |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
 | 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
 | 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log, screenshot deterrence (white screen on capture signals, per-buyer trace code, optional few-lines «high» mode; see `docs/screenshot-protection.md`) (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
@@ -74,7 +74,7 @@ dadrosebook/
 ├── docker-compose.yml          # db, redis, backend, worker, frontend
 ├── .env.example                # copy to .env
 ├── PLAN.md  CLAUDE.md  README.md
-├── docs/phase-1-summary.md
+├── docs/phase-1-summary.md  phase-2-summary.md  api-contract.md  api-contract-phase-2.md
 ├── backend/
 │   ├── Dockerfile  entrypoint.sh  pyproject.toml (ruff + pytest)  requirements*.txt
 │   ├── manage.py
@@ -88,7 +88,7 @@ dadrosebook/
 │       ├── content/            # Banner, GuideVideo (homepage, admin-managed)
 │       ├── leads/              # Lead (study-plan lead magnet), study plan generator, CSV export
 │       ├── accounts/   (P3)    # User (phone), OTP, SmsProvider
-│       ├── cart/       (P2)
+│       ├── cart/       (P2)    # Cart, CartItem (token or user), services, merge on user_logged_in
 │       ├── orders/     (P3)    # Order, OrderItem, Address, ShippingMethod, DiscountCode, StoreSettings
 │       ├── payments/   (P3)    # Payment, PaymentGateway, zarinpal
 │       ├── library/    (P3)    # EbookFile, EbookEntitlement (+ services/entitlements.has_entitlement)
@@ -146,7 +146,8 @@ Hub fields (ب): ExamType/Subject `intro`, `intro_byline`, `intro_is_placeholder
 - **User** (P3): phone (unique, normalised `09xxxxxxxxx`), first/last name, is_staff… custom user model
   is created in Phase 1 already (`accounts.User`, `USERNAME_FIELD = phone`) because swapping later is painful.
 - **OtpCode** (P3): phone, code hash, expires_at, attempts — rate-limited in Redis.
-- **Cart / CartItem** (P2): cart by `cart_id` cookie (UUID) or user; merged on login (`cart.services.merge`).
+- **Cart / CartItem** (P2 ✅): cart by UUID token (`X-Cart-Token` header / `dadrose_cart_token` cookie) or user
+  (one-to-one); unique (cart, variant); merged on login via `user_logged_in` (`cart.services.merge_guest_cart`).
 - **Address, ShippingMethod** (rules: base price, free over threshold, Tehran-only for پیک, ebook-only orders skip),
   **StoreSettings** (singleton: free-shipping threshold, support phone), **DiscountCode** (percent/fixed, min order,
   max uses, per-user limit, validity window, scope by subject/format).
