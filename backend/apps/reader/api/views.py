@@ -10,7 +10,7 @@ from rest_framework.exceptions import (
     Throttled,
     ValidationError,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 from apps.catalog.models import Book
 
 from ..models import Bookmark, Highlight
-from ..services import audit, devices, export, offline, quota
+from ..services import audit, devices, export, offline, problems, quota, sample
 from ..services.access import ReaderError, require_access
 from ..services.bookmarks import BookmarkLimit, add_bookmark, user_bookmarks
 from ..services.highlights import HighlightLimit, create_highlight, user_highlights
@@ -33,8 +33,10 @@ from .serializers import (
     HighlightSerializer,
     HighlightUpdateSerializer,
     OfflineLicenseSerializer,
+    ProblemReportSerializer,
     ProgressSerializer,
     ReaderSessionSerializer,
+    SampleSessionSerializer,
 )
 from .throttles import (
     ChapterDayThrottle,
@@ -43,6 +45,9 @@ from .throttles import (
     DeviceRemoveThrottle,
     ExportThrottle,
     OfflineThrottle,
+    ProblemReportThrottle,
+    SampleFileThrottle,
+    SampleThrottle,
     SearchThrottle,
 )
 
@@ -235,6 +240,7 @@ class ProgressView(ReaderView):
             page=data.get("page", 1),
             total_pages=data.get("total_pages", 0),
             location=data.get("location", ""),
+            ebook_version=data.get("ebook_version"),
         )
         return Response(ProgressSerializer(progress).data)
 
@@ -376,3 +382,78 @@ class OfflineDetailView(ReaderBaseView):
         if not offline.revoke(request.user, pk):
             raise NotFound({"detail": "مجوز آفلاین پیدا نشد.", "code": "no_license"})
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ---------- د۵: free sample in the real reader (no login) ----------
+
+
+class SampleBaseView(APIView):
+    """Open to everyone, throttled by IP, never cached, Persian errors."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = [*api_settings.DEFAULT_AUTHENTICATION_CLASSES, SessionAuthentication]
+    throttle_classes = [SampleThrottle]
+
+    def handle_exception(self, exc):
+        return private(super().handle_exception(to_api_error(exc)))
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        return private(super().finalize_response(request, response, *args, **kwargs))
+
+    def book(self, slug) -> Book:
+        return get_object_or_404(Book, slug=slug, is_active=True)
+
+
+class SampleSessionView(SampleBaseView):
+    def get(self, request, slug):
+        data = sample.sample_session(request, self.book(slug))
+        return Response(SampleSessionSerializer(data, context={"request": request}).data)
+
+
+class SampleChapterView(SampleBaseView):
+    def get(self, request, slug, index):
+        return Response(sample.sample_chapter(self.book(slug), index))
+
+
+class SampleFileView(SampleBaseView):
+    throttle_classes = [SampleFileThrottle]
+
+    def get(self, request, slug):
+        ebook = sample.require_sample(self.book(slug))
+        if ebook.format != ebook.Format.PDF:
+            raise sample.NoSample
+        pdf = sample.pdf_sample(ebook)
+        response = FileResponse(pdf.file.open("rb"), content_type=CONTENT_TYPES[ebook.format])
+        response["Content-Disposition"] = "inline"
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Referrer-Policy"] = "no-referrer"
+        return private(response)
+
+
+class SampleAssetView(SampleBaseView):
+    def get(self, request, token):
+        asset = sample.redeem_sample_asset(token)
+        response = FileResponse(asset.file.open("rb"), content_type=asset.media_type)
+        response["Content-Disposition"] = "inline"
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Referrer-Policy"] = "no-referrer"
+        response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+        return private(response)
+
+
+# ---------- ه۸: «گزارش مشکل» ----------
+
+
+class ProblemReportView(ReaderView):
+    throttle_classes = [ProblemReportThrottle]
+
+    def post(self, request, slug):
+        serializer = ProblemReportSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        report = problems.create_report(
+            request.user,
+            self.book,
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            **serializer.validated_data,
+        )
+        return Response(ProblemReportSerializer(report).data, status=status.HTTP_201_CREATED)

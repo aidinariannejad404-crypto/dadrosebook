@@ -29,6 +29,19 @@ class EbookFile(TimeStampedModel):
     )
     version = models.PositiveIntegerField("نسخه فایل", default=1)
     is_active = models.BooleanField("فعال", default=True)
+    # --- free sample in the real reader (د۵) ---
+    sample_enabled = models.BooleanField(
+        "نمونه رایگان در کتاب‌خوان",
+        default=True,
+        help_text="بازدیدکننده بدون ورود، ابتدای همین فایل را در کتاب‌خوان می‌خواند.",
+    )
+    sample_pages = models.PositiveIntegerField(
+        "صفحات نمونه",
+        null=True,
+        blank=True,
+        help_text="خالی = ۱۰٪ کتاب (حداکثر ۳۰ صفحه). در EPUB صفحه‌ی مجازی حساب می‌شود "
+        "(هر ۱۲۰۰ نویسه). هرگز بیش از نیمی از کتاب نمایش داده نمی‌شود.",
+    )
 
     class Meta:
         verbose_name = "فایل کتاب الکترونیک"
@@ -43,6 +56,7 @@ class EbookEntitlement(models.Model):
     class Source(models.TextChoices):
         PURCHASE = "PURCHASE", "خرید"
         ADMIN = "ADMIN", "اعطای دستی"
+        FREE = "FREE", "دریافت رایگان"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

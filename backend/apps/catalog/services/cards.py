@@ -66,5 +66,6 @@ def card_extras(book: Book, variants: list[BookVariant], *, exam_year: int) -> d
             has_bundle=has_sellable_bundle(variants),
             has_sample=sample,
             course_title=course,
+            is_free_ebook=book.is_free_ebook,  # ه۶
         ),
     }

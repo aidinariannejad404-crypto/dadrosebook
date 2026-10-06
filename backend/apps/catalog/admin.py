@@ -272,6 +272,7 @@ class BookAdmin(ModelAdmin):
         "categories",
         "is_featured",
         "is_quick_review",
+        "is_free_ebook",  # ه۶
         "is_active",
     )
     search_fields = ("title", "search_text")
@@ -318,6 +319,7 @@ class BookAdmin(ModelAdmin):
                 "fields": (
                     "is_featured",
                     "is_quick_review",
+                    "is_free_ebook",  # ه۶
                     "sales_count",
                     "season_sales_count",
                     "is_active",

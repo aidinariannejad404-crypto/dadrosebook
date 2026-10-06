@@ -25,8 +25,9 @@ class ProgressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingProgress
-        fields = ["page", "total_pages", "percent", "location", "updated_at"]
+        fields = ["page", "total_pages", "percent", "location", "ebook_version", "updated_at"]
         read_only_fields = ["updated_at"]
+        extra_kwargs = {"ebook_version": {"required": False, "allow_null": True}}
 
     def validate(self, attrs):
         total = attrs.get("total_pages") or 0
@@ -97,8 +98,11 @@ class CopySerializer(serializers.Serializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ["id", "page", "location", "label", "created_at"]
-        read_only_fields = ["id", "created_at"]
+        fields = ["id", "page", "location", "label", "created_at",
+                  # ه۱: file version + whether it was found again after a new version
+                  "ebook_version", "anchor_status", "previous_page", "context_after"]  # fmt: skip
+        read_only_fields = ["id", "created_at", "anchor_status", "previous_page", "context_after"]
+        extra_kwargs = {"ebook_version": {"required": False, "allow_null": True}}
 
 
 class DeviceSerializer(serializers.ModelSerializer):
@@ -116,9 +120,18 @@ class HighlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Highlight
         fields = ["id", "page", "text", "note", "color", "rects", "location", "created_at",
-                  "updated_at"]  # fmt: skip
-        read_only_fields = ["id", "created_at", "updated_at"]
-        extra_kwargs = {"text": {"max_length": 2000}, "note": {"max_length": 2000}}
+                  "updated_at",
+                  # ه۱: version + context (PDF readers may send the text-layer context they see)
+                  "ebook_version", "context_before", "context_after", "anchor_status",
+                  "previous_page"]  # fmt: skip
+        read_only_fields = ["id", "created_at", "updated_at", "anchor_status", "previous_page"]
+        extra_kwargs = {
+            "text": {"max_length": 2000},
+            "note": {"max_length": 2000},
+            "ebook_version": {"required": False, "allow_null": True},
+            "context_before": {"required": False},
+            "context_after": {"required": False},
+        }
 
     def validate_rects(self, value):
         try:
@@ -132,3 +145,58 @@ class HighlightUpdateSerializer(serializers.ModelSerializer):
         model = Highlight
         fields = ["note", "color"]
         extra_kwargs = {"note": {"max_length": 2000}}
+
+
+# ---------- د۵ free sample ----------
+
+
+class SampleOfferSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    type = serializers.CharField()
+    label = serializers.CharField()
+    price = serializers.IntegerField()
+    in_stock = serializers.BooleanField()
+
+
+class SampleSessionSerializer(serializers.Serializer):
+    book = ReaderBookSerializer()
+    format = serializers.CharField()
+    version = serializers.IntegerField()
+    watermark = serializers.CharField()
+    sample_pages = serializers.IntegerField()
+    total_pages = serializers.IntegerField()
+    file_url = serializers.CharField(allow_blank=True)
+    epub = EpubInfoSerializer(allow_null=True)
+    offers = SampleOfferSerializer(many=True)
+    owned = serializers.BooleanField()
+
+
+# ---------- ه۸ problem reports ----------
+
+
+class ProblemReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        from ..models import ProblemReport
+
+        model = ProblemReport
+        fields = ["id", "kind", "description", "page", "location", "chapter_title",
+                  "ebook_version", "device_label", "status", "created_at"]  # fmt: skip
+        read_only_fields = ["id", "status", "created_at"]
+        extra_kwargs = {
+            "description": {"max_length": 2000, "required": False},
+            "page": {"required": False, "allow_null": True},
+            "location": {"required": False, "max_length": 100},
+            "chapter_title": {"required": False, "max_length": 300},
+            "ebook_version": {"required": False, "allow_null": True},
+            "device_label": {"required": False, "max_length": 100},
+        }
+
+    def validate(self, attrs):
+        from ..models import ProblemReport
+
+        if (
+            attrs.get("kind") == ProblemReport.Kind.OTHER
+            and not attrs.get("description", "").strip()
+        ):
+            raise serializers.ValidationError({"description": "مشکل را کوتاه توضیح دهید."})
+        return attrs

@@ -7,9 +7,11 @@ from .models import (
     EpubPackage,
     Highlight,
     OfflineLicense,
+    ProblemReport,
     ReaderAccessLog,
     ReaderDevice,
     ReadingProgress,
+    StatuteLink,
 )
 
 
@@ -30,8 +32,8 @@ class ReadingProgressAdmin(ReadOnlyAdmin):
 
 @admin.register(Highlight)
 class HighlightAdmin(ReadOnlyAdmin):
-    list_display = ("user", "book", "page", "color", "created_at")
-    list_filter = ("color",)
+    list_display = ("user", "book", "page", "color", "ebook_version", "anchor_status", "created_at")
+    list_filter = ("color", "anchor_status")
     search_fields = ("user__phone", "book__title")
     list_select_related = ("user", "book")
 
@@ -70,7 +72,8 @@ class EpubPackageAdmin(ReadOnlyAdmin):
 
 @admin.register(Bookmark)
 class BookmarkAdmin(ReadOnlyAdmin):
-    list_display = ("user", "book", "page", "created_at")
+    list_display = ("user", "book", "page", "ebook_version", "anchor_status", "created_at")
+    list_filter = ("anchor_status",)
     search_fields = ("user__phone", "book__title")
     list_select_related = ("user", "book")
 
@@ -130,3 +133,103 @@ class OfflineLicenseAdmin(ReadOnlyAdmin):
         from django.utils import timezone
 
         queryset.filter(revoked_at__isnull=True).update(revoked_at=timezone.now())
+
+
+# ---------- ه۶: statute article → commentary book ----------
+
+
+@admin.register(StatuteLink)
+class StatuteLinkAdmin(ModelAdmin):
+    list_display = ("book", "chapter_index", "label", "anchor", "target_book", "order", "is_active")
+    list_filter = ("is_active",)
+    list_editable = ("order", "is_active")
+    search_fields = ("book__title", "label", "target_book__title")
+    autocomplete_fields = ("book", "target_book")
+    list_select_related = ("book", "target_book")
+
+
+# ---------- ه۸: problem reports from the reader ----------
+
+
+@admin.register(ProblemReport)
+class ProblemReportAdmin(ModelAdmin):
+    list_display = (
+        "created",
+        "book",
+        "kind",
+        "page_or_location",
+        "ebook_version",
+        "device_label",
+        "user",
+        "status",
+    )
+    list_filter = ("status", "kind", "ebook_format")
+    search_fields = ("book__title", "user__phone", "description")
+    list_select_related = ("book", "user")
+    date_hierarchy = "created_at"
+    readonly_fields = (
+        "user",
+        "book",
+        "ebook_version",
+        "ebook_format",
+        "kind",
+        "description",
+        "page",
+        "location",
+        "chapter_title",
+        "device_label",
+        "user_agent",
+        "created_at",
+        "resolved_at",
+    )
+    fields = (*readonly_fields[:-2], "status", "staff_note", "created_at", "resolved_at")
+    actions = ("mark_in_progress", "mark_resolved", "mark_rejected")
+
+    def has_add_permission(self, request):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        from django.utils import timezone
+
+        if "status" in form.changed_data:
+            obj.resolved_at = (
+                timezone.now() if obj.status == ProblemReport.Status.RESOLVED else None
+            )
+        super().save_model(request, obj, form, change)
+
+    @admin.display(description="زمان گزارش", ordering="created_at")
+    def created(self, obj):
+        from apps.core.jalali import to_jalali_str
+
+        return to_jalali_str(obj.created_at, persian_digits=True) or "—"
+
+    @admin.display(description="صفحه / فصل")
+    def page_or_location(self, obj):
+        from apps.core.money import to_persian_digits
+
+        parts = []
+        if obj.page:
+            parts.append(f"ص {to_persian_digits(obj.page)}")
+        if obj.chapter_title:
+            parts.append(obj.chapter_title[:40])
+        return " · ".join(parts) or "—"
+
+    def _set(self, request, queryset, status):
+        from apps.core.money import format_number
+
+        from .services.problems import set_status
+
+        count = set_status(queryset, status)
+        self.message_user(request, f"وضعیت {format_number(count)} گزارش به‌روز شد.")
+
+    @admin.action(description="در حال بررسی")
+    def mark_in_progress(self, request, queryset):
+        self._set(request, queryset, ProblemReport.Status.IN_PROGRESS)
+
+    @admin.action(description="رسیدگی شد")
+    def mark_resolved(self, request, queryset):
+        self._set(request, queryset, ProblemReport.Status.RESOLVED)
+
+    @admin.action(description="بدون نیاز به اقدام")
+    def mark_rejected(self, request, queryset):
+        self._set(request, queryset, ProblemReport.Status.REJECTED)

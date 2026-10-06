@@ -226,6 +226,15 @@ READER_OFFLINE_ENABLED = env.bool("READER_OFFLINE_ENABLED", default=True)
 READER_OFFLINE_MAX_BOOKS = env.int("READER_OFFLINE_MAX_BOOKS", default=3)
 READER_OFFLINE_DAYS = env.int("READER_OFFLINE_DAYS", default=14)
 READER_OFFLINE_RATE = env("READER_OFFLINE_RATE", default="10/day")
+# --- reader stream: free sample (د۵) and problem reports (ه۸) ---
+# Sample = sample_pages of the file, or READER_SAMPLE_PERCENT of the book capped at
+# READER_SAMPLE_MAX_PAGES; never more than READER_SAMPLE_MAX_SHARE percent.
+READER_SAMPLE_PERCENT = env.int("READER_SAMPLE_PERCENT", default=10)
+READER_SAMPLE_MAX_PAGES = env.int("READER_SAMPLE_MAX_PAGES", default=30)
+READER_SAMPLE_MAX_SHARE = env.int("READER_SAMPLE_MAX_SHARE", default=50)
+READER_SAMPLE_RATE = env("READER_SAMPLE_RATE", default="120/hour")  # per IP
+READER_SAMPLE_FILE_RATE = env("READER_SAMPLE_FILE_RATE", default="30/hour")  # per IP
+READER_PROBLEM_RATE = env("READER_PROBLEM_RATE", default="10/day")
 
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)
@@ -440,6 +449,14 @@ UNFOLD = {
                     _nav("دسترسی‌های کتاب الکترونیک", "key", "library_ebookentitlement"),
                     _nav("پیشرفت مطالعه", "auto_stories", "reader_readingprogress"),
                     _nav("هایلایت‌ها", "border_color", "reader_highlight"),
+                    # --- reader stream (ه۶ statute links, ه۸ problem reports) ---
+                    _nav(
+                        "گزارش‌های مشکل کتاب",
+                        "report",
+                        "reader_problemreport",
+                        "apps.reader.services.problems.problem_reports_badge",
+                    ),
+                    _nav("پیوند ماده به کتاب شرح", "link", "reader_statutelink"),
                 ],
             },
             {

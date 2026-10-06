@@ -26,7 +26,7 @@ class LibraryItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EbookEntitlement
-        fields = ["book", "granted_at", "source_order", "can_read", "progress"]
+        fields = ["book", "granted_at", "source_order", "can_read", "progress", "source"]
 
     def get_source_order(self, obj: EbookEntitlement) -> str | None:
         return obj.source_order.number if obj.source_order_id else None

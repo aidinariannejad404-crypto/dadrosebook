@@ -23,9 +23,12 @@ def book_badges(
     has_bundle: bool = False,
     has_sample: bool = False,
     course_title: str | None = None,
+    is_free_ebook: bool = False,
     limit: int = MAX_BADGES,
 ) -> list[dict]:
     candidates = [
+        # ه۶ free statute ebooks: «رایگان» comes first
+        is_free_ebook and _badge("free_ebook", "رایگان", "success"),
         edition_badge and _badge("edition", edition_badge, "primary"),
         kit_role == "essential" and _badge("kit_essential", "ضروری کیت", "success"),
         subject_rank

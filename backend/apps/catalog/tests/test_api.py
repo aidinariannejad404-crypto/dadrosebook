@@ -18,6 +18,8 @@ BOOK_CARD_KEYS = {
     # added in the UI refresh
     "card_compare_price", "card_discount_percent", "quick_add_variant_id", "rating_avg",
     "rating_count",
+    # reader stream (ه۶ free statute ebooks)
+    "is_free_ebook",
 }  # fmt: skip
 BOOK_DETAIL_KEYS = BOOK_CARD_KEYS | {
     "publisher", "translators", "categories", "edition", "publish_year", "pages", "isbn",
@@ -26,6 +28,8 @@ BOOK_DETAIL_KEYS = BOOK_CARD_KEYS | {
     "intro_video_url", "variants", "related_courses", "course_offer", "kit_placements",
     "is_featured",
     "updated_at",
+    # reader stream (د۵ sample in the reader, ه۶ free ebook)
+    "reader_sample", "free_ebook_ready",
 }  # fmt: skip
 VARIANT_KEYS = {
     "id", "type", "type_label", "price", "sale_price", "effective_price", "discount_percent",
