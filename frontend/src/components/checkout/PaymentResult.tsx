@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GiftLinkBox } from "@/components/growth/GiftLinkBox"; // growth (و۴)
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Order, OrderStatus } from "@/lib/account-types";
 import { track } from "@/lib/analytics";
@@ -143,6 +144,8 @@ export function PaymentResult({ orderNumber, status: urlStatus }: { orderNumber:
             {order.paid_at && <> · {formatJalaliDate(order.paid_at)}</>}
           </p>
         )}
+        {/* growth (و۴): a gift order shows its claim link */}
+        {number && <GiftLinkBox orderNumber={number} />}
         {canRead && (
           <div className="mt-5 rounded-control bg-success-soft px-4 py-3 text-success">
             <p className="flex items-center justify-center gap-2 font-bold">

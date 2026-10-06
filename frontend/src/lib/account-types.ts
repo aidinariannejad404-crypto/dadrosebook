@@ -70,6 +70,8 @@ export interface CheckoutRequest {
   customer_note?: string;
   /** POST /checkout/ only */
   checkout_key?: string;
+  /** growth (و۴), POST /checkout/ only: a gift order (no address; the recipient claims a link) */
+  gift?: { sender_name: string; recipient_name: string; message: string } | null;
 }
 
 export type QuoteProblemCode = "out_of_stock" | "insufficient_stock" | "inactive" | "placeholder_price";
@@ -94,7 +96,8 @@ export interface QuoteLine {
 export interface Quote {
   lines: QuoteLine[];
   items_total: number;
-  discount: { code: string; amount: number; label: string } | null;
+  /** growth (و۶): `campaign` is set when a running campaign's discount was applied automatically */
+  discount: { code: string; amount: number; label: string; campaign?: { title: string; slug: string } } | null;
   discount_error: string | null;
   needs_shipping: boolean;
   shipping: ShippingOption | null;

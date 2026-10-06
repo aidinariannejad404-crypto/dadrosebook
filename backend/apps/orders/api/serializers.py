@@ -49,6 +49,21 @@ class QuoteRequestSerializer(serializers.Serializer):
     )
 
 
+# --- growth (و۴): gift orders ---
+class GiftRequestSerializer(serializers.Serializer):
+    sender_name = serializers.CharField(max_length=80, allow_blank=True, required=False)
+    recipient_name = serializers.CharField(max_length=80, allow_blank=True, required=False)
+    message = serializers.CharField(
+        max_length=300,
+        allow_blank=True,
+        required=False,
+        error_messages={"max_length": "پیام هدیه حداکثر ۳۰۰ نویسه است."},
+    )
+
+
+# --- end growth ---
+
+
 class CheckoutRequestSerializer(QuoteRequestSerializer):
     checkout_key = serializers.UUIDField(
         error_messages={
@@ -56,6 +71,7 @@ class CheckoutRequestSerializer(QuoteRequestSerializer):
             "invalid": "کلید تسویه معتبر نیست.",
         }
     )
+    gift = GiftRequestSerializer(required=False, allow_null=True)  # growth (و۴)
 
 
 def _build_url(context):

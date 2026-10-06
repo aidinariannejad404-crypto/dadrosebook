@@ -177,6 +177,14 @@ def compute(
                 "label": discounts.label_for(discount_obj),
             }
 
+    # --- growth (و۶): a running campaign's discount applies automatically (best of code/campaign)
+    from apps.growth.services.campaigns import apply_auto_discount
+
+    discount, discount_error, discount_obj, discount_amount = apply_auto_discount(
+        lines, user, discount, discount_error, discount_obj, discount_amount
+    )
+    # --- end growth ---
+
     if address is not None:
         province = address.province
 

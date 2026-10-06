@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
     return [
       { source: "/api/v1/:path*/", destination: `${apiInternal}/:path*/` },
       { source: "/api/v1/:path*", destination: `${apiInternal}/:path*` },
+      // growth (و۱): Torob crawls POST /torob_api/v3/products on the storefront host; Emalls reads the feed.
+      { source: "/torob_api/v3/products", destination: `${apiInternal}/growth/torob/v3/products/` },
+      { source: "/torob_api/v3/products/", destination: `${apiInternal}/growth/torob/v3/products/` },
+      { source: "/feeds/emalls.json", destination: `${apiInternal}/growth/feeds/emalls.json` },
+      { source: "/feeds/emalls.xml", destination: `${apiInternal}/growth/feeds/emalls.xml` },
     ];
   },
   // Phase 6: the reader is private and must not be framed, cached, indexed or leak its URL.

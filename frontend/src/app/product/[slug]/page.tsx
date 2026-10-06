@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { torobMeta } from "@/lib/growth"; // growth (و۱)
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import {
@@ -83,6 +84,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       isbn: book.isbn || undefined,
       images: book.cover ? [{ url: book.cover, alt: `جلد کتاب ${book.title}` }] : undefined,
     },
+    // growth (و۱): Torob crawler meta tags (product_id = the Torob API's page_unique)
+    other: torobMeta(book),
   };
 }
 

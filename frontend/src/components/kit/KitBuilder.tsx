@@ -23,6 +23,7 @@ import { BookCover } from "@/components/book/BookCover";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { CartIcon, CheckIcon, ClockIcon } from "@/components/ui/Icons";
 import { useCart } from "@/components/cart/CartProvider";
+import { KitShareBox } from "@/components/growth/KitShareBox"; // growth (و۳)
 
 export interface KitBuilderProps {
   examTypes: ExamTypeMini[];
@@ -271,6 +272,13 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
                 </div>
               )}
             </div>
+            {/* growth (و۳): shareable kit link */}
+            <KitShareBox
+              exam={exam}
+              examName={examName}
+              variantIds={lines.map((l) => l.variant.id)}
+              slugs={lines.map((l) => l.item.book.slug)}
+            />
           </aside>
         )}
       </div>

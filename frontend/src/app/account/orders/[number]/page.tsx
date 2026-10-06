@@ -12,6 +12,7 @@ import { MiniCover } from "@/components/account/MiniCover";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
 import { CopyButton } from "@/components/account/CopyButton";
 import { PayButton } from "@/components/account/PayButton";
+import { GiftLinkBox } from "@/components/growth/GiftLinkBox"; // growth (و۴)
 import { BookOpenIcon, ChevronIcon, ExternalIcon } from "@/components/ui/Icons";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +67,8 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
             <PayButton number={order.number} />
           </div>
         )}
+        {/* growth (و۴): claim link of a gift order */}
+        <GiftLinkBox orderNumber={order.number} />
       </section>
 
       <section aria-labelledby="items-title" className={CARD}>

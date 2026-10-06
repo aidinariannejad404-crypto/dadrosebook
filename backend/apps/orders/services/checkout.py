@@ -35,6 +35,9 @@ def _existing(user, checkout_key):
 
 
 def create_order(user, data: dict, checkout_key, *, build_url=None) -> Order:
+    # growth (و۴): ``data["gift"]`` (sender_name, recipient_name, message) makes it a gift order:
+    # no address now (the recipient enters it when claiming), only a shipping method.
+    gift = data.get("gift")
     if checkout_key is not None:
         order = _existing(user, checkout_key)
         if order is not None:
@@ -57,7 +60,12 @@ def create_order(user, data: dict, checkout_key, *, build_url=None) -> Order:
         raise CheckoutError({"items": ["سبد خرید خالی است."]})
 
     errors: dict[str, list[str]] = {}
-    if quote["needs_shipping"]:
+    if quote["needs_shipping"] and gift is not None:  # growth (و۴)
+        if not data.get("shipping_method_id"):
+            errors["shipping_method_id"] = [METHOD_REQUIRED]
+        elif pricing.shipping_method is None:
+            errors["shipping_method_id"] = [METHOD_NOT_ALLOWED]
+    elif quote["needs_shipping"]:
         if not address_id:
             errors["address_id"] = [ADDRESS_REQUIRED]
         elif address is None:
@@ -88,7 +96,9 @@ def create_order(user, data: dict, checkout_key, *, build_url=None) -> Order:
                 needs_shipping=quote["needs_shipping"],
                 shipping_method=method,
                 shipping_method_name=method.name if method else "",
-                shipping_address=address.snapshot() if quote["needs_shipping"] else None,
+                shipping_address=(
+                    address.snapshot() if quote["needs_shipping"] and gift is None else None
+                ),
                 customer_note=(data.get("customer_note") or "").strip()[:500],
             )
             OrderItem.objects.bulk_create(
@@ -110,6 +120,10 @@ def create_order(user, data: dict, checkout_key, *, build_url=None) -> Order:
             OrderStatusLog.objects.create(
                 order=order, from_status="", to_status=Order.Status.PENDING_PAYMENT
             )
+            if gift is not None:  # growth (و۴)
+                from apps.growth.services.gifts import attach_gift
+
+                attach_gift(order, gift)
     except IntegrityError:
         # A concurrent request with the same checkout_key won the race.
         order = _existing(user, checkout_key) if checkout_key is not None else None

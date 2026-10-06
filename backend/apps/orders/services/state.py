@@ -227,7 +227,12 @@ def mark_paid(order: Order, *, payment=None, note: str = "") -> bool:
         _log(locked, from_status, S.PAID, note=" — ".join(notes))
 
         _redeem_discount(locked)
-        grant_for_order(locked)
+        # --- growth (و۴): a gift's ebooks go to the recipient when the link is claimed ---
+        from apps.growth.services.gifts import activate_for_paid_order
+
+        if not activate_for_paid_order(locked, now=now):
+            grant_for_order(locked)
+        # --- end growth ---
         _bump_sales(locked)
 
         if not locked.needs_shipping:
