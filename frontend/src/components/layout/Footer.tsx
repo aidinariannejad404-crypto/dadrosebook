@@ -3,7 +3,7 @@ import { format as formatJalali } from "date-fns-jalali";
 import { COURSE_SITE, SITE_NAME, routes } from "@/lib/config";
 import { toPersianDigits } from "@/lib/format";
 import { consultLinks } from "@/lib/consult";
-import type { StoreSettings } from "@/lib/types";
+import type { ExamTypeMini, StoreSettings } from "@/lib/types";
 import { Logo } from "@/components/brand/Logo";
 import { BadgeIcon, TruckIcon } from "@/components/ui/Icons";
 import { InstagramIcon, LockIcon, TelegramIcon, WhatsappIcon } from "./NavIcons";
@@ -40,7 +40,7 @@ function instagramUrl(store: StoreSettings | null): string | null {
 }
 
 /** Footer: logo, trust badges, links incl. policy pages, support channels from store settings, eNamad. */
-export function Footer({ store }: { store: StoreSettings | null }) {
+export function Footer({ store, examTypes = [] }: { store: StoreSettings | null; examTypes?: ExamTypeMini[] }) {
   const year = toPersianDigits(formatJalali(new Date(), "yyyy"));
   const consult = consultLinks(store);
   const instagram = instagramUrl(store);
@@ -69,7 +69,7 @@ export function Footer({ store }: { store: StoreSettings | null }) {
         </ul>
       </div>
 
-      <div className="mx-auto grid max-w-site gap-8 px-4 py-10 md:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+      <div className="mx-auto grid max-w-site gap-8 px-4 py-10 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
         <section aria-label={`درباره ${SITE_NAME}`}>
           <Logo variant="footer-on-dark" />
           <p className="mt-3 max-w-prose text-sm leading-7 text-white/85">
@@ -105,6 +105,23 @@ export function Footer({ store }: { store: StoreSettings | null }) {
             ))}
           </ul>
         </nav>
+        {examTypes.length > 0 && (
+          // exam hubs (package ب): crawlable links to /exam/<slug> from every page
+          <nav aria-labelledby="footer-exams">
+            <h2 id="footer-exams" className="font-bold">
+              منابع آزمون‌ها
+            </h2>
+            <ul className="mt-2">
+              {examTypes.map((e) => (
+                <li key={e.id}>
+                  <Link prefetch={false} href={routes.exam(e.slug)} className={footerLink}>
+                    منابع آزمون {e.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
         <nav aria-labelledby="footer-help">
           <h2 id="footer-help" className="font-bold">
             راهنمای خرید

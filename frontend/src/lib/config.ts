@@ -55,4 +55,13 @@ export const routes = {
   wishlist: "/account/wishlist",
   reviews: "/account/reviews",
   read: (slug: string) => "/read/" + encodeURIComponent(slug),
+  // --- hubs & guides (package ب, impl/hubs) ---
+  exam: (slug: string) => `/exam/${encodeURIComponent(slug)}`,
+  /** POST target of the «آزمون من» chips (stores the exam cookie) */
+  examSelect: "/exam/select",
+  subject: (slug: string) => `/subject/${encodeURIComponent(slug)}`,
+  author: (slug: string) => `/author/${encodeURIComponent(slug)}`,
+  publisher: (slug: string) => `/publisher/${encodeURIComponent(slug)}`,
+  guide: (slug: string) => `/guide/${encodeURIComponent(slug)}`,
+  list: (slug: string) => `/list/${encodeURIComponent(slug)}`,
 };

@@ -52,7 +52,7 @@ export function CategorySheet({
           <ul className="mt-2 flex flex-wrap gap-2">
             {examTypes.map((e) => (
               <li key={e.id}>
-                <Link prefetch={false} href={routes.search({ exam_type: e.slug })} className={chip}>
+                <Link prefetch={false} href={routes.exam(e.slug)} className={chip}>
                   {e.name}
                 </Link>
               </li>
@@ -68,7 +68,7 @@ export function CategorySheet({
           <ul className="mt-2 flex flex-wrap gap-2">
             {subjects.map((s) => (
               <li key={s.id}>
-                <Link prefetch={false} href={routes.search({ subject: s.slug })} className={chip}>
+                <Link prefetch={false} href={routes.subject(s.slug)} className={chip}>
                   {s.name}
                 </Link>
               </li>

@@ -38,19 +38,64 @@ from .services.editions import current_exam_year
 from .services.pricing import book_min_price
 from .services.search import search_books
 
+# --- hubs (package ب, impl/hubs): intro fields + indexability status ----------------------------
+HUB_INTRO_FIELDSET = (
+    "صفحه اختصاصی در سایت (هاب)",
+    {
+        "fields": ("intro", "intro_byline", "intro_is_placeholder", "hub_index_status"),
+        "description": "مقدمه اختصاصی حداقل حدود ۱۵۰ کلمه و حداقل ۳ کتاب فعال لازم است تا صفحه "
+        "در گوگل ایندکس و در نقشه سایت آورده شود؛ در غیر این صورت صفحه noindex می‌ماند.",
+    },
+)
+
+
+class HubAdminMixin:
+    def get_readonly_fields(self, request, obj=None):
+        return (*super().get_readonly_fields(request, obj), "hub_index_status")
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "intro":
+            kwargs["widget"] = WysiwygWidget
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    @admin.display(description="وضعیت ایندکس صفحه")
+    def hub_index_status(self, obj):
+        from apps.content.services.indexing import hub_status
+
+        if not obj or not obj.pk:
+            return "—"
+        indexable, missing = hub_status(obj)
+        if indexable:
+            return "قابل ایندکس (در نقشه سایت)"
+        return "noindex — " + "؛ ".join(missing)
+
+    @admin.display(description="ایندکس", boolean=True)
+    def hub_index_badge(self, obj):
+        from apps.content.services.indexing import hub_status
+
+        return hub_status(obj)[0]
+
 
 @admin.register(ExamType)
-class ExamTypeAdmin(ModelAdmin):
-    list_display = ("name", "short_name", "slug", "order", "is_active")
+class ExamTypeAdmin(HubAdminMixin, ModelAdmin):
+    list_display = ("name", "short_name", "slug", "order", "is_active", "hub_index_badge")
     list_editable = ("order", "is_active")
     search_fields = ("name", "short_name")
+    fieldsets = (
+        (None, {"fields": ("name", "short_name", "slug", "order", "is_active")}),
+        HUB_INTRO_FIELDSET,
+    )
 
 
 @admin.register(Subject)
-class SubjectAdmin(ModelAdmin):
-    list_display = ("name", "color_swatch", "slug", "order", "is_active")
+class SubjectAdmin(HubAdminMixin, ModelAdmin):
+    list_display = ("name", "color_swatch", "slug", "order", "is_active", "hub_index_badge")
     list_editable = ("order", "is_active")
     search_fields = ("name",)
+    fieldsets = (
+        (None, {"fields": ("name", "slug", "color", "order", "description", "is_active")}),
+        HUB_INTRO_FIELDSET,
+    )
 
     @admin.display(description="رنگ")
     def color_swatch(self, obj):
@@ -75,15 +120,27 @@ class CategoryAdmin(ModelAdmin):
 
 
 @admin.register(Person)
-class PersonAdmin(ModelAdmin):
-    list_display = ("name", "slug")
+class PersonAdmin(HubAdminMixin, ModelAdmin):
+    list_display = ("name", "slug", "job_title")
     search_fields = ("name",)
+    fieldsets = (
+        (None, {"fields": ("name", "slug", "photo")}),
+        (
+            "اعتبار علمی (صفحه نویسنده)",
+            {
+                "fields": ("job_title", "affiliation", "bio", "same_as", "hub_index_status"),
+                "description": "سمت، دانشگاه و زندگی‌نامه در صفحه نویسنده و امضای راهنماها "
+                "نمایش داده می‌شود و اعتبار محتوا را نزد گوگل بالا می‌برد.",
+            },
+        ),
+    )
 
 
 @admin.register(Publisher)
-class PublisherAdmin(ModelAdmin):
-    list_display = ("name", "slug", "website")
+class PublisherAdmin(HubAdminMixin, ModelAdmin):
+    list_display = ("name", "slug", "website", "hub_index_badge")
     search_fields = ("name",)
+    fields = ("name", "slug", "website", "intro", "hub_index_status")
 
 
 @admin.register(RelatedCourse)

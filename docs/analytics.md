@@ -37,6 +37,7 @@ Call sites use the typed helpers, not `track()` directly.
 | `notify_me_requested` | `trackNotifyMeRequested(item)` | `item_id`, `item_name`, `variant` | «موجود شد خبرم کن» clicked | Existing — `components/ui/NotifyMeButton.tsx` (Phase 2 may move it to the successful registration) |
 | `course_cross_sell_click` | `trackCourseCrossSellClick(c)` | `course_id`, `course_title`, `book_slug?`, `placement` (`home`, `highlight`, `more`, `buy_box`, CourseCard `tier`/placement) | Click on a dadrose.com course link | Existing — `components/ui/TrackedLink.tsx` (`course` prop) used by CourseBanner, CourseCrossSell, CourseCard, PurchasePanel |
 | `study_plan_requested` | `trackStudyPlanRequested(p)` | `exam_type`, `subjects` (comma list of slugs), `subjects_count`, `hours_per_day`, `book?` (slug) | Study-plan form submitted successfully (the phone number is never sent) | Existing — `components/plan/StudyPlanForm.tsx` |
+| `hub_cta_click` | `trackHubCtaClick(c)` | `hub` (exam/subject/…), `slug`, `cta` (`kit`, `all_books`, `subject_hub`) | Call to action clicked on a hub page (package ب) | `components/hub/HubCtaLink.tsx` (exam hub) |
 
 ## Adding an event
 

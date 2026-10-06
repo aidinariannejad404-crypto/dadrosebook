@@ -3,7 +3,7 @@ import type { ExamTypeMini } from "@/lib/types";
 import { routes } from "@/lib/config";
 
 /**
- * «آزمون من» (P1-3): each chip is a submit button of a plain POST form to /exam, which stores the
+ * «آزمون من» (P1-3): each chip is a submit button of a plain POST form to /exam/select, which stores the
  * slug in the `exam` cookie and reloads the homepage for that exam — no client JS.
  */
 export function ExamChips({ examTypes, selected }: { examTypes: ExamTypeMini[]; selected: ExamTypeMini | null }) {
@@ -15,7 +15,7 @@ export function ExamChips({ examTypes, selected }: { examTypes: ExamTypeMini[]; 
           {selected ? "آزمون من" : "آزمون شما کدام است؟"}
         </h2>
         {selected ? (
-          <form action="/exam" method="post" className="flex items-center gap-1 text-sm text-ink-muted">
+          <form action={routes.examSelect} method="post" className="flex items-center gap-1 text-sm text-ink-muted">
             <p>
               نمایش برای: <strong className="text-ink">{selected.name}</strong>
             </p>
@@ -34,7 +34,7 @@ export function ExamChips({ examTypes, selected }: { examTypes: ExamTypeMini[]; 
           <p className="text-sm text-ink-muted">پرفروش‌ها، سریع‌خوان‌ها و شمارش معکوس برای آزمون شما</p>
         )}
       </div>
-      <form action="/exam" method="post">
+      <form action={routes.examSelect} method="post">
         <ul className="relative -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
           {examTypes.map((e) => {
             const active = selected?.slug === e.slug;
@@ -61,7 +61,7 @@ export function ExamChips({ examTypes, selected }: { examTypes: ExamTypeMini[]; 
       {selected && (
         <Link
           prefetch={false}
-          href={routes.search({ exam_type: selected.slug })}
+          href={routes.exam(selected.slug)}
           className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-primary underline-offset-4 hover:underline"
         >
           همه منابع {selected.name}

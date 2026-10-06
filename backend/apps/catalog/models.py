@@ -32,11 +32,41 @@ class SluggedModel(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class ExamType(SluggedModel):
+class HubIntroMixin:
+    """Sanitises the hub ``intro`` HTML on save (package ب, impl/hubs)."""
+
+    def save(self, *args, **kwargs):
+        from .services.text import sanitize_html
+
+        self.intro = sanitize_html(self.intro)
+        super().save(*args, **kwargs)
+
+
+class ExamType(HubIntroMixin, SluggedModel):
     name = models.CharField("نام", max_length=100)
     short_name = models.CharField("نام کوتاه", max_length=50, blank=True)
     order = models.PositiveSmallIntegerField("ترتیب", default=0)
     is_active = models.BooleanField("فعال", default=True)
+
+    # --- hubs (package ب, impl/hubs): editorial intro for the /آزمون/{slug} hub page ---
+    intro = models.TextField(
+        "مقدمه صفحه",
+        blank=True,
+        help_text="متن اختصاصی صفحه این آزمون در سایت (حداقل حدود ۱۵۰ کلمه تا صفحه در گوگل "
+        "ایندکس شود). HTML ساده مجاز است و پاک‌سازی می‌شود.",
+    )
+    intro_byline = models.CharField(
+        "تهیه‌کننده مقدمه",
+        max_length=200,
+        blank=True,
+        help_text="مثلاً «تیم آموزشی آکادمی دادرُز»؛ زیر مقدمه نمایش داده می‌شود.",
+    )
+    intro_is_placeholder = models.BooleanField(
+        "مقدمه موقت است",
+        default=False,
+        help_text="متن نمونه‌ای که هنوز آکادمی جایگزین نکرده؛ صفحه تا برداشتن این تیک noindex "
+        "می‌ماند.",
+    )
 
     class Meta:
         verbose_name = "آزمون"
@@ -47,7 +77,7 @@ class ExamType(SluggedModel):
         return self.name
 
 
-class Subject(SluggedModel):
+class Subject(HubIntroMixin, SluggedModel):
     name = models.CharField("نام", max_length=100)
     color = models.CharField(
         "رنگ", max_length=7, default="#12264A", validators=[hex_color_validator]
@@ -55,6 +85,26 @@ class Subject(SluggedModel):
     order = models.PositiveSmallIntegerField("ترتیب", default=0)
     description = models.TextField("توضیحات", blank=True)
     is_active = models.BooleanField("فعال", default=True)
+
+    # --- hubs (package ب, impl/hubs): editorial intro for the /درس/{slug} hub page ---
+    intro = models.TextField(
+        "مقدمه صفحه",
+        blank=True,
+        help_text="متن اختصاصی صفحه این درس در سایت (حداقل حدود ۱۵۰ کلمه تا صفحه در گوگل "
+        "ایندکس شود). HTML ساده مجاز است و پاک‌سازی می‌شود.",
+    )
+    intro_byline = models.CharField(
+        "تهیه‌کننده مقدمه",
+        max_length=200,
+        blank=True,
+        help_text="مثلاً «تیم آموزشی آکادمی دادرُز»؛ زیر مقدمه نمایش داده می‌شود.",
+    )
+    intro_is_placeholder = models.BooleanField(
+        "مقدمه موقت است",
+        default=False,
+        help_text="متن نمونه‌ای که هنوز آکادمی جایگزین نکرده؛ صفحه تا برداشتن این تیک noindex "
+        "می‌ماند.",
+    )
 
     class Meta:
         verbose_name = "درس"
@@ -92,6 +142,21 @@ class Person(SluggedModel):
     name = models.CharField("نام", max_length=150)
     bio = models.TextField("زندگی‌نامه", blank=True)
     photo = models.ImageField("عکس", upload_to="people/", blank=True)
+    # --- hubs (package ب, impl/hubs): credentials for /author/{slug} (E-E-A-T, Person JSON-LD) ---
+    job_title = models.CharField(
+        "سمت",
+        max_length=200,
+        blank=True,
+        help_text="مثلاً «عضو هیئت علمی دانشکده حقوق» یا «وکیل پایه یک».",
+    )
+    affiliation = models.CharField(
+        "دانشگاه / سازمان", max_length=200, blank=True, help_text="مثلاً «دانشگاه تهران»."
+    )
+    same_as = models.TextField(
+        "صفحه‌های رسمی",
+        blank=True,
+        help_text="هر نشانی در یک خط (وب‌سایت شخصی، صفحه دانشگاه، ویکی‌پدیا…). فقط https.",
+    )
 
     class Meta:
         verbose_name = "شخص (نویسنده/مترجم)"
@@ -102,9 +167,15 @@ class Person(SluggedModel):
         return self.name
 
 
-class Publisher(SluggedModel):
+class Publisher(HubIntroMixin, SluggedModel):
     name = models.CharField("نام", max_length=150)
     website = models.URLField("وب‌سایت", blank=True)
+    # --- hubs (package ب, impl/hubs) ---
+    intro = models.TextField(
+        "معرفی ناشر",
+        blank=True,
+        help_text="متن معرفی در صفحه ناشر. HTML ساده مجاز است و پاک‌سازی می‌شود.",
+    )
 
     class Meta:
         verbose_name = "ناشر"

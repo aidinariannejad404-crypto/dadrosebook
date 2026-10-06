@@ -4,7 +4,8 @@ python manage.py seed_catalog                    # exam types, subjects, categor
 python manage.py seed_catalog --with-superuser   # also admin 09120000000 / "admin" (DEBUG only)
 python manage.py seed_catalog --if-empty         # skip when books exist (keeps admin edits)
 
-Also runs ``seed_redirects`` (default Sazito 301s; only missing ones are created).
+Also runs ``seed_redirects`` (default Sazito 301s; only missing ones are created) and
+``seed_hubs`` (placeholder exam intros, draft demo guide, demo list; never overwrites edits).
 """
 
 from django.conf import settings
@@ -46,6 +47,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Catalogue seeded: {summary}"))
         # Idempotent and only creates missing rows, so it also runs with --if-empty.
         call_command("seed_redirects", stdout=self.stdout, stderr=self.stderr)
+        # Hubs (package ب): placeholder exam intros, draft demo guide, demo list. Idempotent.
+        call_command("seed_hubs", stdout=self.stdout, stderr=self.stderr)
 
         if options["with_superuser"]:
             self._create_superuser()

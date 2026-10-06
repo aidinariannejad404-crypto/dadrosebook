@@ -6,7 +6,8 @@ from django.core.cache import cache
 from django.db.models import Max, Q
 from django.db.models.functions import Greatest
 
-from apps.catalog.models import Book, Category, ExamType, Subject
+from apps.catalog.models import Book, Category
+from apps.content.services.sitemap import hub_sitemap_data
 
 SITEMAP_CACHE_KEY = "seo:sitemap"
 SITEMAP_CACHE_SECONDS = 300
@@ -23,7 +24,11 @@ def _taxonomy(model) -> list[dict]:
 
 
 def build_sitemap_data() -> dict:
-    """Active books that have at least one active variant, plus active taxonomies.
+    """Active books that have at least one active variant, active categories and the hubs.
+
+    Hubs (package ب): ``exam_types``, ``subjects``, ``authors``, ``publishers``, ``guides`` and
+    ``lists`` hold only pages that pass the indexability guardrail
+    (``apps.content.services.indexing``); thin hubs are noindex and left out.
 
     A book's ``updated_at`` is the later of the book row and its active variants (price changes).
     ``cover`` is the storage URL (relative with local storage; the view makes it absolute).
@@ -46,8 +51,7 @@ def build_sitemap_data() -> dict:
             for b in books
         ],
         "categories": _taxonomy(Category),
-        "subjects": _taxonomy(Subject),
-        "exam_types": _taxonomy(ExamType),
+        **hub_sitemap_data(),
     }
 
 

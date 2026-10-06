@@ -23,6 +23,8 @@ api_v1 = [
     path("back-in-stock/", include("apps.engagement.api.urls")),
     path("library/", include("apps.reader.api.urls")),
     path("seo/", include("apps.seo.api.urls")),
+    # hubs, guides and curated lists (package ب, impl/hubs)
+    path("content/", include("apps.content.api.urls")),
 ]
 
 urlpatterns = [

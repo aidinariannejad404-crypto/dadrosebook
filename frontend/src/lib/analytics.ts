@@ -22,7 +22,9 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // hubs (package ب, impl/hubs)
+  | "hub_cta_click";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -278,6 +280,21 @@ export function trackStudyPlanRequested(p: {
     hours_per_day: p.hours_per_day,
     book: p.book ?? undefined,
   });
+}
+
+/* --- hubs (package ب, impl/hubs) --- */
+
+export interface HubCtaClick {
+  /** exam | subject | author | publisher | guide | list */
+  hub: string;
+  slug: string;
+  /** which call to action, e.g. "kit", "guide", "all_books" */
+  cta: string;
+}
+
+/** Click on a call to action inside a hub page (kit CTA, guide link…). */
+export function trackHubCtaClick(c: HubCtaClick): void {
+  track("hub_cta_click", { hub: c.hub, slug: c.slug, cta: c.cta });
 }
 
 /** Test helper: reset the queue, dedupe set and poller. */

@@ -20,6 +20,13 @@ import type {
   StudyPlanRequest,
   StudyKit,
   SubjectWithCount,
+  // hubs (package ب)
+  AuthorHub,
+  CuratedListDetail,
+  ExamHub,
+  GuideDetail,
+  PublisherHub,
+  SubjectHub,
 } from "./types";
 import { fixtureStudyPlan, studyPlanErrors, type StudyPlanField } from "./study-plan";
 
@@ -401,4 +408,53 @@ export async function getStudyKits(examType: string | null = null): Promise<Stud
     return fixtureStudyKits(await fixtureBooks(), await fixtureWeights(), examType);
   }
   return apiGet<StudyKit[]>(`/catalog/study-kits/${queryString({ exam_type: examType })}`);
+}
+
+/* ---------- hubs, guides and curated lists (package ب, impl/hubs) ---------- */
+
+/** GET that maps 404 to null (unknown slug, draft without preview key). Fixture mode has no hubs. */
+async function apiGetOrNull<T>(path: string, revalidate: number = REVALIDATE_SECONDS): Promise<T | null> {
+  if (fixturesEnabled()) return null;
+  try {
+    return await apiGet<T>(path, revalidate);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+/** GET /content/exams/<slug>/ — exam hub (ب۱). */
+export function getExamHub(slug: string): Promise<ExamHub | null> {
+  return apiGetOrNull<ExamHub>(`/content/exams/${slugSegment(slug)}/`);
+}
+
+/** GET /content/subjects/<slug>/ — subject hub (ب۲). */
+export function getSubjectHub(slug: string): Promise<SubjectHub | null> {
+  return apiGetOrNull<SubjectHub>(`/content/subjects/${slugSegment(slug)}/`);
+}
+
+/** GET /content/authors/<slug>/ — author / translator page (ب۳). */
+export function getAuthorHub(slug: string): Promise<AuthorHub | null> {
+  return apiGetOrNull<AuthorHub>(`/content/authors/${slugSegment(slug)}/`);
+}
+
+/** GET /content/publishers/<slug>/ — publisher page (ب۴). */
+export function getPublisherHub(slug: string): Promise<PublisherHub | null> {
+  return apiGetOrNull<PublisherHub>(`/content/publishers/${slugSegment(slug)}/`);
+}
+
+/** GET /content/guides/<slug>/ (ب۵); a draft only with its staff `preview` key (never cached). */
+export async function getGuide(slug: string, preview: string | null = null): Promise<GuideDetail | null> {
+  if (!preview) return apiGetOrNull<GuideDetail>(`/content/guides/${slugSegment(slug)}/`);
+  if (fixturesEnabled()) return null;
+  const url = `${apiBase()}/content/guides/${slugSegment(slug)}/${queryString({ preview })}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(res.status, url);
+  return (await res.json()) as GuideDetail;
+}
+
+/** GET /content/lists/<slug>/ — curated list (ب۶). */
+export function getCuratedList(slug: string): Promise<CuratedListDetail | null> {
+  return apiGetOrNull<CuratedListDetail>(`/content/lists/${slugSegment(slug)}/`);
 }

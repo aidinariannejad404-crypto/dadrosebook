@@ -16,6 +16,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
 | Admin | Back office, step 1: dashboard (work queue, KPIs, goal metrics), sales report + CSV, staff roles, audit log, order print/CSV, quick price/stock edit, customer summary, admin session timeout (`apps.backoffice`, see `docs/admin-panel-summary.md`); step 2: returns/refunds (`orders.ReturnRequest`), staff SMS 2FA + admin IP allowlist, editable SMS templates (`core.SmsTemplate`), abandoned-cart reminders; next: shipment API (paid), formal invoices | 🚧 |
+| ب | SEO content hubs: `/exam`, `/subject`, `/author`, `/publisher` hubs, `/guide` (author + legal reviewer) and `/list` pages, indexability guardrail (thin hubs noindex + out of the sitemap), per-type sitemaps (see `docs/hubs-summary.md`) | ✅ |
 | 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements | ⏳ |
 | 4 | Secure ebook reader, reading progress, highlights | ⏳ |
@@ -132,6 +133,10 @@ Common: every model has `created_at`/`updated_at` (`TimeStampedModel`). Slugs ar
 |---|---|
 | **Banner** | placement (HERO / COURSE), title, subtitle, image, link_url, link_label, order, is_active |
 | **GuideVideo** | title, video_url, thumbnail, subject (null), exam_type (null), order, is_active — "کدام کتاب را بخوانم؟" |
+| **Guide** (ب۵) | title, slug, summary, intro/body (sanitised HTML), author/reviewer (FK Person), status DRAFT/PUBLISHED, published_at, updated_on, exam_types/subjects/books (M2M), preview_key |
+| **CuratedList** + **CuratedListItem** (ب۶) | title, slug, intro, ends_on, is_active, order; items: book, order, note |
+
+Hub fields (ب): ExamType/Subject `intro`, `intro_byline`, `intro_is_placeholder`; Publisher `intro`; Person `job_title`, `affiliation`, `same_as`.
 
 ### Later phases
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cache } from "react";
+import { Fragment, cache, type ReactNode } from "react";
 import {
   decodeSlug,
   fixturesEnabled,
@@ -19,7 +19,7 @@ import { bookJsonLd, breadcrumbJsonLd, serializeJsonLd } from "@/lib/jsonld";
 import { productDescription, productTitle } from "@/lib/product-meta";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { daysLeft, isLowTime, needsQuickReviewHint, pickExamEvent } from "@/lib/exam-time";
-import type { ExamTypeMini, StudyKit, SubjectWithCount } from "@/lib/types";
+import type { ExamTypeMini, PersonMini, StudyKit, SubjectWithCount } from "@/lib/types";
 import { isEmptyOffer } from "@/lib/courses";
 import { BookCover } from "@/components/book/BookCover";
 import { BookTilt } from "@/components/book/BookTilt";
@@ -159,9 +159,24 @@ export default async function ProductPage({ params }: { params: Params }) {
     breadcrumbJsonLd(crumbs.map((c) => ({ name: c.name, url: c.href ? `${siteUrl()}${c.href}` : url }))),
   ];
 
-  const join = (xs: { name: string }[]) => xs.map((x) => x.name).join("، ");
-  const facts: [string, string][] = [];
-  if (book.publisher) facts.push(["ناشر", book.publisher.name]);
+  // hubs (package ب): authors, translators and the publisher link to their pages
+  const personLinks = (xs: PersonMini[]) =>
+    xs.map((x, i) => (
+      <Fragment key={x.id}>
+        {i > 0 && "، "}
+        <Link prefetch={false} href={routes.author(x.slug)} className="text-primary underline-offset-4 hover:underline">
+          {x.name}
+        </Link>
+      </Fragment>
+    ));
+  const facts: [string, ReactNode][] = [];
+  if (book.publisher)
+    facts.push([
+      "ناشر",
+      <Link key="publisher" prefetch={false} href={routes.publisher(book.publisher.slug)} className="text-primary underline-offset-4 hover:underline">
+        {book.publisher.name}
+      </Link>,
+    ]);
   if (book.edition) facts.push(["ویرایش", book.edition]);
   if (book.volumes > 1) facts.push(["تعداد جلد", `${toPersianDigits(book.volumes)} جلد`]);
   if (book.pages) facts.push(["تعداد صفحات", `${formatNumber(book.pages)} صفحه`]);
@@ -369,13 +384,13 @@ export default async function ProductPage({ params }: { params: Params }) {
               {book.authors.length > 0 && (
                 <div className="flex gap-1">
                   <dt className="text-ink-muted">نویسنده:</dt>
-                  <dd className="font-bold text-ink">{join(book.authors)}</dd>
+                  <dd className="font-bold text-ink">{personLinks(book.authors)}</dd>
                 </div>
               )}
               {book.translators.length > 0 && (
                 <div className="flex gap-1">
                   <dt className="text-ink-muted">مترجم:</dt>
-                  <dd className="font-bold text-ink">{join(book.translators)}</dd>
+                  <dd className="font-bold text-ink">{personLinks(book.translators)}</dd>
                 </div>
               )}
             </dl>
