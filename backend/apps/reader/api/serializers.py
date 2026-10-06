@@ -80,6 +80,15 @@ class OfflineInfoSerializer(serializers.Serializer):
     license = OfflineLicenseSerializer(allow_null=True)
 
 
+class ProtectionSerializer(serializers.Serializer):
+    level = serializers.CharField()
+    trace_code = serializers.CharField()
+
+
+class CaptureEventSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=["print_screen", "shortcut", "multi_touch", "devtools"])
+
+
 class ReaderSessionSerializer(serializers.Serializer):
     book = ReaderBookSerializer()
     file = FileSerializer()
@@ -89,6 +98,7 @@ class ReaderSessionSerializer(serializers.Serializer):
     copy_quota = CopyQuotaSerializer()
     epub = EpubInfoSerializer(allow_null=True)
     offline = OfflineInfoSerializer(allow_null=True)
+    protection = ProtectionSerializer()
 
 
 class CopySerializer(serializers.Serializer):

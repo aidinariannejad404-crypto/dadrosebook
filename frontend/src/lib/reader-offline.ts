@@ -78,6 +78,7 @@ export function sessionFromOffline(
     copy_limit: pkg.copy_limit,
     epub: pkg.epub,
     copy_quota: state?.copy_quota ?? pkg.copy_quota ?? null,
+    protection: pkg.protection ?? null,
     offline: {
       max_books: 0,
       days: 0,

@@ -258,14 +258,72 @@ body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
   top: 0;
 }
 
-/* no printing of ebooks */
+/* no printing of ebooks: nothing of the book (pages, canvases, dialogs, overlays) reaches paper/PDF */
 @media print {
-  .reader-root {
+  .reader-root,
+  .reader-root *,
+  body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
     display: none !important;
   }
   .reader-print-block {
     display: block !important;
   }
+}
+
+/* ---------- Phase 6c: screen guard ----------
+ * ScreenGuard sets <html data-screen-guard="on"> synchronously in the event handler; no transition,
+ * so the next painted frame is white. The reader is visibility:hidden (top-layer dialogs inherit it). */
+.screen-guard-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 0;
+  width: 100%;
+  background: var(--guard-paper);
+  color: var(--guard-ink);
+  text-align: center;
+  cursor: pointer;
+  transition: none;
+}
+.screen-guard-overlay svg {
+  color: var(--guard-muted);
+}
+html[data-screen-guard="on"] .reader-root {
+  visibility: hidden;
+}
+html[data-screen-guard="on"] .reader-root .screen-guard-overlay {
+  display: flex;
+  visibility: visible;
+}
+html[data-screen-guard="on"] dialog::backdrop {
+  visibility: hidden;
+  background: transparent;
+}
+html[data-screen-guard="on"] body {
+  background: var(--guard-paper);
+}
+
+/* «high»: reading band — blurred, semi-opaque layers above and below the sharp band */
+.reading-band-mask {
+  z-index: 5;
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .reading-band-mask {
+    background: var(--color-surface);
+  }
+}
+.reading-band-edge {
+  z-index: 5;
+  border-block: 1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 /* ---------- Reader themes (UI refresh) ----------

@@ -37,9 +37,18 @@ class EbookFileForm(forms.ModelForm):
             "file",
             "version",
             "is_active",
+            "protection",
             "sample_enabled",
             "sample_pages",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Uploads that leave it out (scripts, older forms) keep the default level.
+        self.fields["protection"].required = False
+
+    def clean_protection(self):
+        return self.cleaned_data.get("protection") or EbookFile.Protection.STANDARD
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
@@ -70,10 +79,11 @@ class EbookFileAdmin(ModelAdmin):
         "version",
         "file_name",
         "file_size",
+        "protection",
         "is_active",
         "sample_enabled",
     )
-    list_filter = ("format", "is_active", "sample_enabled")
+    list_filter = ("format", "is_active", "protection", "sample_enabled")
     search_fields = ("book__title",)
     autocomplete_fields = ("book",)
     list_select_related = ("book",)

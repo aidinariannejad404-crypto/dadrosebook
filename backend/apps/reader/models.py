@@ -219,6 +219,7 @@ class ReaderAccessLog(models.Model):
         SEARCH = "search", "جستجو"
         EXPORT = "export", "خروجی یادداشت‌ها"
         OFFLINE = "offline", "بسته آفلاین"
+        CAPTURE = "capture", "تلاش برای اسکرین‌شات"
         DENIED = "denied", "رد دسترسی"
 
     user = models.ForeignKey(
@@ -434,3 +435,27 @@ class ProblemReport(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.get_kind_display()} — {self.book}"
+
+
+class ReaderTraceCode(models.Model):
+    """A short code drawn faintly on every page a user reads of a book.
+
+    It traces a leaked screenshot back to the account.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reader_trace_codes"
+    )
+    book = models.ForeignKey("catalog.Book", on_delete=models.CASCADE, related_name="+")
+    code = models.CharField("کد ردیابی", max_length=9, unique=True)
+    created_at = models.DateTimeField("زمان", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "کد ردیابی اسکرین‌شات"
+        verbose_name_plural = "کدهای ردیابی اسکرین‌شات"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "book"], name="reader_trace_user_book")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.code} — {self.user} — {self.book}"

@@ -246,6 +246,9 @@ READER_SAMPLE_RATE = env("READER_SAMPLE_RATE", default="120/hour")  # per IP
 READER_SAMPLE_FILE_RATE = env("READER_SAMPLE_FILE_RATE", default="30/hour")  # per IP
 READER_PROBLEM_RATE = env("READER_PROBLEM_RATE", default="10/day")
 
+# Screenshot attempts the reader reports (beyond this they are dropped, not refused).
+READER_CAPTURE_EVENT_RATE = env("READER_CAPTURE_EVENT_RATE", default="60/hour")
+
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL)

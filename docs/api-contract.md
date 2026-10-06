@@ -628,3 +628,26 @@ lists official holidays. Rules (`apps.orders.services.delivery`):
   "variant": { "id", "type", "type_label", "in_stock" } }]` — requests linked to the user or made with
   their phone; pending ones plus those notified in the last 30 days.
 * `DELETE /me/back-in-stock/<id>/` → 204 (pending → CANCELLED); 404 when not theirs or not pending.
+
+## Phase 6c: screenshot protection (best effort, free) (`apps.reader`)
+
+### Session additions (`GET /library/<slug>/read/`)
+```jsonc
+"protection": {
+  "level": "standard" | "high",     // per ebook file, set in the admin (default "standard")
+  "trace_code": "K7Q2-M9XD"         // per user+book, drawn faintly all over every page; staff look it up in the admin
+}
+```
+- **standard**: blank screen (white, with «برای ادامه مطالعه به صفحه برگردید») whenever the
+  window/tab is not focused or not visible (`blur`, `visibilitychange`, `pagehide`), while a
+  screenshot key combination is held (Meta/Win, Meta+Shift, Ctrl+Shift on ChromeOS, Alt+PrintScreen),
+  on `PrintScreen` (then overwrite the clipboard), on 3+ finger touches, and when the pointer leaves
+  the window on desktop. Visible watermark + dense faint trace-code watermark.
+- **high**: all of the above, plus «حالت نوار مطالعه»: only a band of a few lines around the reading
+  position is shown sharply; the rest of the page is blurred/hidden, so one screenshot holds at most a
+  few lines.
+
+### `POST /library/<slug>/capture-events/` body `{ "kind": "print_screen" | "shortcut" | "multi_touch" | "devtools" }` → `204`
+The reader reports each detected capture attempt (not plain blur/visibility changes). Logged as
+`ReaderAccessLog.kind = "capture"` with the kind in `detail`. Throttled 60/hour (extra calls are
+dropped silently with `204`).

@@ -5,6 +5,7 @@ import { isDeviceId, searchChapterTexts, uuidFromBytes } from "./reader-epub";
 import { EPUB_FIXTURE, EPUB_FIXTURE_SLUG, fixtureText } from "./reader-fixture-epub";
 import type {
   Bookmark,
+  CaptureEventKind,
   CopyQuota,
   CopyRecorded,
   EpubChapter,
@@ -343,8 +344,12 @@ function setFixtureLicenses(list: OfflineLicense[]): void {
   }
 }
 
+/** Phase 6c fixtures: these slugs open with protection level «high» (reading band). */
+export const HIGH_PROTECTION_FIXTURE_SLUGS = [`${EPUB_FIXTURE_SLUG}-high`, "pdf-sample-high"];
+export const FIXTURE_TRACE_CODE = "K7Q2-M9XD";
+
 function fixtureSession(slug: string): ReaderSession {
-  const epub = slug === EPUB_FIXTURE_SLUG;
+  const epub = slug === EPUB_FIXTURE_SLUG || slug === `${EPUB_FIXTURE_SLUG}-high`;
   return {
     book: {
       slug,
@@ -374,6 +379,10 @@ function fixtureSession(slug: string): ReaderSession {
           license: fixtureLicenses().find((l) => l.book === slug && l.device_label === "Chrome · Linux") ?? null,
         }
       : null,
+    protection: {
+      level: HIGH_PROTECTION_FIXTURE_SLUGS.includes(slug) ? "high" : "standard",
+      trace_code: FIXTURE_TRACE_CODE,
+    },
   };
 }
 
@@ -606,6 +615,7 @@ function fixtureOfflineGrant(slug: string): ReaderResult<OfflineGrant> {
       epub: EPUB_FIXTURE.info,
       chapters: EPUB_FIXTURE.chapters,
       watermark: session.watermark,
+      protection: session.protection ?? null,
       copy_limit: session.copy_limit,
       copy_quota: session.copy_quota,
     },
@@ -647,6 +657,21 @@ export function recordCopy(slug: string, chars: number): Promise<ReaderResult<Co
     return delay(ok({ limit: q.limit, used: q.used, granted }), 60);
   }
   return call<CopyRecorded>(`/${slugSegment(slug)}/copies/`, { method: "POST", body: JSON.stringify({ chars: n }) });
+}
+
+/* ---------- Phase 6c: screenshot protection ---------- */
+
+/**
+ * POST /library/<slug>/capture-events/ {kind} — report a detected capture attempt. Fire-and-forget:
+ * the answer (204, also when throttled) and any failure are ignored. Fixture mode: no-op.
+ */
+export function reportCaptureEvent(slug: string, kind: CaptureEventKind): void {
+  if (readerFixtureEnabled()) return;
+  void call<void>(`/${slugSegment(slug)}/capture-events/`, {
+    method: "POST",
+    body: JSON.stringify({ kind }),
+    keepalive: true,
+  }).catch(() => undefined);
 }
 
 /** Default name for an exported notebook when the server sends no usable Content-Disposition. */

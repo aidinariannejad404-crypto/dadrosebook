@@ -80,3 +80,9 @@ class ProblemReportThrottle(_SettingsRateThrottle):
     scope = "reader_problem"
     setting = "READER_PROBLEM_RATE"
     default = "10/day"
+
+
+class CaptureEventThrottle(_SettingsRateThrottle):
+    scope = "reader_capture"
+    setting = "READER_CAPTURE_EVENT_RATE"
+    default = "60/hour"

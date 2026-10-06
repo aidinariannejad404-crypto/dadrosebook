@@ -16,6 +16,7 @@ urlpatterns = [
     path("<str:slug>/epub/search/", views.SearchView.as_view(), name="epub-search"),
     path("<str:slug>/bookmarks/", views.BookmarkListView.as_view(), name="bookmarks"),
     path("<str:slug>/copies/", views.CopyView.as_view(), name="copies"),
+    path("<str:slug>/capture-events/", views.CaptureEventView.as_view(), name="capture-events"),
     path("<str:slug>/notes/export/", views.NotesExportView.as_view(), name="notes-export"),
     path("<str:slug>/offline/", views.OfflineView.as_view(), name="offline"),
     path("<str:slug>/bookmarks/<int:pk>/", views.BookmarkDetailView.as_view(), name="bookmark"),

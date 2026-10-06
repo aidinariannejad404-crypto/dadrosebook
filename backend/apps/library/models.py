@@ -43,6 +43,18 @@ class EbookFile(TimeStampedModel):
         "(هر ۱۲۰۰ نویسه). هرگز بیش از نیمی از کتاب نمایش داده نمی‌شود.",
     )
 
+    class Protection(models.TextChoices):
+        STANDARD = "standard", "استاندارد"
+        HIGH = "high", "بالا (نمایش فقط چند خط در هر لحظه)"
+
+    protection = models.CharField(
+        "سطح حفاظت در برابر اسکرین‌شات",
+        max_length=10,
+        choices=Protection.choices,
+        default=Protection.STANDARD,
+        help_text="در سطح «بالا» فقط نواری چندخطی از صفحه واضح دیده می‌شود.",
+    )
+
     class Meta:
         verbose_name = "فایل کتاب الکترونیک"
         verbose_name_plural = "فایل‌های کتاب الکترونیک"

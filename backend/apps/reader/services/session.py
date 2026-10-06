@@ -14,6 +14,7 @@ from ..models import EpubPackage
 from .access import NoEbook, active_file, require_access
 from .epub import ASSET_RE, get_package
 from .progress import get_progress
+from .protection import protection_info
 from .quota import quota
 from .signing import asset_url, signed_url, ttl_seconds
 
@@ -84,6 +85,7 @@ def reader_session(request, user, book: Book, device=None) -> dict:
         "copy_quota": quota(user, book),
         "epub": epub,
         "offline": offline_info(user, book, ebook, device),
+        "protection": protection_info(user, book, ebook),
     }
 
 
