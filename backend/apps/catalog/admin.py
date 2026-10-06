@@ -532,10 +532,37 @@ class BookVariantAdmin(ModelAdmin):
 
 class ExamEventForm(forms.ModelForm):
     date = JalaliDateField(label="تاریخ برگزاری (شمسی)", help_text="مثلاً ۱۴۰۵/۰۸/۱۴")
+    # --- ux stream (ج۵): registration window for «افزودن به تقویم» ---
+    registration_start = JalaliDateField(
+        label="شروع ثبت‌نام (شمسی)", required=False, help_text="اختیاری؛ مثلاً ۱۴۰۵/۰۶/۰۱"
+    )
+    registration_end = JalaliDateField(
+        label="پایان ثبت‌نام (شمسی)",
+        required=False,
+        help_text="اختیاری؛ با پرکردن هر دو، داوطلب می‌تواند مهلت ثبت‌نام را به تقویمش اضافه کند.",
+    )
 
     class Meta:
         model = ExamEvent
-        fields = ("name", "exam_type", "date", "is_active")
+        fields = (
+            "name",
+            "exam_type",
+            "date",
+            "registration_start",
+            "registration_end",
+            "is_active",
+        )
+
+    def clean(self):
+        data = super().clean()
+        start, end = data.get("registration_start"), data.get("registration_end")
+        if (start is None) != (end is None):
+            raise forms.ValidationError(
+                "شروع و پایان ثبت‌نام را با هم وارد کنید یا هر دو را خالی بگذارید."
+            )
+        if start and end and start > end:
+            raise forms.ValidationError("شروع ثبت‌نام باید پیش از پایان آن باشد.")
+        return data
 
 
 @admin.register(ExamEvent)

@@ -6,6 +6,7 @@ import { formatJalaliDate } from "@/lib/format";
 import { examCountdown } from "@/lib/countdown";
 import { orderKits } from "@/lib/kit";
 import type { ExamEvent, ExamTypeMini, StudyKit } from "@/lib/types";
+import { toCalendarEvent } from "@/lib/calendar";
 import { KitBuilder } from "@/components/kit/KitBuilder";
 // growth (و۳): shared kit links
 import { getSharedKit } from "@/lib/api";
@@ -88,7 +89,11 @@ export default async function KitPage({ searchParams }: { searchParams: SearchPa
         exam={exam}
         kits={orderKits(kits.filter((k) => k.items.length > 0))}
         subjectsParam={first(sp.s) ?? null}
-        event={next ? { name: next.name, date: next.date, dateLabel: formatJalaliDate(next.date) } : null}
+        event={
+          next
+            ? { name: next.name, date: next.date, dateLabel: formatJalaliDate(next.date), calendar: toCalendarEvent(next) }
+            : null
+        }
         serverNow={now}
       />
     </div>

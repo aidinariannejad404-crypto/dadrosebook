@@ -20,6 +20,7 @@ import type {
   KitRole,
   Paginated,
   SearchSuggestions,
+  SearchZeroState,
   SitemapData,
   StoreSettings,
   StudyPlan,
@@ -532,4 +533,33 @@ export async function getChangelog(): Promise<import("./platform-types").Changel
   if (fixturesEnabled()) return [];
   const page = await apiGet<Paginated<import("./platform-types").ChangelogEntry>>("/changelog/", 300);
   return page.results;
+}
+
+/* ---------- ux stream (ج۳ search zero state, ج۵ calendar) ---------- */
+
+/** GET /catalog/search/zero-state/?exam= — popular books + subject shortcuts for the empty search box. */
+export async function getSearchZeroState(exam: string | null, { fixtures = false } = {}): Promise<SearchZeroState | null> {
+  if (fixtures || fixturesEnabled()) {
+    const books = await fixtureBooks();
+    const home = await fixtureHome();
+    const pool = exam ? books.filter((b) => b.exam_types.some((e) => e.slug === exam)) : books;
+    return {
+      exam: home.exam_types.find((e) => e.slug === exam) ?? null,
+      popular: [...pool]
+        .sort((a, b) => (b.social_proof?.season_buyers ?? 0) - (a.social_proof?.season_buyers ?? 0))
+        .slice(0, 5)
+        .map((b) => ({ id: b.id, slug: b.slug, title: b.title })),
+      subjects: home.subjects.slice(0, 8).map(({ id, name, slug, color }) => ({ id, name, slug, color })),
+    };
+  }
+  const res = await fetch(`${apiBase()}/catalog/search/zero-state/${queryString({ exam })}`, {
+    headers: { Accept: "application/json" },
+  }).catch(() => null);
+  if (!res || !res.ok) return null;
+  return (await res.json()) as SearchZeroState;
+}
+
+/** Same-origin URL of an exam event's .ics (proxied to Django by the /api/v1 rewrite). */
+export function examEventIcsUrl(id: number, kind: "exam" | "registration" = "exam"): string {
+  return `/api/v1/catalog/exam-events/${id}/calendar.ics?kind=${kind}`;
 }

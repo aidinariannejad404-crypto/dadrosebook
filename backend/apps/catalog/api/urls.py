@@ -20,4 +20,11 @@ urlpatterns = [
     path("exam-events/", views.ExamEventListView.as_view(), name="exam-event-list"),
     path("courses/", views.CourseListView.as_view(), name="course-list"),
     path("study-kits/", views.StudyKitListView.as_view(), name="study-kit-list"),
+    # --- ux stream ---
+    path(
+        "exam-events/<int:pk>/calendar.ics",
+        views.ExamEventCalendarView.as_view(),
+        name="exam-event-ics",
+    ),
+    path("search/zero-state/", views.SearchZeroStateView.as_view(), name="search-zero-state"),
 ]

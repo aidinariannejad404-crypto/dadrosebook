@@ -865,3 +865,30 @@ export interface CuratedListDetail {
   book_count: number;
   entries: { book: BookCard; note: string }[];
 }
+
+/* ---------- ux stream (ج۳ search zero state, ج۵ add-to-calendar, ج۷ ebook facts) ---------- */
+
+export interface CalendarLinks {
+  google: string;
+}
+
+export interface ExamEvent {
+  /** ISO dates of the registration window (both set or both null) */
+  registration_start?: string | null;
+  registration_end?: string | null;
+  /** Google Calendar links; the .ics is `/api/v1/catalog/exam-events/<id>/calendar.ics?kind=` */
+  calendar?: { exam: CalendarLinks; registration: CalendarLinks | null };
+}
+
+export interface BookDetail {
+  /** active ebook file formats, EPUB first; [] when no file is uploaded yet */
+  ebook_formats?: ("EPUB" | "PDF")[];
+}
+
+/** GET /catalog/search/zero-state/?exam= */
+export interface SearchZeroState {
+  exam: ExamTypeMini | null;
+  /** best sellers for the exam (no query log yet) */
+  popular: { id: number; slug: string; title: string }[];
+  subjects: SubjectMini[];
+}

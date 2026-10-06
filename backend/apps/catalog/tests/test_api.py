@@ -26,7 +26,10 @@ BOOK_DETAIL_KEYS = BOOK_CARD_KEYS | {
     "intro_video_url", "variants", "related_courses", "course_offer", "kit_placements",
     "is_featured",
     "updated_at",
+    "ebook_formats",  # ux stream (ج۷)
 }  # fmt: skip
+# ux stream (ج۵ add-to-calendar)
+UX_EXAM_EVENT_KEYS = {"registration_start", "registration_end", "calendar"}
 VARIANT_KEYS = {
     "id", "type", "type_label", "price", "sale_price", "effective_price", "discount_percent",
     "in_stock", "stock", "price_is_placeholder", "bundle_saving",
@@ -273,7 +276,7 @@ def test_categories_tree_and_detail(api, catalog):
 def test_exam_events_upcoming_only(api, catalog):
     data = api.get("/api/v1/catalog/exam-events/").json()
     assert [e["name"] for e in data] == ["آزمون کانون وکلا ۱۴۰۵"]
-    assert set(data[0]) == {"id", "name", "date", "exam_type"}
+    assert set(data[0]) == {"id", "name", "date", "exam_type", *UX_EXAM_EVENT_KEYS}
     assert data[0]["date"] == "2099-11-05"
 
 

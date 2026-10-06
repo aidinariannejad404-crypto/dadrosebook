@@ -27,6 +27,8 @@ REVIEW_REQUEST = "review_request"
 # --- end retention stream ---
 # --- platform stream (PF-11): support ticket replies ---
 TICKET_REPLY = "ticket_reply"
+# --- ux stream: login code (WebOTP line is appended in code, never editable) ---
+OTP_LOGIN = "otp_login"
 
 KINDS: dict[str, SmsKind] = {
     k.key: k
@@ -97,6 +99,13 @@ KINDS: dict[str, SmsKind] = {
             "پاسخ به درخواست پشتیبانی",
             {"code": "کد پیگیری درخواست", "link": "لینک مشاهده پاسخ"},
             "دادرُز: درخواست پشتیبانی {code} پاسخ داده شد. مشاهده پاسخ: {link}",
+        ),
+        # --- ux stream ---
+        SmsKind(
+            OTP_LOGIN,
+            "کد ورود",
+            {"code": "کد یک‌بارمصرف"},
+            "کد ورود شما به دادرُز: {code}",
         ),
     )
 }

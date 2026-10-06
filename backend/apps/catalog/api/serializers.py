@@ -407,10 +407,13 @@ class BookDetailSerializer(BookCardSerializer):
     related_courses = serializers.SerializerMethodField()
     course_offer = serializers.SerializerMethodField()
     kit_placements = serializers.SerializerMethodField()
+    # --- ux stream (ج۷): file formats of the ebook edition, e.g. ["EPUB"] ---
+    ebook_formats = serializers.SerializerMethodField()
 
     class Meta(BookCardSerializer.Meta):
         fields = [
             *BookCardSerializer.Meta.fields,
+            "ebook_formats",
             "publisher",
             "translators",
             "categories",
@@ -457,6 +460,11 @@ class BookDetailSerializer(BookCardSerializer):
         offer = build_course_offer(obj, exam_type=self.context.get("exam_type"))
         return serialize_course_offer(offer, self.context)
 
+    def get_ebook_formats(self, obj: Book) -> list[str]:
+        """Active ebook file formats, EPUB first (reflowable reads better on phones)."""
+        formats = set(obj.ebook_files.filter(is_active=True).values_list("format", flat=True))
+        return [f for f in ("EPUB", "PDF") if f in formats]
+
     def get_kit_placements(self, obj: Book) -> list[dict]:
         placements = self.context.get("kit_placements", [])
         return KitPlacementSerializer(placements, many=True).data
@@ -492,10 +500,26 @@ class CategoryDetailSerializer(serializers.Serializer):
 
 class ExamEventSerializer(serializers.ModelSerializer):
     exam_type = ExamTypeMiniSerializer(read_only=True)
+    # --- ux stream (ج۵ add-to-calendar) ---
+    calendar = serializers.SerializerMethodField()
 
     class Meta:
         model = ExamEvent
-        fields = ["id", "name", "date", "exam_type"]
+        fields = [
+            "id",
+            "name",
+            "date",
+            "exam_type",
+            "registration_start",
+            "registration_end",
+            "calendar",
+        ]
+
+    def get_calendar(self, obj: ExamEvent) -> dict:
+        """Google Calendar links; the .ics lives at ``exam-events/<id>/calendar.ics?kind=``."""
+        from ..services.exam_calendar import calendar_links
+
+        return calendar_links(obj)
 
 
 class BannerSerializer(serializers.ModelSerializer):
@@ -597,3 +621,16 @@ def serialize_suggestions(data: dict, context: dict) -> dict:
         "categories": CategoryMiniSerializer(data["categories"], many=True).data,
         "authors": PersonMiniSerializer(data["authors"], many=True).data,
     }
+
+
+# --- ux stream: ج۳ search zero state ---
+class PopularBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ["id", "slug", "title"]
+
+
+class SearchZeroStateSerializer(serializers.Serializer):
+    exam = ExamTypeMiniSerializer(allow_null=True)
+    popular = PopularBookSerializer(many=True)
+    subjects = SubjectMiniSerializer(many=True)

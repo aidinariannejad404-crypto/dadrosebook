@@ -52,6 +52,15 @@ const config: Config = {
       maxWidth: {
         site: "80rem",
       },
+      // ux stream (ج۸): motion tokens from tokens.css
+      transitionDuration: {
+        fast: "var(--motion-fast)",
+        base: "var(--motion-base)",
+        slow: "var(--motion-slow)",
+      },
+      transitionTimingFunction: {
+        out: "var(--ease-out)",
+      },
     },
   },
   plugins: [],

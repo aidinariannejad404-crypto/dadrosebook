@@ -19,6 +19,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | Growth | Research package «و»: Torob API v3 + meta tags + Emalls feed, shareable kit links, gift by link, partner codes report, exam-calendar campaigns with auto-applied discount (`apps.growth`, see `docs/growth-summary.md`) | ✅ |
 | ب | SEO content hubs: `/exam`, `/subject`, `/author`, `/publisher` hubs, `/guide` (author + legal reviewer) and `/list` pages, indexability guardrail (thin hubs noindex + out of the sitemap), per-type sitemaps (see `docs/hubs-summary.md`) | ✅ |
 | Retention | `apps.study`: reading minutes + daily goal + gentle streak + «کارنامه مطالعه» (`/account/report`), time-left in reader and library forecast, living study plan (`/account/plan`), edition-upgrade discount + owner SMS, review prompts + review filters (see `docs/retention-summary.md`) | ✅ |
+| UX ج | Quick UX wins from the UX/SEO research: WebOTP, route skeletons, search zero state, undo on remove, add-to-calendar, guest wishlist, ebook price anchor, motion tokens, compare 2-3 books (see `docs/ux-quick-wins-summary.md`) | ✅ |
 | 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements | ⏳ |
 | 4 | Secure ebook reader, reading progress, highlights | ⏳ |

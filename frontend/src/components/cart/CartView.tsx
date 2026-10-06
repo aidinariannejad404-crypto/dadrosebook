@@ -6,11 +6,13 @@ import { useState } from "react";
 import type { Cart, CartIssue, CartItem } from "@/lib/types";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { routes } from "@/lib/config";
-import { track } from "@/lib/analytics";
+import { track, trackUndoRemove } from "@/lib/analytics";
 import { SHORT_LABEL } from "@/lib/variants";
 import { BookCover } from "@/components/book/BookCover";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { CartBodySkeleton } from "@/components/skeletons/RouteSkeletons";
+import { UndoRow } from "@/components/ui/UndoRow";
+import { useUndo } from "@/components/ui/useUndo";
 import { BoltIcon, BookOpenIcon, CartIcon, TruckIcon } from "@/components/ui/Icons";
 import { useCart } from "./CartProvider";
 // د۱ (impl/trust): warn when the customer already owns this format
@@ -30,21 +32,67 @@ function issueText(item: CartItem): string {
 
 /** Cart page body: lines, summary card, mobile sticky total, empty state. */
 export function CartView() {
-  const { cart } = useCart();
+  const { cart, add } = useCart();
+  // ج۴: a removed line stays as «حذف شد · بازگرداندن» for 6 s; undo re-adds the same variant × quantity.
+  const { store: undo, entries: removed } = useUndo<{ item: CartItem; index: number }>();
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<{ key: string; text: string } | null>(null);
 
   if (!cart) {
     return (
-      <div aria-busy="true" className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <div>
         <span className="sr-only">در حال بارگذاری سبد خرید…</span>
-        <div className="space-y-3">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-        <Skeleton className="h-56 w-full" />
+        <CartBodySkeleton />
       </div>
     );
   }
-  if (cart.items.length === 0) return <EmptyCart />;
+
+  async function restore(key: string) {
+    const entry = removed.find((e) => e.key === key);
+    if (!entry || restoring) return;
+    setRestoring(key);
+    setRestoreError(null);
+    const { item } = entry.value;
+    const r = await add(item.variant.id, item.quantity, "cart");
+    setRestoring(null);
+    if (r.ok) {
+      undo.undo(key);
+      trackUndoRemove("cart");
+    } else {
+      setRestoreError({ key, text: r.error.detail });
+    }
+  }
+
+  // Lines + undo placeholders at the position the line had.
+  const pending = removed.filter((e) => !cart.items.some((i) => i.variant.id === e.value.item.variant.id));
+  const rows: ({ kind: "line"; item: CartItem } | { kind: "undo"; key: string; item: CartItem })[] = cart.items.map(
+    (item) => ({ kind: "line", item }),
+  );
+  for (const e of [...pending].sort((a, b) => a.value.index - b.value.index)) {
+    rows.splice(Math.min(e.value.index, rows.length), 0, { kind: "undo", key: e.key, item: e.value.item });
+  }
+  const undoRow = (key: string, item: CartItem) => (
+    <UndoRow
+      key={`undo-${key}`}
+      as="li"
+      label={`«${item.book.title}» (${SHORT_LABEL[item.variant.type]})`}
+      removedText=" از سبد حذف شد."
+      onUndo={() => void restore(key)}
+      busy={restoring === key}
+      error={restoreError?.key === key ? restoreError.text : null}
+    />
+  );
+
+  if (cart.items.length === 0) {
+    return (
+      <>
+        {pending.length > 0 && (
+          <ul className="mx-auto mb-4 max-w-lg space-y-3">{pending.map((e) => undoRow(e.key, e.value.item))}</ul>
+        )}
+        <EmptyCart />
+      </>
+    );
+  }
 
   const hasEbook = cart.items.some((i) => i.variant.type !== "PRINT");
   return (
@@ -54,9 +102,19 @@ export function CartView() {
           کالاهای سبد
         </h2>
         <ul className="space-y-3">
-          {cart.items.map((item) => (
-            <CartLine key={item.id} item={item} />
-          ))}
+          {rows.map((row) =>
+            row.kind === "undo" ? (
+              undoRow(row.key, row.item)
+            ) : (
+              <CartLine
+                key={row.item.id}
+                item={row.item}
+                onRemoved={(item) =>
+                  undo.push(String(item.variant.id), { item, index: cart.items.findIndex((i) => i.id === item.id) })
+                }
+              />
+            ),
+          )}
         </ul>
         {hasEbook && (
           <p className="mt-3 flex items-start gap-2 rounded-control bg-success-soft px-3 py-2.5 text-sm leading-7 text-success">
@@ -100,7 +158,7 @@ function EmptyCart() {
   );
 }
 
-function CartLine({ item }: { item: CartItem }) {
+function CartLine({ item, onRemoved }: { item: CartItem; onRemoved: (item: CartItem) => void }) {
   const { update, remove } = useCart();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +191,13 @@ function CartLine({ item }: { item: CartItem }) {
             </h3>
             <button
               type="button"
-              onClick={() => void run(() => remove(item.id))}
+              onClick={() =>
+                void run(async () => {
+                  const r = await remove(item.id, { silent: true });
+                  if (r.ok) onRemoved(item);
+                  return r;
+                })
+              }
               disabled={busy}
               aria-label={`حذف ${label} از سبد`}
               className="-me-2 -mt-2 inline-flex min-h-11 shrink-0 items-center rounded-control px-2 text-sm font-bold text-danger hover:bg-danger-soft disabled:opacity-50"

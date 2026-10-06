@@ -42,6 +42,19 @@
   --radius-control: 0.625rem;
   --shadow-card: 0 1px 2px rgb(16 24 43 / 0.06), 0 4px 16px rgb(16 24 43 / 0.06);
   --shadow-raised: 0 8px 28px rgb(16 24 43 / 0.14);
+
+  /* motion (ux stream ج۸) — animate transform/opacity only; nothing over --motion-slow on a blocking path */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
 }
 
 /* ---------- Reader themes (UI refresh) ----------

@@ -17,6 +17,11 @@ import {
   trackViewItem,
   trackOwnedBookNotice,
   trackStartStudying,
+  trackAddToCalendar,
+  trackCompareOpen,
+  trackSearchZeroStateClick,
+  trackUndoRemove,
+  trackWishlistToggle,
   type AnalyticsDetail,
 } from "./analytics";
 
@@ -207,5 +212,22 @@ describe("typed helpers", () => {
     expect(mine.map((e) => e.event)).toEqual(["owned_book_notice", "start_studying_action"]);
     expect(mine[0]!.params).toEqual({ item_id: 7, formats: "PRINT,EBOOK", surface: "product" });
     expect(mine[1]!.params).toEqual({ action: "study_plan", transaction_id: "DR-1" });
+  });
+
+  it("ux stream helpers", () => {
+    trackSearchZeroStateClick("recent", null);
+    trackUndoRemove("cart");
+    trackAddToCalendar({ kind: "exam", via: "ics", exam_type: "vekalat", placement: "countdown" });
+    trackWishlistToggle({ item_id: 3, on: true, guest: true });
+    trackCompareOpen(2);
+    expect(domEvents.map((e) => e.event)).toEqual([
+      "search_zero_state_click",
+      "undo_remove",
+      "add_to_calendar",
+      "wishlist_toggle",
+      "compare_open",
+    ]);
+    expect(domEvents[0]!.params).toEqual({ kind: "recent" });
+    expect(domEvents[3]!.params).toEqual({ item_id: 3, on: true, guest: true });
   });
 });

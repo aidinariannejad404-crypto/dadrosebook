@@ -3,12 +3,15 @@
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { getSearchSuggestions } from "@/lib/api";
+import { getSearchSuggestions, getSearchZeroState } from "@/lib/api";
+import { trackSearchZeroStateClick } from "@/lib/analytics";
+import { examSlugFromCookieHeader } from "@/lib/exam-cookie";
+import { readRecent, rememberSearch, removeRecent, writeRecent } from "@/lib/recent-searches";
 import { routes } from "@/lib/config";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { PRICE_SOON } from "@/lib/variants";
-import type { SearchSuggestions } from "@/lib/types";
-import { SearchIcon } from "@/components/ui/Icons";
+import type { SearchSuggestions, SearchZeroState } from "@/lib/types";
+import { ClockIcon, SearchIcon } from "@/components/ui/Icons";
 
 interface SearchAutocompleteProps {
   /** USE_API_FIXTURES is server-only, so the server passes it down (local dev/tests only) */
@@ -16,23 +19,33 @@ interface SearchAutocompleteProps {
   className?: string;
 }
 
-type Section = "books" | "subjects" | "categories" | "authors" | "all";
+type Section = "books" | "subjects" | "categories" | "authors" | "all" | ZeroSection;
+/** ج۳ zero state (empty box, focused): recent terms, popular for my exam, subject shortcuts */
+type ZeroSection = "recent" | "popular" | "shortcuts";
 
 interface Option {
   id: string;
   section: Section;
   href: string;
   render: ReactNode;
+  /** recent-search term (deletable with the ✕ button or the Delete key) */
+  recent?: string;
 }
 
 const DEBOUNCE_MS = 200;
 const MIN_CHARS = 2;
 
-const SECTION_TITLES: Record<Exclude<Section, "all">, string> = {
+const SECTION_TITLES: Record<"books" | "subjects" | "categories" | "authors", string> = {
   books: "کتاب‌ها",
   subjects: "درس‌ها",
   categories: "دسته‌بندی‌ها",
   authors: "نویسندگان",
+};
+
+const ZERO_TITLES: Record<ZeroSection, string> = {
+  recent: "جستجوهای اخیر",
+  popular: "پرطرفدار",
+  shortcuts: "میان‌بر درس‌ها",
 };
 
 /**
@@ -53,8 +66,24 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
   const [loading, setLoading] = useState(false);
   const requestRef = useRef(0);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [recent, setRecent] = useState<string[]>([]);
+  const [zero, setZero] = useState<SearchZeroState | null>(null);
+  const [exam, setExam] = useState<string | null>(null);
+  const zeroRequested = useRef(false);
 
   const term = value.trim();
+  const zeroMode = term.length < MIN_CHARS;
+
+  // Zero state data: recent terms (this browser) every time the box opens; popular + subjects once.
+  useEffect(() => {
+    if (!open || !zeroMode) return;
+    setRecent(readRecent());
+    if (zeroRequested.current) return;
+    zeroRequested.current = true;
+    const slug = examSlugFromCookieHeader(document.cookie);
+    setExam(slug);
+    void getSearchZeroState(slug, { fixtures }).then((z) => setZero(z));
+  }, [open, zeroMode, fixtures]);
 
   // debounced fetch; stale responses are ignored
   useEffect(() => {
@@ -81,7 +110,10 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
     setActive(-1);
   }, [pathname]);
 
-  const groups = useMemo(() => buildGroups(data, uid), [data, uid]);
+  const groups = useMemo(
+    () => (zeroMode ? buildZeroGroups(recent, zero, uid) : buildGroups(data, uid)),
+    [zeroMode, recent, zero, data, uid],
+  );
   const options = useMemo<Option[]>(() => {
     const all = groups.flatMap((g) => g.options);
     if (term.length >= MIN_CHARS) {
@@ -100,14 +132,27 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
     return all;
   }, [groups, term, uid]);
 
-  const expanded = open && term.length >= MIN_CHARS && (options.length > 0 || loading);
+  const expanded = open && (zeroMode ? options.length > 0 : options.length > 0 || loading);
   const activeOption = expanded && active >= 0 ? options[active] : undefined;
   const resultCount = options.length - 1;
 
-  function go(href: string) {
+  function go(href: string, option?: Option) {
+    if (term.length >= MIN_CHARS) setRecent(rememberSearch(term));
+    else if (option?.recent) setRecent(rememberSearch(option.recent));
+    if (option && zeroMode && option.section !== "all") {
+      const kind = option.section === "recent" ? "recent" : option.section === "popular" ? "popular" : "subject";
+      trackSearchZeroStateClick(kind, exam);
+    }
     setOpen(false);
     setActive(-1);
     router.push(href);
+  }
+
+  function forget(termToRemove: string) {
+    const next = removeRecent(recent, termToRemove);
+    writeRecent(next);
+    setRecent(next);
+    setActive(-1);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -125,8 +170,11 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
     } else if (e.key === "Enter") {
       if (activeOption) {
         e.preventDefault();
-        go(activeOption.href);
+        go(activeOption.href, activeOption);
       }
+    } else if (e.key === "Delete" && activeOption?.recent) {
+      e.preventDefault();
+      forget(activeOption.recent);
     } else if (e.key === "Escape") {
       if (expanded) {
         e.preventDefault();
@@ -152,7 +200,7 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
     index += 1;
     const i = index;
     const selected = i === active;
-    return (
+    const option = (
       <div
         key={o.id}
         id={o.id}
@@ -160,12 +208,30 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
         aria-selected={selected}
         onMouseDown={(e) => e.preventDefault()}
         onMouseMove={() => setActive(i)}
-        onClick={() => go(o.href)}
-        className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-3 py-1.5 text-sm text-ink ${
+        onClick={() => go(o.href, o)}
+        className={`flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-control px-3 py-1.5 text-sm text-ink ${
           selected ? "bg-primary-soft outline outline-2 -outline-offset-2 outline-primary" : ""
         }`}
       >
         {o.render}
+      </div>
+    );
+    if (!o.recent) return option;
+    const t = o.recent;
+    // Pointer users get a ✕; keyboard users press Delete on the active option (hint below).
+    return (
+      <div key={o.id} role="presentation" className="flex items-center gap-1">
+        {option}
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => forget(t)}
+          aria-label={`حذف «${t}» از جستجوهای اخیر`}
+          className="press grid size-11 shrink-0 place-items-center rounded-control text-lg text-ink-muted hover:bg-danger-soft hover:text-danger"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
     );
   };
@@ -236,17 +302,17 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
           {groups.map((g) => (
             <div key={g.section} role="group" aria-labelledby={`${uid}-${g.section}`} className="mb-1">
               <div id={`${uid}-${g.section}`} role="presentation" className="px-3 pb-1 pt-2 text-xs font-extrabold text-ink-muted">
-                {SECTION_TITLES[g.section]}
+                {g.title ?? SECTION_TITLES[g.section as keyof typeof SECTION_TITLES]}
               </div>
               {g.options.map(renderOption)}
             </div>
           ))}
-          {loading && groups.length === 0 && (
+          {!zeroMode && loading && groups.length === 0 && (
             <div role="presentation" className="px-3 py-2 text-sm text-ink-muted">
               در حال جستجو…
             </div>
           )}
-          {!loading && data && groups.length === 0 && (
+          {!zeroMode && !loading && data && groups.length === 0 && (
             <div role="presentation" className="px-3 py-2 text-sm text-ink-muted">
               پیشنهادی پیدا نشد؛ Enter را بزنید تا همه نتایج را ببینید.
             </div>
@@ -260,16 +326,90 @@ export function SearchAutocomplete({ fixtures = false, className = "" }: SearchA
             ))}
         </div>
         <p className="sr-only" aria-live="polite">
-          {expanded && !loading && data ? `${toPersianDigits(Math.max(resultCount, 0))} پیشنهاد` : ""}
+          {expanded && zeroMode
+            ? `${toPersianDigits(options.length)} پیشنهاد${recent.length ? "؛ برای حذف یک جستجوی اخیر کلید Delete را بزنید" : ""}`
+            : expanded && !loading && data
+              ? `${toPersianDigits(Math.max(resultCount, 0))} پیشنهاد`
+              : ""}
         </p>
       </div>
     </form>
   );
 }
 
-function buildGroups(data: SearchSuggestions | null, uid: string): { section: Exclude<Section, "all">; options: Option[] }[] {
+interface Group {
+  section: Exclude<Section, "all">;
+  title?: string;
+  options: Option[];
+}
+
+/** ج۳: empty box → recent terms, popular books for the visitor's exam, subject shortcuts. */
+function buildZeroGroups(recent: string[], zero: SearchZeroState | null, uid: string): Group[] {
+  const groups: Group[] = [];
+  if (recent.length)
+    groups.push({
+      section: "recent",
+      title: ZERO_TITLES.recent,
+      options: recent.map((t, i) => ({
+        id: `${uid}-r-${i}`,
+        section: "recent",
+        href: routes.search({ q: t }),
+        recent: t,
+        render: (
+          <>
+            <ClockIcon size={16} className="shrink-0 text-ink-muted" />
+            <span className="min-w-0 truncate">{t}</span>
+          </>
+        ),
+      })),
+    });
+  if (zero?.popular.length)
+    groups.push({
+      section: "popular",
+      title: zero.exam ? `پرطرفدار برای ${zero.exam.short_name || zero.exam.name}` : ZERO_TITLES.popular,
+      options: zero.popular.map((b) => ({
+        id: `${uid}-p-${b.id}`,
+        section: "popular",
+        href: routes.product(b.slug),
+        render: (
+          <>
+            <TrendIcon />
+            <span className="min-w-0 truncate">{b.title}</span>
+          </>
+        ),
+      })),
+    });
+  if (zero?.subjects.length)
+    groups.push({
+      section: "shortcuts",
+      title: ZERO_TITLES.shortcuts,
+      options: zero.subjects.map((s) => ({
+        id: `${uid}-z-${s.id}`,
+        section: "shortcuts",
+        href: routes.search({ subject: s.slug }),
+        render: (
+          <>
+            <span aria-hidden="true" className="size-3 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+            <span className="min-w-0 truncate">{s.name}</span>
+          </>
+        ),
+      })),
+    });
+  return groups;
+}
+
+function TrendIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="shrink-0 -scale-x-100 text-accent-ink">
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </svg>
+  );
+}
+
+function buildGroups(data: SearchSuggestions | null, uid: string): Group[] {
   if (!data) return [];
-  const groups: { section: Exclude<Section, "all">; options: Option[] }[] = [];
+  const groups: Group[] = [];
   if (data.books.length)
     groups.push({
       section: "books",

@@ -45,6 +45,7 @@ import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/components/ui/Icons";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
+import { CompareToggle } from "@/components/compare/CompareToggle";
 import { getBookReviews } from "@/lib/reviews-api";
 import { UpgradeBanner } from "@/components/study/UpgradeBanner"; // retention stream (ه۲)
 
@@ -304,6 +305,8 @@ export default async function ProductPage({ params }: { params: Params }) {
         variants: book.variants,
       }}
       related={relatedRest.find((b) => b.in_stock) ?? null}
+      ebookFormats={book.ebook_formats ?? []}
+      pages={book.pages}
     >
       <div className="mx-auto max-w-site px-4 pt-2 md:pt-4">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
@@ -376,6 +379,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             <div className="flex items-start gap-2">
               <h1 className="min-w-0 flex-1 text-xl font-black leading-9 text-ink md:text-2xl md:leading-[2.75rem]">{book.title}</h1>
               <ShareButton url={url} title={book.title} text={`کتاب «${book.title}» در فروشگاه دادرُز`} className="shrink-0" />
+              <CompareToggle book={{ id: book.id, slug: book.slug, title: book.title }} variant="round" className="shrink-0" />
               <WishlistButton bookId={book.id} bookTitle={book.title} className="shrink-0" />
             </div>
             {book.subtitle && <p className="mt-1 text-ink-muted">{book.subtitle}</p>}

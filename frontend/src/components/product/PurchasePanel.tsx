@@ -13,6 +13,7 @@ import {
   purchasableEbook,
 } from "@/lib/variants";
 import { courseLink } from "@/lib/courses";
+import { ebookFacts, ebookSavingPercent } from "@/lib/ebook-facts";
 import { track } from "@/lib/analytics";
 import { routes } from "@/lib/config";
 import * as cartClient from "@/lib/cart-client";
@@ -57,6 +58,9 @@ interface PurchaseProviderProps {
   sheetBook?: SheetBook;
   /** a related book the sheet suggests when there is no format upgrade */
   related?: BookCard | null;
+  /** ج۷: ebook file formats (EPUB first) and the page count, shown on the ebook option */
+  ebookFormats?: string[];
+  pages?: number | null;
 }
 
 const DELIVERY_ICON: Record<VariantType, typeof TruckIcon> = {
@@ -236,7 +240,7 @@ function BuyAction({ compact, helperId }: { compact: boolean; helperId?: string 
         type="button"
         onClick={() => void addSelected()}
         aria-disabled={busy || undefined}
-        className={`inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:opacity-80 ${size}`}
+        className={`press inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-control bg-primary font-extrabold text-white hover:bg-primary-hover aria-disabled:opacity-80 ${size}`}
       >
         <CartIcon size={20} />
         {busy ? "در حال افزودن…" : "افزودن به سبد خرید"}
@@ -279,7 +283,7 @@ function tilePrice(v: Variant): { text: string; cls: string } {
  */
 export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const uid = useId();
-  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add } =
+  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add, ebookFormats, pages } =
     usePurchase();
 
   if (variants.length === 0) {
@@ -299,6 +303,9 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const showPrintOut = printOut && ebook != null;
   const showLowTime = Boolean(lowTime) && ebook != null && !ebookSelected && !showPrintOut;
   const saving = selected?.type === "BUNDLE" && !placeholder ? selected.bundle_saving : null;
+  const printVariant = variants.find((v) => v.type === "PRINT");
+  const ebookSaving = ebookSavingPercent(printVariant, variants.find((v) => v.type === "EBOOK"));
+  const facts = ebookSelected ? ebookFacts({ saving: ebookSaving, formats: ebookFormats, pages }) : [];
 
   return (
     <section aria-labelledby={`${uid}-title`} className="rounded-card bg-surface p-4 shadow-card md:p-5">
@@ -345,6 +352,11 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
                   {v.bundle_saving != null && !v.price_is_placeholder && (
                     <span className="mt-0.5 text-[0.6875rem] font-bold leading-4 text-success">
                       {formatNumber(v.bundle_saving)} تومان صرفه‌جویی
+                    </span>
+                  )}
+                  {v.type === "EBOOK" && ebookSaving != null && (
+                    <span className="mt-0.5 text-[0.6875rem] font-bold leading-4 text-success">
+                      {formatPercent(ebookSaving)} ارزان‌تر
                     </span>
                   )}
                 </span>
@@ -409,6 +421,20 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
           </p>
         )}
       </div>
+      {facts.length > 0 && (
+        <ul aria-label="درباره نسخه الکترونیک" className="mt-3 flex flex-wrap gap-1.5 text-xs font-bold">
+          {facts.map((f) => (
+            <li
+              key={f.key}
+              className={`inline-flex min-h-7 items-center rounded-full px-2.5 ${
+                f.key === "saving" ? "bg-success-soft text-success" : "bg-primary-soft text-primary"
+              }`}
+            >
+              {f.text}
+            </li>
+          ))}
+        </ul>
+      )}
       {lowStock && selected?.in_stock && !placeholder && (
         <p className="mt-2 text-xs font-bold text-danger">تنها {toPersianDigits(selected.stock ?? 0)} نسخه باقی مانده است</p>
       )}

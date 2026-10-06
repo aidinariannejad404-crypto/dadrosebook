@@ -19,6 +19,7 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { OnboardingSheet } from "@/components/platform/OnboardingSheet";
 import { PwaInstallListener } from "@/components/platform/PwaInstallListener";
 import { WhatsNewSheet } from "@/components/platform/WhatsNewSheet";
+import { CompareTray } from "@/components/compare/CompareTray";
 
 const vazirmatn = localFont({
   src: "../fonts/Vazirmatn-wght.woff2",
@@ -102,6 +103,7 @@ export default async function RootLayout({ children, topbar }: { children: React
             <Footer store={store} examTypes={browse.examTypes} />
           </HideOn>
           <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
+          <CompareTray />
           <Umami />
           <WebVitals />
           {/* platform stream: client-only sheets, rendered for logged-in visitors only */}
