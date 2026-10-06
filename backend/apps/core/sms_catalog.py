@@ -21,6 +21,10 @@ ORDER_SHIPPED = "order_shipped"
 BACK_IN_STOCK = "back_in_stock"
 ABANDONED_CART = "abandoned_cart"
 REFUND_DONE = "refund_done"
+# --- retention stream (apps.study): edition upgrades and review prompts ---
+EDITION_UPGRADE = "edition_upgrade"
+REVIEW_REQUEST = "review_request"
+# --- end retention stream ---
 
 KINDS: dict[str, SmsKind] = {
     k.key: k
@@ -62,5 +66,28 @@ KINDS: dict[str, SmsKind] = {
             "مبلغ {amount} بابت سفارش {order} به شما بازگردانده شد. شماره پیگیری: {reference}"
             "\nدادرُز",
         ),
+        # --- retention stream (apps.study) ---
+        SmsKind(
+            EDITION_UPGRADE,
+            "ویرایش جدید برای دارندگان ویرایش قبلی",
+            {
+                "book": "نام کتاب",
+                "edition": "ویرایش جدید (مثلاً ویرایش ۱۴۰۵)",
+                "old_edition": "ویرایشی که مشتری دارد",
+                "percent": "درصد تخفیف ارتقا",
+                "link": "لینک صفحه کتاب",
+            },
+            "دادرُز: {edition} «{book}» آمد. شما {old_edition} را دارید؛ ارتقا با {percent}٪ "
+            "تخفیف: {link}\nلغو۱۱",
+            marketing=True,
+        ),
+        SmsKind(
+            REVIEW_REQUEST,
+            "درخواست نظر درباره کتاب",
+            {"book": "نام کتاب", "exam": "آزمون مشتری (اگر معلوم باشد)", "link": "لینک ثبت نظر"},
+            "دادرُز: «{book}» برای آزمون شما چقدر کمک کرد؟ با یک لمس امتیاز بدهید: {link}\nلغو۱۱",
+            marketing=True,
+        ),
+        # --- end retention stream ---
     )
 }

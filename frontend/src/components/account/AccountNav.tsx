@@ -8,7 +8,9 @@ import { accountRoutes } from "@/lib/account-routes";
 import {
   BadgeIcon,
   BookOpenIcon,
+  CalendarIcon,
   ChatIcon,
+  ClockIcon,
   DevicesIcon,
   GridIcon,
   HeartIcon,
@@ -22,6 +24,10 @@ const ITEMS = [
   { href: accountRoutes.readiness, label: "آمادگی من", Icon: BadgeIcon }, // د۴ (impl/trust)
   { href: accountRoutes.orders, label: "سفارش‌ها", Icon: PackageIcon },
   { href: accountRoutes.library, label: "کتابخانه من", Icon: BookOpenIcon },
+  // --- retention stream ---
+  { href: accountRoutes.plan, label: "برنامه مطالعه", Icon: CalendarIcon },
+  { href: accountRoutes.report, label: "کارنامه مطالعه", Icon: ClockIcon },
+  // --- end retention stream ---
   { href: accountRoutes.devices, label: "دستگاه‌های من", Icon: DevicesIcon },
   { href: accountRoutes.addresses, label: "نشانی‌ها", Icon: MapPinIcon },
   { href: accountRoutes.wishlist, label: "علاقه‌مندی‌ها", Icon: HeartIcon },

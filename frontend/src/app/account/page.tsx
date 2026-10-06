@@ -15,6 +15,7 @@ import { BookOpenIcon, ChatIcon, ChevronIcon, HeartIcon, MapPinIcon, PackageIcon
 import type { Readiness } from "@/lib/trust-types";
 import { selectedExamSlug } from "@/lib/exam-server";
 import { ReadinessHeadline } from "@/components/trust/ReadinessDashboard";
+import { StudyDashboard } from "@/components/study/StudyDashboard"; // retention stream
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "پیشخوان", robots: { index: false, follow: false } };
@@ -71,6 +72,10 @@ export default async function AccountDashboard() {
       {readiness && readiness.total_subjects > 0 && <ReadinessHeadline data={readiness} link />}
 
       {reading && <ContinueReading entry={reading} />}
+
+      {/* --- retention stream: minutes/goal/streak, plan «امروز», review prompt --- */}
+      <StudyDashboard readable={(library ?? []).filter((e) => e.can_read).map((e) => e.book.slug)} />
+      {/* --- end retention stream --- */}
 
       {pending > 0 && (
         <p className="rounded-control bg-warning-soft px-4 py-3 text-sm font-bold leading-7 text-warning">

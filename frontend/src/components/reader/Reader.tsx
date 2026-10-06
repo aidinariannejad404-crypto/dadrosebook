@@ -40,6 +40,11 @@ import { useCopyQuota } from "./useCopyQuota";
 import type { OfflineStart } from "./useOfflineBook";
 import { PURGE_ERRORS, openOfflineBook, purgeOfflineBook } from "@/lib/reader-offline";
 import { registerReaderSw } from "@/lib/reader-sw";
+// --- retention stream (ه۳/ه۴): active-reading heartbeat, goal and time left ---
+import { ReaderStudyBar } from "@/components/study/ReaderStudyBar";
+import { pdfChapterStarts } from "@/components/study/pdf-chapters";
+import { chapterEndFor } from "@/lib/study";
+// --- end retention stream ---
 
 type State =
   | { status: "loading" }
@@ -111,6 +116,7 @@ export function Reader({ slug }: { slug: string }) {
   const [notice, setNotice] = useState("");
   const [pageInput, setPageInput] = useState("");
   const [theme, setThemeState] = useState<ReaderTheme>("light");
+  const [chapterStarts, setChapterStarts] = useState<number[]>([]); // retention stream
 
   useEffect(() => {
     setThemeState(initialReaderTheme());
@@ -193,6 +199,20 @@ export function Reader({ slug }: { slug: string }) {
       if (opened) void opened.destroy();
     };
   }, [slug, attempt]);
+
+  // --- retention stream: chapter boundaries from the PDF outline (for «تا پایان فصل») ---
+  const readyDoc = state.status === "ready" ? state.doc : null;
+  useEffect(() => {
+    if (!readyDoc) return;
+    let cancelled = false;
+    void pdfChapterStarts(readyDoc).then((starts) => {
+      if (!cancelled) setChapterStarts(starts);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [readyDoc]);
+  // --- end retention stream ---
 
   /* ---------- stage width (fit to width) ---------- */
   useEffect(() => {
@@ -576,6 +596,11 @@ export function Reader({ slug }: { slug: string }) {
 
       {/* bottom bar */}
       <nav aria-label="پیمایش صفحات" className="pb-safe border-t border-line bg-surface">
+        {/* --- retention stream: today's minutes + time left in the chapter --- */}
+        <div className="mx-auto max-w-3xl border-b border-line px-2 sm:px-4">
+          <ReaderStudyBar slug={slug} page={page} totalPages={total} chapterEnd={chapterEndFor(chapterStarts, page, total)} />
+        </div>
+        {/* --- end retention stream --- */}
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 px-2 py-1.5 sm:px-4">
           <button
             type="button"

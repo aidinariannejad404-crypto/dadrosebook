@@ -12,6 +12,10 @@ export const accountRoutes = {
   reviews: "/account/reviews",
   /** د۴ (impl/trust): readiness dashboard + «خبرم کن» list. */
   readiness: "/account/readiness",
+  // --- retention stream: «کارنامه مطالعه» and the living study plan ---
+  report: "/account/report",
+  plan: "/account/plan",
+  // --- end retention stream ---
   /** Phase 4 reader. */
   read: (slug: string) => `/read/${encodeURIComponent(slug)}`,
   /** Login with a return path (only same-site absolute paths are kept). */

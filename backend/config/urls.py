@@ -28,6 +28,7 @@ api_v1 = [
     path("", include("apps.studyhub.api.urls")),
     # hubs, guides and curated lists (package ب, impl/hubs)
     path("content/", include("apps.content.api.urls")),
+    path("study/", include("apps.study.api.urls")),  # retention stream
 ]
 
 urlpatterns = [

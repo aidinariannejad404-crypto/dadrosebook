@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.seo",
     "apps.growth",  # growth loops: Torob feed, kit links, gifts, partners, campaigns
     "apps.studyhub",  # impl/trust: د۳/د۴ start-studying, readiness, reminder consent
+    "apps.study",  # retention stream: minutes, streak, living plan, edition upgrade, review loop
     "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 
@@ -249,7 +250,22 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.cart.tasks.send_abandoned_cart_reminders",
         "schedule": 30 * 60.0,
     },
+    # --- retention stream (apps.study) ---
+    "study-review-prompts": {  # idempotent: one prompt per user/book, one SMS per prompt
+        "task": "apps.study.tasks.review_prompts",
+        "schedule": 6 * 3600.0,
+    },
+    # --- end retention stream ---
 }
+
+# --- retention stream (apps.study) -------------------------------------------------------------
+# «این کتاب برای آزمون شما چقدر کمک کرد؟» N days after delivery (or 90% read).
+REVIEW_PROMPT_DELAY_DAYS = env.int("REVIEW_PROMPT_DELAY_DAYS", default=10)
+# Also text the prompt (once per prompt, at most one SMS a week per customer).
+REVIEW_PROMPT_SMS_ENABLED = env.bool("REVIEW_PROMPT_SMS_ENABLED", default=False)
+# Reader heartbeats (one every 30 s while reading actively).
+STUDY_HEARTBEAT_RATE = env("STUDY_HEARTBEAT_RATE", default="6/min")
+# --- end retention stream ---
 
 # --- integrations -------------------------------------------------------------------------------
 SMS_PROVIDER = env("SMS_PROVIDER", default="console")
@@ -481,6 +497,12 @@ UNFOLD = {
                         WQ + "reviews_badge",
                     ),
                     _nav("سرنخ‌ها (برنامه مطالعه)", "contact_phone", "leads_lead"),
+                    # --- retention stream (apps.study) ---
+                    _nav("ارتقای ویرایش", "upgrade", "study_editionlink"),
+                    _nav("درخواست‌های نظر", "reviews", "study_reviewprompt"),
+                    _nav("برنامه‌های مطالعه کاربران", "event_note", "study_studyplan"),
+                    _nav("روزهای مطالعه", "timer", "study_readingday"),
+                    # --- end retention stream ---
                     _nav("علاقه‌مندی‌ها", "favorite", "wishlist_wishlistitem"),
                     _nav("نشانی‌ها", "home_pin", "orders_address"),
                 ],

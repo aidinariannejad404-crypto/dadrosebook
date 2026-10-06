@@ -33,6 +33,7 @@ def test_get_public_shows_approved_only(api, book, user, other_user):
         "average": None,
         "count": 1,
         "distribution": {"5": 1, "4": 0, "3": 0, "2": 0, "1": 0},
+        "exam_types": [],
     }
     (item,) = data["results"]
     assert item["author"] == "علی ر."

@@ -134,6 +134,7 @@ def test_quote_endpoint_anonymous(api, books, methods):
         "free_shipping_remaining",
         "ebook_now",
         "problems",
+        "upgrade_discount_total",  # retention stream (edition upgrade)
     }
 
 

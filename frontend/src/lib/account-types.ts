@@ -96,6 +96,9 @@ export interface QuoteLine {
   line_total: number;
   in_stock: boolean;
   available_quantity: number | null;
+  /** retention stream (ه۲): edition-upgrade discount on one unit, already in line_total */
+  upgrade_discount?: number;
+  upgrade_label?: string;
 }
 
 export interface Quote {
@@ -216,6 +219,8 @@ export interface ReviewSummary {
   average: number | null;
   count: number;
   distribution: Record<"1" | "2" | "3" | "4" | "5", number>;
+  /** retention stream (ه۷): approved reviews per exam, for the filter chips */
+  exam_types?: { slug: string; name: string; short_name: string; count: number }[];
 }
 
 export interface BookReviews {

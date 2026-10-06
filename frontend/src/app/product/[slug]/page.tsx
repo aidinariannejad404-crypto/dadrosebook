@@ -46,6 +46,7 @@ import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/co
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { getBookReviews } from "@/lib/reviews-api";
+import { UpgradeBanner } from "@/components/study/UpgradeBanner"; // retention stream (ه۲)
 
 type Params = Promise<{ slug: string }>;
 
@@ -401,6 +402,9 @@ export default async function ProductPage({ params }: { params: Params }) {
                 <SubjectTag key={s.id} subject={s} link size="md" />
               ))}
             </div>
+            {/* --- retention stream (ه۲): edition upgrade offer for owners of the old edition --- */}
+            <UpgradeBanner slug={book.slug} className="mt-4" />
+            {/* --- end retention stream --- */}
             </div>
 
             {/* buy box sits in the info column on phones/tablet, in its own column on desktop */}
