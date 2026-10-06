@@ -24,6 +24,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | Reader+ | Annotations re-anchored across ebook file versions, free sample in the real reader, free statute ebooks + «شرح این ماده», in-reader problem reports, quote image cards | ✅ |
 | Platform | Lessons from Taaghche/Fidibo features: onboarding study profile, library tab + continue reading, inbox + notification preferences, support tickets, OTP help/voice hook, PWA install, reader fonts, crypto-key guard, changelog (`apps.inbox`, `apps.support`) | ✅ |
 | UX/SEO integration | All branches above merged on `claude/project-thread-j6j21e`; summary in `docs/ux-seo-implementation-summary.md` | ✅ (owner decisions pending) |
+| Integration | 2026-10-06: every branch (PRs #1–#9, incl. the screenshot protection on #8 and the Phase 2 summary) merged into `main` via `claude/integrate-all-f2e1yk`; migrations linear, 1402 backend + 558 frontend tests, lint, typecheck, `next build` and `docker compose up` all green. Nothing deployed. | ✅ |
 
 ---
 
