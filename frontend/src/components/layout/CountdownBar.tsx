@@ -46,8 +46,8 @@ export function CountdownBar({ examName, examDate, examDateLabel, serverNow, cal
             <span className="text-white/80"> · {examDateLabel}</span>
           </span>
         </p>
-        <p className="flex items-center gap-2" aria-live="off">
-          <span className="text-white/85">زمان باقی‌مانده:</span>
+        <div className="flex items-center gap-2" aria-live="off">
+          <span className="whitespace-nowrap text-white/85">زمان باقی‌مانده:</span>
           <span className="rounded-md bg-accent px-2 py-0.5 font-extrabold text-ink">
             {toPersianDigits(days)} روز
           </span>
@@ -55,8 +55,8 @@ export function CountdownBar({ examName, examDate, examDateLabel, serverNow, cal
           <Link prefetch={false} href="/kit" className="hidden min-h-11 items-center px-2 font-bold text-accent underline-offset-4 hover:underline md:inline-flex">
             بسته مطالعاتی آزمون
           </Link>
-          {calendar && <AddToCalendar event={calendar} placement="countdown" tone="dark" />}
-        </p>
+          {calendar && <AddToCalendar event={calendar} placement="countdown" tone="dark" compact />}
+        </div>
       </div>
     </div>
   );

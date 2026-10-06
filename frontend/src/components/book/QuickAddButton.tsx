@@ -49,7 +49,8 @@ export function QuickAddButton({ variantId, bookId, bookTitle, price, format, cl
       onClick={add}
       aria-label={added ? `${bookTitle} به سبد خرید اضافه شد` : `افزودن ${bookTitle} به سبد خرید`}
       aria-busy={state === "busy" || undefined}
-      className={`press relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors ${
+      // `relative` only when the caller does not position it: with both, Tailwind's `relative` wins over `absolute`
+      className={`press ${/\babsolute\b/.test(className) ? "" : "relative "}z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors ${
         added ? "bg-success text-white" : "bg-primary text-white hover:bg-primary-hover"
       } disabled:opacity-60 ${className}`}
     >

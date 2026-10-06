@@ -365,9 +365,9 @@ export default async function ProductPage({ params }: { params: Params }) {
             <div className="flex items-start gap-2">
               <h1 className="min-w-0 flex-1 text-xl font-black leading-9 text-ink md:text-2xl md:leading-[2.75rem]">{book.title}</h1>
               <ShareButton url={url} title={book.title} text={`کتاب «${book.title}» در فروشگاه دادرُز`} className="shrink-0" />
+              <CompareToggle book={{ id: book.id, slug: book.slug, title: book.title }} variant="round" className="shrink-0" />
               <WishlistButton bookId={book.id} bookTitle={book.title} className="shrink-0" />
             </div>
-            <CompareToggle book={{ id: book.id, slug: book.slug, title: book.title }} variant="button" className="mt-2 inline-flex" />
             {book.subtitle && <p className="mt-1 text-ink-muted">{book.subtitle}</p>}
             <dl className="mt-3 space-y-1 text-sm">
               {book.authors.length > 0 && (

@@ -17,8 +17,8 @@ export function CompareIcon({ size = 20 }: { size?: number }) {
 
 interface CompareToggleProps {
   book: CompareItem;
-  /** "icon": round overlay on cards; "button": labelled button (product page) */
-  variant?: "icon" | "button";
+  /** "icon": round overlay on cards; "round": outlined, next to the product page heart; "button": labelled */
+  variant?: "icon" | "round" | "button";
   className?: string;
 }
 
@@ -42,15 +42,19 @@ export function CompareToggle({ book, variant = "icon", className = "" }: Compar
   const label = on ? `برداشتن «${book.title}» از مقایسه` : `افزودن «${book.title}» به مقایسه`;
   return (
     <span className={className}>
-      {variant === "icon" ? (
+      {variant !== "button" ? (
         <button
           type="button"
           onClick={onClick}
           aria-pressed={on}
           aria-label={label}
           title={on ? "در فهرست مقایسه" : "مقایسه"}
-          className={`press inline-flex size-11 items-center justify-center rounded-full shadow-card ${
-            on ? "bg-primary text-white" : "bg-surface text-ink-muted hover:text-primary"
+          className={`press inline-flex size-11 items-center justify-center rounded-full ${
+            variant === "round" ? "border" : "shadow-card"
+          } ${
+            on
+              ? "border-primary bg-primary text-white"
+              : "border-line-strong bg-surface text-ink-muted hover:text-primary"
           }`}
         >
           <CompareIcon size={20} />

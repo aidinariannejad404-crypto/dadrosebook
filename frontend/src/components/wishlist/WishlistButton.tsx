@@ -158,7 +158,8 @@ export function WishlistButton({ bookId, bookTitle, className = "", showLabel = 
   const label = on ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها";
 
   return (
-    <span className={`relative inline-flex flex-col items-center ${className}`}>
+    // `relative` anchors the guest hint, unless the caller already positions the heart (cards: absolute)
+    <span className={`${/\babsolute\b/.test(className) ? "" : "relative "}inline-flex flex-col items-center ${className}`}>
       <button
         type="button"
         onClick={toggle}

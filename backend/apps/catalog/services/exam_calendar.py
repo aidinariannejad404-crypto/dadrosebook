@@ -6,7 +6,7 @@ titles and descriptions are Persian and carry the Jalali date so the reminder re
 """
 
 from datetime import UTC, date, datetime, timedelta
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from django.conf import settings
 
@@ -57,7 +57,7 @@ def _site_url() -> str:
 
 def entry(event: ExamEvent, kind: str = EXAM) -> dict:
     """Title, description and the all-day ``[start, end)`` range for one calendar entry."""
-    kit = f"{_site_url()}/kit?exam={event.exam_type.slug}" if _site_url() else ""
+    kit = f"{_site_url()}/kit?exam={quote(event.exam_type.slug)}" if _site_url() else ""
     if kind == REGISTRATION:
         start, last = event.registration_start, event.registration_end
         if start is None or last is None:

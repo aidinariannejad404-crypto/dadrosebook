@@ -13,6 +13,8 @@ interface AddToCalendarProps {
   placement: string;
   /** light text on the navy countdown bar */
   tone?: "dark" | "light";
+  /** phones: icon + «تقویم» only (the countdown bar is narrow) */
+  compact?: boolean;
   className?: string;
 }
 
@@ -20,7 +22,7 @@ interface AddToCalendarProps {
  * «افزودن به تقویم» (ج۵): a small menu with the exam day and, when known, the registration window,
  * each as an .ics download (iPhone / Android calendar apps) or a Google Calendar link.
  */
-export function AddToCalendar({ event, placement, tone = "light", className = "" }: AddToCalendarProps) {
+export function AddToCalendar({ event, placement, tone = "light", compact = false, className = "" }: AddToCalendarProps) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const wrap = useRef<HTMLDivElement>(null);
@@ -77,10 +79,19 @@ export function AddToCalendar({ event, placement, tone = "light", className = ""
         aria-expanded={open}
         aria-controls={`${id}-menu`}
         onClick={() => setOpen((o) => !o)}
-        className={`press inline-flex min-h-11 items-center gap-1.5 rounded-control px-3 text-sm font-bold ${trigger}`}
+        className={`press inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-control px-3 text-sm font-bold ${trigger}`}
       >
         <CalendarIcon size={18} className="shrink-0" />
-        افزودن به تقویم
+        {compact ? (
+          <>
+            <span className="sm:hidden" aria-hidden="true">
+              تقویم
+            </span>
+            <span className="sr-only sm:not-sr-only">افزودن به تقویم</span>
+          </>
+        ) : (
+          "افزودن به تقویم"
+        )}
       </button>
       <div
         id={`${id}-menu`}
