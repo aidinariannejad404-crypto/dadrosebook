@@ -73,6 +73,7 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
         <CardActions
           bookId={book.id}
           bookTitle={book.title}
+          bookSlug={book.slug}
           quickAdd={quickAdd ?? null}
           price={book.card_price}
           format={book.card_format}

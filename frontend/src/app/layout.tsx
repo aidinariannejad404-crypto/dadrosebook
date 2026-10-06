@@ -14,6 +14,7 @@ import { HideOn } from "@/components/layout/HideOn";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { CheckoutFooter, CheckoutHeader } from "@/components/layout/CheckoutChrome";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { CompareTray } from "@/components/compare/CompareTray";
 
 const vazirmatn = localFont({
   src: "../fonts/Vazirmatn-wght.woff2",
@@ -97,6 +98,7 @@ export default async function RootLayout({ children, topbar }: { children: React
             <Footer store={store} />
           </HideOn>
           <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
+          <CompareTray />
           <Umami />
         </CartProvider>
       </body>

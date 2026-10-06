@@ -44,6 +44,7 @@ import { StudyPlanCta } from "@/components/plan/StudyPlanCta";
 import { BookOpenIcon, CheckIcon, ClockIcon, DownloadIcon, PlayIcon } from "@/components/ui/Icons";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
+import { CompareToggle } from "@/components/compare/CompareToggle";
 import { getBookReviews } from "@/lib/reviews-api";
 import { aggregateRating } from "@/lib/reviews";
 
@@ -366,6 +367,7 @@ export default async function ProductPage({ params }: { params: Params }) {
               <ShareButton url={url} title={book.title} text={`کتاب «${book.title}» در فروشگاه دادرُز`} className="shrink-0" />
               <WishlistButton bookId={book.id} bookTitle={book.title} className="shrink-0" />
             </div>
+            <CompareToggle book={{ id: book.id, slug: book.slug, title: book.title }} variant="button" className="mt-2 inline-flex" />
             {book.subtitle && <p className="mt-1 text-ink-muted">{book.subtitle}</p>}
             <dl className="mt-3 space-y-1 text-sm">
               {book.authors.length > 0 && (
