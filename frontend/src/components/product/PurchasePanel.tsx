@@ -19,6 +19,10 @@ import * as cartClient from "@/lib/cart-client";
 import { policyRoutes, RETURN_WINDOW_DAYS } from "@/lib/content/policies";
 import { useCart } from "@/components/cart/CartProvider";
 import { AddedToCartSheet, type AddedState, type SheetBook } from "./AddedToCartSheet";
+// package د (impl/trust): ownership banner, duplicate warning, delivery date promise
+import { OwnedBanner } from "@/components/trust/OwnedBanner";
+import { DuplicateNotice } from "@/components/trust/DuplicateNotice";
+import { DeliveryPromise } from "@/components/trust/DeliveryPromise";
 import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { TrackedLink } from "@/components/ui/TrackedLink";
 import {
@@ -275,7 +279,7 @@ function tilePrice(v: Variant): { text: string; cls: string } {
  */
 export function PurchasePanel({ footer }: { footer?: ReactNode }) {
   const uid = useId();
-  const { bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add } =
+  const { bookId, bookSlug, courseTeaser, courseTeaserNote, variants, course, selected, select, wantsCourse, setWantsCourse, store, examLine, lowTime, ebook, printOut, add } =
     usePurchase();
 
   if (variants.length === 0) {
@@ -301,6 +305,8 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
       <h2 id={`${uid}-title`} className="sr-only">
         خرید کتاب
       </h2>
+
+      {bookSlug && <OwnedBanner bookId={bookId} slug={bookSlug} className="mb-4" />}
 
       {showPrintOut && (
         <div className="mb-4 rounded-control bg-success-soft px-3 py-2.5 text-sm leading-7 text-success">
@@ -416,11 +422,29 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
       {selected && (
         <div className="mt-4 flex items-start gap-2 rounded-control bg-bg px-3 py-2.5 text-[0.8125rem] leading-6 text-ink">
           <DeliveryIcon size={20} className="mt-0.5 shrink-0 text-primary" />
-          <ul className="space-y-0.5">
-            {deliveryLines(selected.type, store).map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+          <div className="min-w-0 flex-1">
+            <ul className="space-y-0.5">
+              {deliveryLines(selected.type, store).map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <DeliveryPromise
+              type={selected.type}
+              surface="product"
+              className="mt-1.5"
+              clashAction={
+                ebook && !ebookSelected ? (
+                  <button
+                    type="button"
+                    onClick={() => select(ebook.id)}
+                    className="inline-flex min-h-11 items-center font-extrabold underline underline-offset-4"
+                  >
+                    انتخاب نسخه الکترونیک
+                  </button>
+                ) : null
+              }
+            />
+          </div>
         </div>
       )}
 
@@ -462,6 +486,7 @@ export function PurchasePanel({ footer }: { footer?: ReactNode }) {
       )}
 
       <div className="mt-4 flex flex-col gap-2">
+        {selected && <DuplicateNotice bookId={bookId} type={selected.type} />}
         <BuyAction compact={false} helperId={helperId} />
         {placeholder && !(selected ? !selected.in_stock : printOut) && (
           <p id={helperId} className="text-center text-xs text-ink-muted">

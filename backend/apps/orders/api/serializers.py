@@ -126,6 +126,7 @@ class OrderDetailSerializer(OrderSummarySerializer):
     timeline = serializers.SerializerMethodField()
     payment = serializers.SerializerMethodField()
     can_pay = serializers.SerializerMethodField()
+    delivery_estimate = serializers.SerializerMethodField()
     discount_code = serializers.CharField(source="discount_code_text", read_only=True)
 
     class Meta(OrderSummarySerializer.Meta):
@@ -144,6 +145,7 @@ class OrderDetailSerializer(OrderSummarySerializer):
             "timeline",
             "payment",
             "can_pay",
+            "delivery_estimate",
         )
 
     def get_items(self, order) -> list[dict]:
@@ -200,3 +202,12 @@ class OrderDetailSerializer(OrderSummarySerializer):
 
     def get_can_pay(self, order) -> bool:
         return state.can_pay(order)
+
+    def get_delivery_estimate(self, order) -> dict | None:
+        """د۲ (impl/trust): the delivery window promised for a paid, not yet delivered order."""
+        from ..services.delivery import order_estimate
+
+        if not order.is_paid:
+            return None
+        estimate = order_estimate(order)
+        return estimate.as_dict() if estimate else None

@@ -10,6 +10,8 @@ import { formatJalaliDate, formatToman, toPersianDigits } from "@/lib/format";
 import { apiFetch, errorMessage } from "@/lib/session";
 import { BookOpenIcon, CheckIcon, ClockIcon, CloseIcon } from "@/components/ui/Icons";
 import { clearCheckoutKeys } from "./checkout-key";
+// د۳ (impl/trust): post-purchase «شروع مطالعه»
+import { StartStudying } from "@/components/trust/StartStudying";
 
 export type ResultStatus = "paid" | "failed" | "cancelled" | "pending";
 
@@ -122,7 +124,7 @@ export function PaymentResult({ orderNumber, status: urlStatus }: { orderNumber:
   if (status === "paid") {
     const canRead = order?.items.some((i) => i.can_read) ?? false;
     return (
-      <Shell>
+      <Shell wide>
         <Badge tone="success">
           <CheckIcon size={32} strokeWidth={2.6} />
         </Badge>
@@ -146,25 +148,24 @@ export function PaymentResult({ orderNumber, status: urlStatus }: { orderNumber:
         )}
         {/* growth (و۴): a gift order shows its claim link */}
         {number && <GiftLinkBox orderNumber={number} />}
-        {canRead && (
-          <div className="mt-5 rounded-control bg-success-soft px-4 py-3 text-success">
-            <p className="flex items-center justify-center gap-2 font-bold">
+        {order ? (
+          <StartStudying order={order} />
+        ) : (
+          canRead && (
+            <p className="mt-5 flex items-center justify-center gap-2 rounded-control bg-success-soft px-4 py-3 font-bold text-success">
               <BookOpenIcon size={20} />
               کتاب‌های الکترونیک شما آماده مطالعه است
             </p>
-            <Link href={routes.library} className={`${primaryBtn} mt-3 w-full`}>
-              رفتن به کتابخانه من
-            </Link>
-          </div>
-        )}
-        {order?.needs_shipping && (
-          <p className="mt-4 text-sm leading-7 text-ink">
-            نسخه چاپی سفارش شما آماده ارسال می‌شود؛ کد رهگیری مرسوله پیامک خواهد شد.
-          </p>
+          )
         )}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          {canRead && (
+            <Link href={routes.library} className={secondaryBtn}>
+              کتابخانه من
+            </Link>
+          )}
           {number && order && (
-            <Link href={routes.order(number)} className={canRead ? secondaryBtn : primaryBtn}>
+            <Link href={routes.order(number)} className={secondaryBtn}>
               مشاهده سفارش
             </Link>
           )}
@@ -245,9 +246,9 @@ export function PaymentResult({ orderNumber, status: urlStatus }: { orderNumber:
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
-    <div className="mx-auto w-full max-w-lg px-4 py-10 md:py-16">
+    <div className={`mx-auto w-full px-4 py-10 md:py-16 ${wide ? "max-w-xl" : "max-w-lg"}`}>
       <div className="rounded-card bg-surface p-6 text-center shadow-card md:p-8">{children}</div>
     </div>
   );

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { apiFetch } from "@/lib/session";
 import { accountRoutes } from "@/lib/account-routes";
 import {
+  BadgeIcon,
   BookOpenIcon,
   ChatIcon,
   DevicesIcon,
@@ -18,6 +19,7 @@ import {
 
 const ITEMS = [
   { href: accountRoutes.dashboard, label: "پیشخوان", Icon: GridIcon, exact: true },
+  { href: accountRoutes.readiness, label: "آمادگی من", Icon: BadgeIcon }, // د۴ (impl/trust)
   { href: accountRoutes.orders, label: "سفارش‌ها", Icon: PackageIcon },
   { href: accountRoutes.library, label: "کتابخانه من", Icon: BookOpenIcon },
   { href: accountRoutes.devices, label: "دستگاه‌های من", Icon: DevicesIcon },

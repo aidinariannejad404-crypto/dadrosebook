@@ -11,6 +11,10 @@ import { ProfileForm } from "@/components/account/ProfileForm";
 import { ContinueReading } from "@/components/account/ContinueReading";
 import { mostRecentInProgress } from "@/components/account/ReadingProgressMeter";
 import { BookOpenIcon, ChatIcon, ChevronIcon, HeartIcon, MapPinIcon, PackageIcon } from "@/components/ui/Icons";
+// د۴ (impl/trust): readiness headline
+import type { Readiness } from "@/lib/trust-types";
+import { selectedExamSlug } from "@/lib/exam-server";
+import { ReadinessHeadline } from "@/components/trust/ReadinessDashboard";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "پیشخوان", robots: { index: false, follow: false } };
@@ -29,10 +33,12 @@ function greeting(): string {
 }
 
 export default async function AccountDashboard() {
-  const [me, orders, library] = await Promise.all([
+  const exam = await selectedExamSlug();
+  const [me, orders, library, readiness] = await Promise.all([
     getMe(),
     safe(serverApiGet<Paginated<OrderSummary>>("/orders/")),
     safe(serverApiGet<LibraryEntry[]>("/library/")),
+    safe(serverApiGet<Readiness>(`/me/readiness/${exam ? `?exam=${encodeURIComponent(exam)}` : ""}`)),
   ]);
   if (!me) return null; // the layout already handled anonymous visitors
 
@@ -61,6 +67,8 @@ export default async function AccountDashboard() {
           <ProfileForm me={me} />
         </div>
       </section>
+
+      {readiness && readiness.total_subjects > 0 && <ReadinessHeadline data={readiness} link />}
 
       {reading && <ContinueReading entry={reading} />}
 

@@ -14,6 +14,8 @@ import {
   trackPurchase,
   trackStudyPlanRequested,
   trackViewItem,
+  trackOwnedBookNotice,
+  trackStartStudying,
   type AnalyticsDetail,
 } from "./analytics";
 
@@ -190,5 +192,14 @@ describe("typed helpers", () => {
     expect(domEvents[0]!.params.currency).toBe("TOMAN");
     expect(domEvents[2]!.params).toEqual({ course_id: 5, course_title: "دوره", book_slug: "x", placement: "more" });
     expect(domEvents[3]!.params).toEqual({ exam_type: "vekalat", subjects: "a,b", subjects_count: 2, hours_per_day: 4 });
+  });
+
+  it("package د helpers (impl/trust)", () => {
+    trackOwnedBookNotice({ item_id: 7, formats: ["PRINT", "EBOOK"], surface: "product" });
+    trackStartStudying("study_plan", "DR-1");
+    const mine = domEvents.slice(-2);
+    expect(mine.map((e) => e.event)).toEqual(["owned_book_notice", "start_studying_action"]);
+    expect(mine[0]!.params).toEqual({ item_id: 7, formats: "PRINT,EBOOK", surface: "product" });
+    expect(mine[1]!.params).toEqual({ action: "study_plan", transaction_id: "DR-1" });
   });
 });

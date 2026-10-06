@@ -24,6 +24,10 @@ import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { CartIcon, CheckIcon, ClockIcon } from "@/components/ui/Icons";
 import { useCart } from "@/components/cart/CartProvider";
 import { KitShareBox } from "@/components/growth/KitShareBox"; // growth (و۳)
+// د۱ (impl/trust): owned books are marked and left out of «افزودن همه»
+import { useOwned } from "@/components/trust/useOwned";
+import { ownedBadge, ownedIdsIn, uncheckBooks } from "@/lib/owned";
+import type { OwnedBook } from "@/lib/trust-types";
 
 export interface KitBuilderProps {
   examTypes: ExamTypeMini[];
@@ -52,6 +56,16 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
   const resultRef = useRef<HTMLDivElement>(null);
   const examName = examTypes.find((e) => e.slug === exam)?.name ?? "";
   const allSubjects = useMemo(() => kits.map((k) => k.subject.slug), [kits]);
+
+  const ownedState = useOwned();
+  const owned = ownedState?.kind === "user" ? ownedState.books : null;
+  const [excluded, setExcluded] = useState<number[]>([]);
+  useEffect(() => {
+    if (!owned) return;
+    const ids = ownedIdsIn([...new Set(kits.flatMap((k) => k.items.map((i) => i.book.id)))], owned);
+    setExcluded(ids);
+    if (ids.length) setSel((s) => uncheckBooks(s, ids));
+  }, [owned, kits]);
 
   const lines = useMemo(() => selectedLines(kits, subjects, sel), [kits, subjects, sel]);
   const totals = kitTotals(lines);
@@ -218,6 +232,7 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
                                   format={sel.formats[item.book.id]}
                                   onCheck={(on) => setBook(item.book.id, on)}
                                   onFormat={(id) => setFormat(item.book.id, id)}
+                                  owned={owned?.get(item.book.id)}
                                 />
                               ))}
                             </ul>
@@ -237,6 +252,11 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
               کیت شما
             </h2>
             <TotalsList totals={totals} />
+            {excluded.length > 0 && (
+              <p className="mt-3 rounded-control bg-info-soft px-3 py-2 text-xs font-bold leading-6 text-info">
+                {toPersianDigits(excluded.length)} کتابی که دارید از «افزودن همه» کنار گذاشته شد.
+              </p>
+            )}
             <AddAllButton totals={totals} busy={add.kind === "busy"} onClick={addAll} className="mt-4 w-full" />
             <div ref={resultRef} tabIndex={-1} className="focus:outline-none" aria-live="polite">
               {add.kind === "error" && (
@@ -374,6 +394,7 @@ function KitBookRow({
   format,
   onCheck,
   onFormat,
+  owned,
 }: {
   uid: string;
   item: StudyKitItem;
@@ -381,7 +402,9 @@ function KitBookRow({
   format: number | undefined;
   onCheck: (on: boolean) => void;
   onFormat: (variantId: number) => void;
+  owned?: OwnedBook;
 }) {
+  const ownedLabel = ownedBadge(owned);
   const book = item.book;
   const options = formatOptions(book.variants);
   const buyable = options.some((v) => v.in_stock);
@@ -417,6 +440,12 @@ function KitBookRow({
               >
                 {item.is_essential ? "ضروری" : "پیشنهادی"}
               </span>
+              {ownedLabel && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-2 py-0.5 text-xs font-bold text-info">
+                  <CheckIcon size={12} strokeWidth={2.8} className="shrink-0" />
+                  {ownedLabel}
+                </span>
+              )}
               <Link href={routes.product(book.slug)} className="inline-flex min-h-11 items-center text-xs font-bold text-primary underline-offset-4 hover:underline">
                 جزئیات کتاب
               </Link>

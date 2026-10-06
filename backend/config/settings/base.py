@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.reader",
     "apps.seo",
     "apps.growth",  # growth loops: Torob feed, kit links, gifts, partners, campaigns
+    "apps.studyhub",  # impl/trust: د۳/د۴ start-studying, readiness, reminder consent
     "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 

@@ -13,6 +13,9 @@ import { useCart } from "@/components/cart/CartProvider";
 import { Dialog } from "@/components/ui/Dialog";
 import { BookCover } from "@/components/book/BookCover";
 import { BoltIcon, CartIcon, CheckIcon, TruckIcon } from "@/components/ui/Icons";
+// package د (impl/trust)
+import { DeliveryPromise } from "@/components/trust/DeliveryPromise";
+import { DuplicateNotice } from "@/components/trust/DuplicateNotice";
 
 export interface SheetBook {
   id: number;
@@ -122,6 +125,9 @@ export function AddedToCartSheet({
               <CheckIcon size={18} strokeWidth={2.6} />
             </span>
           </div>
+
+          <DuplicateNotice bookId={book.id} type={variant.type} />
+          <DeliveryPromise type={variant.type} surface="sheet" />
 
           <div className="rounded-control bg-bg p-3">
             <p className="flex items-center justify-between gap-2 text-sm">

@@ -5,6 +5,10 @@ import type { Address, Me, ShippingOption } from "@/lib/account-types";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { CheckIcon, TruckIcon } from "@/components/ui/Icons";
 import { AddressForm } from "./AddressForm";
+// د۲ (impl/trust): delivery date promise + exam clash warning
+import { routes } from "@/lib/config";
+import { promiseText } from "@/lib/delivery";
+import { ExamClashNote } from "@/components/trust/DeliveryPromise";
 
 const card =
   "flex min-h-16 w-full cursor-pointer items-start gap-3 rounded-control border-2 border-line bg-surface p-3 transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus hover:border-line-strong";
@@ -32,6 +36,7 @@ export function ShippingStep(p: ShippingStepProps) {
   const uid = useId();
   const hasAddresses = (p.addresses?.length ?? 0) > 0;
   const formOpen = p.showForm || (p.addresses != null && !hasAddresses);
+  const selectedClash = p.options?.find((m) => m.id === p.selectedMethodId)?.exam_clash ?? null;
 
   return (
     <div className="space-y-6">
@@ -137,7 +142,11 @@ export function ShippingStep(p: ShippingStepProps) {
                   <TruckIcon size={22} className="mt-0.5 shrink-0 text-primary" />
                   <span className="min-w-0 flex-1 text-sm leading-7">
                     <span className="block font-extrabold text-ink">{m.name}</span>
-                    {m.eta_note && <span className="block text-ink-muted">{m.eta_note}</span>}
+                    {promiseText(m.delivery_estimate) ? (
+                      <span className="block font-bold text-ink">{promiseText(m.delivery_estimate)}</span>
+                    ) : (
+                      m.eta_note && <span className="block text-ink-muted">{m.eta_note}</span>
+                    )}
                     {m.description && <span className="block text-ink-muted">{m.description}</span>}
                   </span>
                   <span className="shrink-0 text-sm font-extrabold">
@@ -156,6 +165,18 @@ export function ShippingStep(p: ShippingStepProps) {
               </label>
             ))}
           </div>
+          {selectedClash && (
+            <ExamClashNote
+              clash={selectedClash}
+              surface="checkout"
+              className="mt-3"
+              action={
+                <a href={routes.cart} className="inline-flex min-h-11 items-center font-extrabold underline underline-offset-4">
+                  تغییر به نسخه الکترونیک یا بسته در سبد خرید
+                </a>
+              }
+            />
+          )}
         </fieldset>
       )}
     </div>

@@ -521,3 +521,110 @@ Both beacons accept `Content-Type: application/json` **and** `text/plain` with a
 ```
 Only active books with at least one active variant; a book's `updated_at` is the later of the book
 and its active variants (UTC, `Z`). Taxonomies: active only. Lists are sorted by slug.
+
+## Package «د» — trust and conversion (impl/trust)
+
+Report items د۱–د۴ (`ux-seo-research/report.md`; JTBD appendix R3, R4, R5, R17). Money is integer
+toman, dates ISO (`YYYY-MM-DD`, Asia/Tehran calendar). `exam` is an `ExamType.slug`; when the query
+parameter is absent the API reads the storefront's «آزمون من» `exam` cookie (same-origin calls send it).
+
+### د۱ Ownership: `GET /me/owned/` (auth)
+
+```json
+{ "books": [
+  { "book_id": 12, "slug": "حقوق-مدنی", "title": "حقوق مدنی", "formats": ["PRINT", "EBOOK"],
+    "can_read": true, "purchased_at": "2026-10-02T18:00:00Z", "order_number": "DR-14050712-0001" }
+] }
+```
+
+* `PRINT`: a PRINT or BUNDLE line of a paid order (PAID, PROCESSING, SHIPPED, DELIVERED) not fully
+  refunded through a return. `EBOOK`: an active ebook entitlement (purchase or admin grant).
+* `purchased_at` / `order_number`: the latest print purchase, else the entitlement grant.
+* 401 for visitors. `Cache-Control: private, no-store`. The storefront fetches it in the browser once
+  per page (product banner, kit, cart, added-to-cart sheet) so catalog HTML stays the same for everyone.
+
+### د۲ Delivery date promise
+
+`ShippingMethod` gained `min_business_days`, `max_business_days` (null = no estimate; max null = min)
+and `cutoff_hour` (0–23, Tehran time). `ShippingHoliday` (admin «تعطیلات ارسال», Jalali date input)
+lists official holidays. Rules (`apps.orders.services.delivery`):
+
+* business day = not Friday and not a `ShippingHoliday`;
+* dispatch = today when paid on a business day before `cutoff_hour`, else the next business day;
+* window = dispatch + min … + max business days (0 = the dispatch day);
+* exam clash = `max_date` > next exam date − 7 days.
+
+`DeliveryEstimate`: `{ "dispatch_date", "min_date", "max_date", "label": "شنبه ۱۸ مهر تا دوشنبه ۲۰ مهر" }`
+`ExamClash`: `{ "exam_name", "exam_date", "safe_until", "message" }`
+
+* `GET /shipping-methods/?province=&subtotal=&exam=` — each `ShippingOption` also has
+  `delivery_estimate` (`DeliveryEstimate | null`) and `exam_clash` (`ExamClash | null`). The quote's
+  `shipping` option carries `delivery_estimate` too (its `exam_clash` is always null).
+* `GET /delivery-estimate/?province=&exam=` (public, `Cache-Control: private, max-age=300`):
+
+```json
+{ "estimate": DeliveryEstimate | null,
+  "methods": [{ "id": 1, "code": "post", "name": "پست پیشتاز", "tehran_only": false,
+                "estimate": DeliveryEstimate | null, "exam_clash": ExamClash | null }],
+  "exam": { "name": "آزمون کانون ۱۴۰۵", "slug": "kanoon", "date": "2026-10-15", "days_left": 10,
+            "safe_until": "2026-10-08" } | null,
+  "exam_clash": ExamClash | null }
+```
+
+  Without `province` only nationwide methods are used (no courier promise to other cities); `estimate`
+  spans the earliest `min_date` to the latest `max_date` of the offered methods.
+* `GET /orders/<number>/` — `delivery_estimate` for a paid order that needs shipping and is not yet
+  delivered (computed from `paid_at`), else null.
+
+### د۳ Post-purchase «شروع مطالعه» (auth, own paid orders only; 404 otherwise)
+
+* `GET /me/orders/<number>/start/?exam=`
+
+```json
+{ "order": "DR-…",
+  "read_first": { "id": 12, "slug": "…", "title": "…", "cover": null, "subject_color": "#1F4E8C",
+                  "reader_url": "/read/…", "percent_read": 0.0 } | null,
+  "exam": ExamInfo | null,
+  "plan": { "exam_type": "kanoon", "books": [{ "slug": "…", "title": "…" }], "subjects": ["…"] },
+  "reminders": { "sms": false, "consented_at": null } }
+```
+
+  `read_first`: a readable ebook of the order that is **essential** in the exam's kit (heaviest
+  subject first, then kit order), else the order's first readable ebook; null for print-only orders.
+  `ExamInfo`: `{ "slug", "name", "event_name", "date", "days_left" }` (exam from `?exam=`/cookie, else
+  the exam most of the order's books belong to).
+* `POST /me/study-plan/` `{ "order": "DR-…", "exam_type"?: "kanoon", "hours_per_day"?: 6 }` →
+  201 `{ "token", "plan_url": "/plan/<token>" }`. Uses the existing study-plan generator (`apps.leads`)
+  with the customer's phone, the order's books and their subjects. The lead's `consent` mirrors the
+  SMS-reminder flag (never assumed). Throttle scope `study_plan`.
+* `GET /me/study-reminders/` → `{ "sms": bool, "consented_at": iso | null }`;
+  `PUT /me/study-reminders/` `{ "sms": bool, "source"?: "payment_result" | "account" }` → same shape.
+  Stored in `studyhub.StudyReminderConsent` (one row per user, with opt-in and withdrawal times).
+  Sending reminders is not built yet.
+
+### د۴ Readiness dashboard (auth)
+
+* `GET /me/readiness/?exam=` (exam from the param/cookie, else the customer's last paid order)
+
+```json
+{ "exam": ExamInfo | null,
+  "subjects": [
+    { "subject": { "id": 1, "name": "حقوق مدنی", "slug": "…", "color": "#1F4E8C" }, "weight": 4,
+      "essential_total": 2, "essential_owned": 1, "ready": false, "percent_read": 40.0,
+      "books": [
+        { "id": 12, "slug": "…", "title": "…", "cover": null, "subject_color": "#1F4E8C",
+          "owned": true, "formats": ["EBOOK"], "percent_read": 40.0, "buy_variant": null },
+        { "id": 13, "…": "…", "owned": false, "formats": [], "percent_read": null,
+          "buy_variant": { "id": 31, "type": "PRINT", "type_label": "نسخه چاپی", "price": 450000 } } ] } ],
+  "ready_subjects": 1, "total_subjects": 2, "headline": "آمادگی منابع: ۱ از ۲ درس" }
+```
+
+  Subjects: the exam's active kit recommendations that have essential books, by weight then subject
+  order. A subject is `ready` when every essential book is owned (any format). `percent_read` averages
+  the subject's owned ebooks (`ReadingProgress`); null when none (print reading isn't tracked).
+  `buy_variant` follows the kit default (bundle → print → ebook, purchasable only).
+* `GET /me/back-in-stock/` → `[{ "id", "status": "PENDING" | "NOTIFIED", "status_label", "created_at",
+  "notified_at", "book": { "id", "slug", "title", "cover", "subject_color" },
+  "variant": { "id", "type", "type_label", "in_stock" } }]` — requests linked to the user or made with
+  their phone; pending ones plus those notified in the last 30 days.
+* `DELETE /me/back-in-stock/<id>/` → 204 (pending → CANCELLED); 404 when not theirs or not pending.

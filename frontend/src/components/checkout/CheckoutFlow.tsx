@@ -426,6 +426,10 @@ export function CheckoutFlow({ search }: { search: string }) {
                         {selectedAddress && `${selectedAddress.province}، ${selectedAddress.city}، ${selectedAddress.address_line}`}
                       </p>
                       {quote.shipping && <p className="text-ink-muted">{quote.shipping.name}</p>}
+                      {/* د۲ (impl/trust) */}
+                      {quote.shipping?.delivery_estimate && (
+                        <p className="font-bold text-ink">تحویل تقریبی: {quote.shipping.delivery_estimate.label}</p>
+                      )}
                     </div>
                     <button
                       type="button"
