@@ -42,7 +42,7 @@ export function ReviewList({ slug, initial, summary }: { slug: string; initial: 
   const showFilters = exams.length > 0 || ratings.length > 1;
 
   return (
-    <div>
+    <div className="min-w-0">
       {showFilters && (
         <div className="mb-3 space-y-2" role="group" aria-label="فیلتر نظرها">
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
