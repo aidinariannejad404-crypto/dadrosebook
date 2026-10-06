@@ -37,6 +37,11 @@ Call sites use the typed helpers, not `track()` directly.
 | `notify_me_requested` | `trackNotifyMeRequested(item)` | `item_id`, `item_name`, `variant` | «موجود شد خبرم کن» clicked | Existing — `components/ui/NotifyMeButton.tsx` (Phase 2 may move it to the successful registration) |
 | `course_cross_sell_click` | `trackCourseCrossSellClick(c)` | `course_id`, `course_title`, `book_slug?`, `placement` (`home`, `highlight`, `more`, `buy_box`, CourseCard `tier`/placement) | Click on a dadrose.com course link | Existing — `components/ui/TrackedLink.tsx` (`course` prop) used by CourseBanner, CourseCrossSell, CourseCard, PurchasePanel |
 | `study_plan_requested` | `trackStudyPlanRequested(p)` | `exam_type`, `subjects` (comma list of slugs), `subjects_count`, `hours_per_day`, `book?` (slug) | Study-plan form submitted successfully (the phone number is never sent) | Existing — `components/plan/StudyPlanForm.tsx` |
+| `owned_book_notice` | `trackOwnedBookNotice(p)` | `item_id`, `formats` (comma list), `surface` (`product` \| `kit` \| `cart`) | «در کتابخانه شما» / «این کتاب را … خریدید» banner shown (د۱) | impl/trust — `components/trust/OwnedBanner.tsx` |
+| `delivery_exam_clash_shown` | `track()` | `surface` (`product` \| `sheet` \| `checkout`), `exam` | The print copy may arrive within a week of the exam (د۲) | impl/trust — `components/trust/DeliveryPromise.tsx` |
+| `start_studying_action` | `trackStartStudying(action, order)` | `action` (`read_first` \| `study_plan` \| `reminders_on` \| `reminders_off`), `transaction_id` | Post-purchase «شروع مطالعه» action (د۳) | impl/trust — `components/trust/StartStudying.tsx` |
+| `readiness_add_to_cart` | `track()` | `item_id`, `item_name`, `value`, `quantity` (or `items`, `source: add_missing`) | Missing essential book added from «آمادگی من» (د۴) | impl/trust — `components/trust/ReadinessActions.tsx` |
+| `notify_me_cancelled` | `track()` | `item_id`, `variant` | «خبرم کن» cancelled in the account (د۴) | impl/trust — `components/trust/NotifyList.tsx` |
 
 ## Adding an event
 

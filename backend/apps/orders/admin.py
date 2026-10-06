@@ -17,6 +17,8 @@ from unfold.decorators import action, display
 from unfold.widgets import UnfoldAdminCheckboxSelectMultipleWidget
 
 from apps.catalog.models import BookVariant
+from apps.core.forms import JalaliDateField
+from apps.core.jalali import to_jalali_str
 from apps.core.money import format_toman, to_persian_digits
 
 from .models import (
@@ -29,6 +31,7 @@ from .models import (
     ReturnLine,
     ReturnRequest,
     ReturnRequestLog,
+    ShippingHoliday,
     ShippingMethod,
 )
 from .services import returns, state
@@ -392,13 +395,81 @@ class OrderAdmin(ModelAdmin):
 
 @admin.register(ShippingMethod)
 class ShippingMethodAdmin(ModelAdmin):
-    list_display = ("name", "code", "price_toman", "free_over", "tehran_only", "order", "is_active")
+    list_display = (
+        "name",
+        "code",
+        "price_toman",
+        "free_over",
+        "delivery_days",
+        "cutoff_hour",
+        "tehran_only",
+        "order",
+        "is_active",
+    )
     list_editable = ("order", "is_active")
     search_fields = ("name", "code")
+    # د۲ (impl/trust): delivery promise fields get their own section
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "name",
+                    "code",
+                    "description",
+                    "eta_note",
+                    "base_price",
+                    "free_over",
+                    "tehran_only",
+                    "is_active",
+                    "order",
+                )
+            },
+        ),
+        (
+            "تاریخ تحویل تقریبی",
+            {
+                "fields": ("min_business_days", "max_business_days", "cutoff_hour"),
+                "description": "از این اعداد «تحویل تقریبی: شنبه ۲۰ مهر تا دوشنبه ۲۲ مهر» ساخته "
+                "می‌شود. جمعه‌ها و «تعطیلات ارسال» روز کاری حساب نمی‌شوند.",
+            },
+        ),
+    )
 
     @admin.display(description="هزینه", ordering="base_price")
     def price_toman(self, obj):
         return format_toman(obj.base_price)
+
+    @admin.display(description="روز کاری تا تحویل")
+    def delivery_days(self, obj):
+        if obj.min_business_days is None:
+            return "—"
+        high = obj.max_business_days if obj.max_business_days is not None else obj.min_business_days
+        if high == obj.min_business_days:
+            return to_persian_digits(str(high))
+        return f"{to_persian_digits(str(obj.min_business_days))} تا {to_persian_digits(str(high))}"
+
+
+class ShippingHolidayForm(forms.ModelForm):
+    date = JalaliDateField(label="تاریخ (شمسی)", help_text="مثلاً ۱۴۰۵/۰۱/۰۱")
+
+    class Meta:
+        model = ShippingHoliday
+        fields = ("date", "title")
+
+
+@admin.register(ShippingHoliday)
+class ShippingHolidayAdmin(ModelAdmin):
+    """د۲ (impl/trust): official holidays the delivery estimate skips (Fridays are automatic)."""
+
+    form = ShippingHolidayForm
+    list_display = ("jalali_date", "title")
+    search_fields = ("title",)
+    ordering = ("date",)
+
+    @admin.display(description="تاریخ (شمسی)", ordering="date")
+    def jalali_date(self, obj):
+        return to_jalali_str(obj.date, persian_digits=True)
 
 
 class DiscountCodeForm(forms.ModelForm):

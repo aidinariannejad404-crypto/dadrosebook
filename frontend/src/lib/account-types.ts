@@ -4,6 +4,7 @@
  */
 
 import type { BookCard, ExamTypeMini, VariantType } from "./types";
+import type { DeliveryEstimate, ExamClash } from "./trust-types";
 
 export interface Me {
   id: number;
@@ -53,6 +54,10 @@ export interface ShippingOption {
   is_free: boolean;
   free_over: number | null;
   tehran_only: boolean;
+  /** د۲ (impl/trust): null when the method has no business-day range */
+  delivery_estimate?: DeliveryEstimate | null;
+  /** د۲: set when the parcel may arrive within a week of the «آزمون من» exam */
+  exam_clash?: ExamClash | null;
 }
 
 export interface CheckoutItem {
@@ -161,6 +166,8 @@ export interface Order extends OrderSummary {
   timeline: { status: OrderStatus; label: string; at: string }[];
   payment: { status: string; ref_id: string; card_pan: string; gateway: string } | null;
   can_pay: boolean;
+  /** د۲ (impl/trust): promised window for a paid, not yet delivered print order */
+  delivery_estimate?: DeliveryEstimate | null;
 }
 
 export interface CheckoutCreated {

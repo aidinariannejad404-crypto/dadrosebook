@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.engagement",
     "apps.reader",
     "apps.seo",
+    "apps.studyhub",  # impl/trust: د۳/د۴ start-studying, readiness, reminder consent
     "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 

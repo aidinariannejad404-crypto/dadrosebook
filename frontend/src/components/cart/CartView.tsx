@@ -12,6 +12,8 @@ import { NotifyMeButton } from "@/components/ui/NotifyMeButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BoltIcon, BookOpenIcon, CartIcon, TruckIcon } from "@/components/ui/Icons";
 import { useCart } from "./CartProvider";
+// د۱ (impl/trust): warn when the customer already owns this format
+import { DuplicateNotice } from "@/components/trust/DuplicateNotice";
 
 const BESTSELLERS = routes.search({ ordering: "-sales_count" });
 
@@ -189,6 +191,8 @@ function CartLine({ item }: { item: CartItem }) {
           </div>
         </div>
       </div>
+
+      <DuplicateNotice bookId={item.book.id} type={v.type} className="mt-3" />
 
       {item.issue && (
         <div className="mt-3 rounded-control bg-danger-soft px-3 py-2 text-sm leading-7 text-danger">

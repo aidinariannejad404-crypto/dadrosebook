@@ -22,7 +22,13 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // --- package د (impl/trust) ---
+  | "owned_book_notice"
+  | "delivery_exam_clash_shown"
+  | "start_studying_action"
+  | "readiness_add_to_cart"
+  | "notify_me_cancelled";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -278,6 +284,18 @@ export function trackStudyPlanRequested(p: {
     hours_per_day: p.hours_per_day,
     book: p.book ?? undefined,
   });
+}
+
+// --- package د (impl/trust) ---
+
+/** د۱: an «این کتاب را دارید» banner or duplicate warning was shown. */
+export function trackOwnedBookNotice(p: { item_id: number; formats: string[]; surface: "product" | "kit" | "cart" }): void {
+  track("owned_book_notice", { item_id: p.item_id, formats: p.formats.join(","), surface: p.surface });
+}
+
+/** د۳: a post-purchase «شروع مطالعه» action. */
+export function trackStartStudying(action: "read_first" | "study_plan" | "reminders_on" | "reminders_off", order: string): void {
+  track("start_studying_action", { action, transaction_id: order });
 }
 
 /** Test helper: reset the queue, dedupe set and poller. */

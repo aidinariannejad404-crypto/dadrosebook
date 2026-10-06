@@ -76,4 +76,6 @@ def test_shipping_methods_endpoint(api, methods):
         "is_free",
         "free_over",
         "tehran_only",
+        "delivery_estimate",  # د۲
+        "exam_clash",  # د۲
     }

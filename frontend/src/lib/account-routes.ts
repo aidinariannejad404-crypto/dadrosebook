@@ -10,6 +10,8 @@ export const accountRoutes = {
   devices: "/account/devices",
   wishlist: "/account/wishlist",
   reviews: "/account/reviews",
+  /** د۴ (impl/trust): readiness dashboard + «خبرم کن» list. */
+  readiness: "/account/readiness",
   /** Phase 4 reader. */
   read: (slug: string) => `/read/${encodeURIComponent(slug)}`,
   /** Login with a return path (only same-site absolute paths are kept). */

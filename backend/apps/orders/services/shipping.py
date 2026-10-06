@@ -44,12 +44,27 @@ def methods_for(province: str | None):
     return qs.order_by("order", "id")
 
 
-def option_for(method: ShippingMethod, subtotal: int, *, default_threshold=_UNSET) -> dict:
-    """The ``ShippingOption`` shape of the API contract."""
+def option_for(
+    method: ShippingMethod,
+    subtotal: int,
+    *,
+    default_threshold=_UNSET,
+    holidays=None,
+    exam_event=None,
+    now=None,
+) -> dict:
+    """The ``ShippingOption`` shape of the API contract.
+
+    د۲: ``delivery_estimate`` (``None`` when the method has no business-day range) and
+    ``exam_clash`` (``None`` unless ``exam_event`` is given and the parcel may arrive too late).
+    """
+    from . import delivery
+
     if default_threshold is _UNSET:
         default_threshold = store_threshold()
     free_over = free_over_for(method, default_threshold=default_threshold)
     price = price_for(method, subtotal, default_threshold=default_threshold)
+    estimate = delivery.estimate_for(method, now=now, holidays=holidays)
     return {
         "id": method.pk,
         "code": method.code,
@@ -61,12 +76,29 @@ def option_for(method: ShippingMethod, subtotal: int, *, default_threshold=_UNSE
         "is_free": price == 0,
         "free_over": free_over,
         "tehran_only": method.tehran_only,
+        "delivery_estimate": estimate.as_dict() if estimate else None,
+        "exam_clash": delivery.clash_info(estimate, exam_event),
     }
 
 
-def options_for(province: str | None, subtotal: int) -> list[dict]:
+def options_for(province: str | None, subtotal: int, *, exam_slug: str | None = None) -> list[dict]:
+    from . import delivery
+
     threshold = store_threshold()
-    return [option_for(m, subtotal, default_threshold=threshold) for m in methods_for(province)]
+    now = delivery.local_now()
+    holidays = delivery.holidays_from(now.date())
+    event = delivery.exam_event_for(exam_slug, today=now.date())
+    return [
+        option_for(
+            m,
+            subtotal,
+            default_threshold=threshold,
+            holidays=holidays,
+            exam_event=event,
+            now=now,
+        )
+        for m in methods_for(province)
+    ]
 
 
 def free_shipping_remaining(

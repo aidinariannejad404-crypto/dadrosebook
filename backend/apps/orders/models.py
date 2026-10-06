@@ -5,6 +5,7 @@ shipping method name) so later catalog edits never change a placed order.
 """
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -111,6 +112,29 @@ class ShippingMethod(TimeStampedModel):
     )
     is_active = models.BooleanField("فعال", default=True)
     order = models.PositiveSmallIntegerField("ترتیب", default=0)
+    # --- د۲ delivery date promise (impl/trust) ---
+    min_business_days = models.PositiveSmallIntegerField(
+        "حداقل روز کاری تا تحویل",
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(60)],
+        help_text="از روز ارسال شمرده می‌شود؛ ۰ یعنی تحویل همان روز ارسال. "
+        "خالی یعنی تاریخ تحویل تقریبی نمایش داده نشود.",
+    )
+    max_business_days = models.PositiveSmallIntegerField(
+        "حداکثر روز کاری تا تحویل",
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(60)],
+        help_text="خالی یعنی برابر حداقل.",
+    )
+    cutoff_hour = models.PositiveSmallIntegerField(
+        "ساعت پایان ارسال همان روز",
+        default=14,
+        validators=[MaxValueValidator(23)],
+        help_text="سفارش‌هایی که در روز کاری پیش از این ساعت (به وقت تهران) پرداخت شوند همان روز "
+        "ارسال می‌شوند؛ بعد از آن از روز کاری بعد. جمعه و تعطیلات رسمی روز کاری نیستند.",
+    )
 
     class Meta:
         verbose_name = "روش ارسال"
@@ -119,6 +143,36 @@ class ShippingMethod(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+    def clean(self):
+        super().clean()
+        low, high = self.min_business_days, self.max_business_days
+        if high is not None and low is None:
+            raise ValidationError({"min_business_days": "حداقل روز کاری را هم وارد کنید."})
+        if low is not None and high is not None and high < low:
+            raise ValidationError(
+                {"max_business_days": "حداکثر روز کاری نباید از حداقل کمتر باشد."}
+            )
+
+
+class ShippingHoliday(models.Model):
+    """A non-working day for dispatch and delivery (Fridays are always off).
+
+    د۲ (impl/trust): used by ``apps.orders.services.delivery`` to skip official holidays.
+    """
+
+    date = models.DateField("تاریخ", unique=True)
+    title = models.CharField("مناسبت", max_length=100, blank=True)
+
+    class Meta:
+        verbose_name = "تعطیلی ارسال"
+        verbose_name_plural = "تعطیلات ارسال"
+        ordering = ["date"]
+
+    def __str__(self) -> str:
+        from apps.core.jalali import to_jalali_str
+
+        return f"{to_jalali_str(self.date, persian_digits=True)} {self.title}".strip()
 
 
 class DiscountCode(TimeStampedModel):
