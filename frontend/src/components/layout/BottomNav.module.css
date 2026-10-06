@@ -1,0 +1,17 @@
+/* Mobile bottom tab bar: 3.5rem (56px) + the home-indicator safe area. */
+.bar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* In-flow spacer so the footer/content can scroll clear of the fixed bar. */
+.spacer {
+  height: calc(3.5rem + env(safe-area-inset-bottom));
+}
+
+/* Bottom sheet for «دسته‌ها» (native <dialog>) */
+.sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 85dvh;
+}

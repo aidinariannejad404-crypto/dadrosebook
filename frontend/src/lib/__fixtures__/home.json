@@ -1,0 +1,2004 @@
+{
+  "next_exam": {
+    "id": 1,
+    "name": "آزمون کانون وکلا ۱۴۰۵",
+    "date": "2026-11-05",
+    "exam_type": {
+      "id": 1,
+      "name": "کانون وکلا",
+      "slug": "کانون-وکلا",
+      "short_name": "کانون"
+    }
+  },
+  "exam_types": [
+    {
+      "id": 1,
+      "name": "کانون وکلا",
+      "slug": "کانون-وکلا",
+      "short_name": "کانون"
+    },
+    {
+      "id": 2,
+      "name": "مرکز وکلا",
+      "slug": "مرکز-وکلا",
+      "short_name": "مرکز"
+    },
+    {
+      "id": 3,
+      "name": "قضاوت",
+      "slug": "قضاوت",
+      "short_name": "قضاوت"
+    },
+    {
+      "id": 4,
+      "name": "سردفتری",
+      "slug": "سردفتری",
+      "short_name": "سردفتری"
+    },
+    {
+      "id": 5,
+      "name": "ارشد و دکتری",
+      "slug": "ارشد-و-دکتری",
+      "short_name": "ارشد"
+    }
+  ],
+  "subjects": [
+    {
+      "id": 1,
+      "name": "حقوق مدنی",
+      "slug": "حقوق-مدنی",
+      "color": "#1F4E8C",
+      "book_count": 3,
+      "weight": null
+    },
+    {
+      "id": 2,
+      "name": "آیین دادرسی مدنی",
+      "slug": "آیین-دادرسی-مدنی",
+      "color": "#2E6F9E",
+      "book_count": 3,
+      "weight": null
+    },
+    {
+      "id": 3,
+      "name": "حقوق تجارت",
+      "slug": "حقوق-تجارت",
+      "color": "#1E7A5A",
+      "book_count": 3,
+      "weight": null
+    },
+    {
+      "id": 4,
+      "name": "حقوق جزا",
+      "slug": "حقوق-جزا",
+      "color": "#A23B32",
+      "book_count": 3,
+      "weight": null
+    },
+    {
+      "id": 5,
+      "name": "آیین دادرسی کیفری",
+      "slug": "آیین-دادرسی-کیفری",
+      "color": "#7A2B3A",
+      "book_count": 2,
+      "weight": null
+    },
+    {
+      "id": 6,
+      "name": "اصول فقه",
+      "slug": "اصول-فقه",
+      "color": "#8A6A2E",
+      "book_count": 1,
+      "weight": null
+    },
+    {
+      "id": 7,
+      "name": "متون فقه",
+      "slug": "متون-فقه",
+      "color": "#6B5A3A",
+      "book_count": 1,
+      "weight": null
+    },
+    {
+      "id": 8,
+      "name": "حقوق اساسی",
+      "slug": "حقوق-اساسی",
+      "color": "#5A3E8A",
+      "book_count": 1,
+      "weight": null
+    },
+    {
+      "id": 9,
+      "name": "حقوق ثبت",
+      "slug": "حقوق-ثبت",
+      "color": "#4A5563",
+      "book_count": 1,
+      "weight": null
+    },
+    {
+      "id": 10,
+      "name": "قوانین خاص",
+      "slug": "قوانین-خاص",
+      "color": "#3F6B6B",
+      "book_count": 1,
+      "weight": null
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "آزمون وکالت",
+      "slug": "آزمون-وکالت",
+      "children": [
+        {
+          "id": 2,
+          "name": "منابع اصلی",
+          "slug": "منابع-اصلی",
+          "children": []
+        },
+        {
+          "id": 3,
+          "name": "سریع‌خوان و جمع‌بندی",
+          "slug": "سریع-خوان-و-جمع-بندی",
+          "children": []
+        },
+        {
+          "id": 4,
+          "name": "تست و نمونه سؤال",
+          "slug": "تست-و-نمونه-سؤال",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "آزمون قضاوت",
+      "slug": "آزمون-قضاوت",
+      "children": []
+    },
+    {
+      "id": 6,
+      "name": "ارشد و دکتری",
+      "slug": "ارشد-و-دکتری",
+      "children": []
+    },
+    {
+      "id": 7,
+      "name": "کتاب الکترونیک",
+      "slug": "کتاب-الکترونیک",
+      "children": []
+    },
+    {
+      "id": 8,
+      "name": "مجموعه قوانین",
+      "slug": "مجموعه-قوانین",
+      "children": []
+    }
+  ],
+  "hero_banners": [
+    {
+      "id": 1,
+      "title": "بسته مطالعاتی آزمون وکالت ۱۴۰۵",
+      "subtitle": "منابع هر درس را به ترتیب اولویت ببینید و بسته کامل خود را با یک کلیک بسازید.",
+      "image": null,
+      "link_url": "/kit",
+      "link_label": "ساخت بسته مطالعاتی"
+    }
+  ],
+  "course_banners": [
+    {
+      "id": 2,
+      "title": "کتاب را بخوانید، دوره را ببینید",
+      "subtitle": "کتاب‌های دادرُز همراه با دوره‌های ویدئویی همان استاد؛ یادگیری عمیق‌تر و تست‌زنی مطمئن‌تر.",
+      "image": null,
+      "link_url": "https://dadrose.com/courses",
+      "link_label": "مشاهده دوره‌ها"
+    }
+  ],
+  "bestsellers": [
+    {
+      "id": 1,
+      "title": "حقوق مدنی دوجلدی",
+      "subtitle": "",
+      "slug": "حقوق-مدنی-دوجلدی-دکتر-شکری",
+      "cover": "/fixtures/covers/hoghoogh-madani.jpg",
+      "authors": [
+        {
+          "id": 1,
+          "name": "دکتر شکری",
+          "slug": "دکتر-شکری"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 1400000,
+      "card_price": 2200000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK",
+        "BUNDLE"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 2,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": true,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "اصلاحات قانون مدنی و قانون حمایت خانواده ۱۴۰۴",
+      "course_badge": "دوره جامع حقوق مدنی ۱ تا ۸",
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": 64
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق مدنی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 101,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 2,
+      "title": "آیین دادرسی مدنی کاربردی",
+      "subtitle": "",
+      "slug": "آیین-دادرسی-مدنی-کاربردی-دکتر-حسینی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 2,
+          "name": "دکتر حسینی",
+          "slug": "دکتر-حسینی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 990000,
+      "card_price": 1480000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK",
+        "BUNDLE"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": true,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "",
+      "course_badge": "دوره آیین دادرسی مدنی کاربردی",
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": 31
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ آیین دادرسی مدنی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 1650000,
+      "card_discount_percent": 10,
+      "quick_add_variant_id": 104,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 3,
+      "title": "حقوق تجارت جامع",
+      "subtitle": "",
+      "slug": "حقوق-تجارت-جامع-دکتر-کریمی",
+      "cover": "/fixtures/covers/hoghoogh-tejarat.jpg",
+      "authors": [
+        {
+          "id": 3,
+          "name": "دکتر کریمی",
+          "slug": "دکتر-کریمی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 3,
+          "name": "حقوق تجارت",
+          "slug": "حقوق-تجارت",
+          "color": "#1E7A5A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 5,
+          "name": "ارشد و دکتری",
+          "slug": "ارشد-و-دکتری",
+          "short_name": "ارشد"
+        }
+      ],
+      "min_price": 1450000,
+      "card_price": 1450000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق تجارت",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 107,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 4,
+      "title": "حقوق جزای عمومی",
+      "subtitle": "",
+      "slug": "حقوق-جزای-عمومی-دکتر-رضایی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 4,
+          "name": "دکتر رضایی",
+          "slug": "دکتر-رضایی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 760000,
+      "card_price": 1090000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK",
+        "BUNDLE"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "قانون کاهش مجازات حبس تعزیری (اصلاحی ۱۴۰۳)",
+      "course_badge": "دوره جمع‌بندی حقوق جزا",
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق جزا",
+          "tone": "accent"
+        },
+        {
+          "code": "bundle",
+          "label": "چاپی + الکترونیک",
+          "tone": "info"
+        }
+      ],
+      "card_compare_price": 1280000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 109,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 5,
+      "title": "حقوق جزای اختصاصی",
+      "subtitle": "",
+      "slug": "حقوق-جزای-اختصاصی-دکتر-رضایی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 4,
+          "name": "دکتر رضایی",
+          "slug": "دکتر-رضایی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": 810000,
+      "card_price": 1350000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 2,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۲ حقوق جزا",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 112,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 6,
+      "title": "آیین دادرسی کیفری",
+      "subtitle": "",
+      "slug": "آیین-دادرسی-کیفری-دکتر-موسوی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 5,
+          "name": "دکتر موسوی",
+          "slug": "دکتر-موسوی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 5,
+          "name": "آیین دادرسی کیفری",
+          "slug": "آیین-دادرسی-کیفری",
+          "color": "#7A2B3A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 830000,
+      "card_price": 1390000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ آیین دادرسی کیفری",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 114,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 11,
+      "title": "مجموعه قوانین خاص آزمون وکالت",
+      "subtitle": "",
+      "slug": "مجموعه-قوانین-خاص-آزمون-وکالت-تیم-علمی-دادرُز",
+      "cover": null,
+      "authors": [
+        {
+          "id": 9,
+          "name": "تیم علمی دادرُز",
+          "slug": "تیم-علمی-دادرُز"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 10,
+          "name": "قوانین خاص",
+          "slug": "قوانین-خاص",
+          "color": "#3F6B6B"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": 760000,
+      "card_price": 760000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "LAWS",
+      "resource_type_label": "مجموعه قوانین",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "اصلاحات قانون حمایت خانواده ۱۴۰۴",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ قوانین خاص",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 123,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 12,
+      "title": "بانک تست طبقه‌بندی‌شده کانون وکلا",
+      "subtitle": "",
+      "slug": "بانک-تست-طبقه-بندی-شده-کانون-وکلا-تیم-علمی-دادرُز",
+      "cover": null,
+      "authors": [
+        {
+          "id": 9,
+          "name": "تیم علمی دادرُز",
+          "slug": "تیم-علمی-دادرُز"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        },
+        {
+          "id": 3,
+          "name": "حقوق تجارت",
+          "slug": "حقوق-تجارت",
+          "color": "#1E7A5A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        }
+      ],
+      "min_price": 590000,
+      "card_price": 590000,
+      "card_format": "EBOOK",
+      "formats": [
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": false,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TESTS",
+      "resource_type_label": "تست و مجموعه سؤالات",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 2,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۲ حقوق مدنی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 7,
+      "title": "اصول فقه کاربردی",
+      "subtitle": "",
+      "slug": "اصول-فقه-کاربردی-استاد-محمدی",
+      "cover": "/fixtures/covers/osool-feqh.jpg",
+      "authors": [
+        {
+          "id": 6,
+          "name": "استاد محمدی",
+          "slug": "استاد-محمدی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 6,
+          "name": "اصول فقه",
+          "slug": "اصول-فقه",
+          "color": "#8A6A2E"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        },
+        {
+          "id": 5,
+          "name": "ارشد و دکتری",
+          "slug": "ارشد-و-دکتری",
+          "short_name": "ارشد"
+        }
+      ],
+      "min_price": 590000,
+      "card_price": 830000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ اصول فقه",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 980000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 116,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 8,
+      "title": "متون فقه (شرح لمعه)",
+      "subtitle": "",
+      "slug": "متون-فقه-شرح-لمعه-استاد-محمدی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 6,
+          "name": "استاد محمدی",
+          "slug": "استاد-محمدی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 7,
+          "name": "متون فقه",
+          "slug": "متون-فقه",
+          "color": "#6B5A3A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 1050000,
+      "card_price": 1050000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ متون فقه",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 118,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 9,
+      "title": "حقوق اساسی در نظم حقوقی ایران",
+      "subtitle": "",
+      "slug": "حقوق-اساسی-در-نظم-حقوقی-ایران-دکتر-نوری",
+      "cover": null,
+      "authors": [
+        {
+          "id": 7,
+          "name": "دکتر نوری",
+          "slug": "دکتر-نوری"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 8,
+          "name": "حقوق اساسی",
+          "slug": "حقوق-اساسی",
+          "color": "#5A3E8A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 5,
+          "name": "ارشد و دکتری",
+          "slug": "ارشد-و-دکتری",
+          "short_name": "ارشد"
+        }
+      ],
+      "min_price": 540000,
+      "card_price": 760000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق اساسی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 890000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 119,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 10,
+      "title": "حقوق ثبت اسناد و املاک",
+      "subtitle": "",
+      "slug": "حقوق-ثبت-اسناد-و-املاک-دکتر-صادقی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 8,
+          "name": "دکتر صادقی",
+          "slug": "دکتر-صادقی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 9,
+          "name": "حقوق ثبت",
+          "slug": "حقوق-ثبت",
+          "color": "#4A5563"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 4,
+          "name": "سردفتری",
+          "slug": "سردفتری",
+          "short_name": "سردفتری"
+        }
+      ],
+      "min_price": 490000,
+      "card_price": 820000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "قانون الزام به ثبت رسمی معاملات اموال غیرمنقول ۱۴۰۳",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق ثبت",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": 121,
+      "rating_avg": null,
+      "rating_count": 0
+    }
+  ],
+  "quick_review": [
+    {
+      "id": 13,
+      "title": "سریع‌خوان حقوق مدنی",
+      "subtitle": "",
+      "slug": "سریع-خوان-حقوق-مدنی-دکتر-شکری",
+      "cover": null,
+      "authors": [
+        {
+          "id": 1,
+          "name": "دکتر شکری",
+          "slug": "دکتر-شکری"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": 420000,
+      "card_price": 690000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": false,
+      "is_quick_review": true,
+      "volumes": 1,
+      "resource_type": "QUICK_REVIEW",
+      "resource_type_label": "سریع‌خوان",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "اصلاحات قانون مدنی ۱۴۰۴",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 3,
+        "season_buyers": 27
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۳ حقوق مدنی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 15,
+      "title": "سریع‌خوان حقوق تجارت",
+      "subtitle": "",
+      "slug": "سریع-خوان-حقوق-تجارت-دکتر-کریمی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 3,
+          "name": "دکتر کریمی",
+          "slug": "دکتر-کریمی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 3,
+          "name": "حقوق تجارت",
+          "slug": "حقوق-تجارت",
+          "color": "#1E7A5A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        }
+      ],
+      "min_price": 350000,
+      "card_price": 560000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": false,
+      "is_quick_review": true,
+      "volumes": 1,
+      "resource_type": "QUICK_REVIEW",
+      "resource_type_label": "سریع‌خوان",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 3,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۳ حقوق تجارت",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 14,
+      "title": "سریع‌خوان آیین دادرسی مدنی",
+      "subtitle": "",
+      "slug": "سریع-خوان-آیین-دادرسی-مدنی-دکتر-حسینی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 2,
+          "name": "دکتر حسینی",
+          "slug": "دکتر-حسینی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": null,
+      "card_price": null,
+      "card_format": null,
+      "formats": [
+        "PRINT"
+      ],
+      "in_stock": false,
+      "print_in_stock": false,
+      "is_quick_review": true,
+      "volumes": 1,
+      "resource_type": "QUICK_REVIEW",
+      "resource_type_label": "سریع‌خوان",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 3,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۳ آیین دادرسی مدنی",
+          "tone": "accent"
+        },
+        {
+          "code": "quick_review",
+          "label": "سریع‌خوان",
+          "tone": "warning"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 16,
+      "title": "سریع‌خوان حقوق جزا",
+      "subtitle": "",
+      "slug": "سریع-خوان-حقوق-جزا-دکتر-رضایی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 4,
+          "name": "دکتر رضایی",
+          "slug": "دکتر-رضایی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        },
+        {
+          "id": 5,
+          "name": "آیین دادرسی کیفری",
+          "slug": "آیین-دادرسی-کیفری",
+          "color": "#7A2B3A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": 620000,
+      "card_price": 620000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT"
+      ],
+      "in_stock": false,
+      "print_in_stock": false,
+      "is_quick_review": true,
+      "volumes": 1,
+      "resource_type": "QUICK_REVIEW",
+      "resource_type_label": "سریع‌خوان",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 3,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۳ حقوق جزا",
+          "tone": "accent"
+        },
+        {
+          "code": "quick_review",
+          "label": "سریع‌خوان",
+          "tone": "warning"
+        }
+      ],
+      "card_compare_price": null,
+      "card_discount_percent": null,
+      "quick_add_variant_id": null,
+      "rating_avg": null,
+      "rating_count": 0
+    }
+  ],
+  "featured_course": {
+    "id": 1,
+    "title": "دوره جامع حقوق مدنی ۱ تا ۸",
+    "url": "https://dadrose.com/courses/%d8%ad%d9%82%d9%88%d9%82-%d9%85%d8%af%d9%86%db%8c-1-%d8%aa%d8%a7-8/",
+    "course_type": "FULL",
+    "course_type_label": "دوره جامع",
+    "subject": {
+      "id": 1,
+      "name": "حقوق مدنی",
+      "slug": "حقوق-مدنی",
+      "color": "#1F4E8C"
+    },
+    "exam_types": [
+      {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      },
+      {
+        "id": 2,
+        "name": "مرکز وکلا",
+        "slug": "مرکز-وکلا",
+        "short_name": "مرکز"
+      },
+      {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      },
+      {
+        "id": 4,
+        "name": "سردفتری",
+        "slug": "سردفتری",
+        "short_name": "سردفتری"
+      }
+    ],
+    "teachers": [
+      "سجاد یوسفی"
+    ],
+    "price": 8125000,
+    "sale_price": null,
+    "effective_price": 8125000,
+    "is_free": false,
+    "hours": 50,
+    "sessions": null,
+    "price_per_hour": 162500,
+    "students_count": 283,
+    "rating": null,
+    "reviews_count": 0,
+    "image": null,
+    "intro_video_url": "https://www.aparat.com/v/nssk9vk",
+    "short_description": "حقوق مدنی مهم‌ترین شاخه حقوق است که دانشی از شکل‌گیری شخصیت انسان تا مسائل اموال و ارث را دربر می‌گیرد.",
+    "selling_points": [
+      "تدریس ماده به ماده",
+      "همراه مثال‌های متعدد",
+      "نکات آزمونی",
+      "تدریس قوانین خاص (مسئولیت مدنی، موجر و مستاجر ۵۶ و ۷۶)",
+      "تدریس نموداری",
+      "جزوه کلاسی",
+      "دسترسی مادام‌العمر"
+    ]
+  },
+  "guide_videos": [
+    {
+      "id": 1,
+      "title": "برای حقوق مدنی کدام کتاب را بخوانم؟",
+      "video_url": "https://www.aparat.com/v/dadrose-guide-civil",
+      "thumbnail": null,
+      "subject": {
+        "id": 1,
+        "name": "حقوق مدنی",
+        "slug": "حقوق-مدنی",
+        "color": "#1F4E8C"
+      },
+      "exam_type": {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      }
+    },
+    {
+      "id": 2,
+      "title": "ترتیب خواندن منابع آیین دادرسی مدنی",
+      "video_url": "https://www.aparat.com/v/dadrose-guide-procedure",
+      "thumbnail": null,
+      "subject": {
+        "id": 2,
+        "name": "آیین دادرسی مدنی",
+        "slug": "آیین-دادرسی-مدنی",
+        "color": "#2E6F9E"
+      },
+      "exam_type": {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      }
+    },
+    {
+      "id": 3,
+      "title": "سریع‌خوان یا منبع اصلی؟ برنامه ماه آخر",
+      "video_url": "https://www.aparat.com/v/dadrose-guide-last-month",
+      "thumbnail": null,
+      "subject": null,
+      "exam_type": {
+        "id": 1,
+        "name": "کانون وکلا",
+        "slug": "کانون-وکلا",
+        "short_name": "کانون"
+      }
+    },
+    {
+      "id": 4,
+      "title": "منابع حقوق جزا برای آزمون قضاوت",
+      "video_url": "https://www.aparat.com/v/dadrose-guide-criminal",
+      "thumbnail": null,
+      "subject": {
+        "id": 4,
+        "name": "حقوق جزا",
+        "slug": "حقوق-جزا",
+        "color": "#A23B32"
+      },
+      "exam_type": {
+        "id": 3,
+        "name": "قضاوت",
+        "slug": "قضاوت",
+        "short_name": "قضاوت"
+      }
+    }
+  ],
+  "selected_exam_type": null,
+  "store": {
+    "free_shipping_threshold": 3000000,
+    "print_dispatch_note": "ارسال حداکثر ۱ روز کاری پس از سفارش",
+    "delivery_tehran_note": "تحویل تهران ۱ تا ۲ روز کاری",
+    "delivery_province_note": "سایر شهرها ۳ تا ۵ روز کاری",
+    "consult_whatsapp": "989120000000",
+    "consult_telegram": "dadrose_support",
+    "support_hours": "همه روزه ۹ تا ۲۱",
+    "enamad_html": "",
+    "students_count_claim": "+۱۵٬۰۰۰ دانشجوی آکادمی دادرُز"
+  },
+  "discounted": [
+    {
+      "id": 4,
+      "title": "حقوق جزای عمومی",
+      "subtitle": "",
+      "slug": "حقوق-جزای-عمومی-دکتر-رضایی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 4,
+          "name": "دکتر رضایی",
+          "slug": "دکتر-رضایی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 4,
+          "name": "حقوق جزا",
+          "slug": "حقوق-جزا",
+          "color": "#A23B32"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 760000,
+      "card_price": 1090000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK",
+        "BUNDLE"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "قانون کاهش مجازات حبس تعزیری (اصلاحی ۱۴۰۳)",
+      "course_badge": "دوره جمع‌بندی حقوق جزا",
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق جزا",
+          "tone": "accent"
+        },
+        {
+          "code": "bundle",
+          "label": "چاپی + الکترونیک",
+          "tone": "info"
+        }
+      ],
+      "card_compare_price": 1280000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 109,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 7,
+      "title": "اصول فقه کاربردی",
+      "subtitle": "",
+      "slug": "اصول-فقه-کاربردی-استاد-محمدی",
+      "cover": "/fixtures/covers/osool-feqh.jpg",
+      "authors": [
+        {
+          "id": 6,
+          "name": "استاد محمدی",
+          "slug": "استاد-محمدی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 6,
+          "name": "اصول فقه",
+          "slug": "اصول-فقه",
+          "color": "#8A6A2E"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        },
+        {
+          "id": 5,
+          "name": "ارشد و دکتری",
+          "slug": "ارشد-و-دکتری",
+          "short_name": "ارشد"
+        }
+      ],
+      "min_price": 590000,
+      "card_price": 830000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ اصول فقه",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 980000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 116,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 9,
+      "title": "حقوق اساسی در نظم حقوقی ایران",
+      "subtitle": "",
+      "slug": "حقوق-اساسی-در-نظم-حقوقی-ایران-دکتر-نوری",
+      "cover": null,
+      "authors": [
+        {
+          "id": 7,
+          "name": "دکتر نوری",
+          "slug": "دکتر-نوری"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 8,
+          "name": "حقوق اساسی",
+          "slug": "حقوق-اساسی",
+          "color": "#5A3E8A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 5,
+          "name": "ارشد و دکتری",
+          "slug": "ارشد-و-دکتری",
+          "short_name": "ارشد"
+        }
+      ],
+      "min_price": 540000,
+      "card_price": 760000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ حقوق اساسی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 890000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 119,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 17,
+      "title": "حقوق مدنی نموداری",
+      "subtitle": "همراه با قانون مدنی نموداری و قوانین خاص مرتبط",
+      "slug": "حقوق-مدنی-نموداری",
+      "cover": null,
+      "authors": [
+        {
+          "id": 20,
+          "name": "امین بیات",
+          "slug": "امین-بیات"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        }
+      ],
+      "min_price": 335000,
+      "card_price": 335000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": "حقوق مدنی ۲ تا ۸",
+      "social_proof": {
+        "subject_rank": null,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "course",
+          "label": "منبع دوره دادرُز",
+          "tone": "info"
+        }
+      ],
+      "card_compare_price": 395000,
+      "card_discount_percent": 15,
+      "quick_add_variant_id": 170,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 12,
+      "title": "بانک تست طبقه‌بندی‌شده کانون وکلا",
+      "subtitle": "",
+      "slug": "بانک-تست-طبقه-بندی-شده-کانون-وکلا-تیم-علمی-دادرُز",
+      "cover": null,
+      "authors": [
+        {
+          "id": 9,
+          "name": "تیم علمی دادرُز",
+          "slug": "تیم-علمی-دادرُز"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 1,
+          "name": "حقوق مدنی",
+          "slug": "حقوق-مدنی",
+          "color": "#1F4E8C"
+        },
+        {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        },
+        {
+          "id": 3,
+          "name": "حقوق تجارت",
+          "slug": "حقوق-تجارت",
+          "color": "#1E7A5A"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        }
+      ],
+      "min_price": 590000,
+      "card_price": 590000,
+      "card_format": "EBOOK",
+      "formats": [
+        "EBOOK"
+      ],
+      "in_stock": true,
+      "print_in_stock": false,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TESTS",
+      "resource_type_label": "تست و مجموعه سؤالات",
+      "has_sample": false,
+      "kit_role": null,
+      "edition_badge": null,
+      "law_updated_until": "",
+      "course_badge": null,
+      "social_proof": {
+        "subject_rank": 2,
+        "season_buyers": null
+      },
+      "badges": [
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۲ حقوق مدنی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 690000,
+      "card_discount_percent": 14,
+      "quick_add_variant_id": 124,
+      "rating_avg": null,
+      "rating_count": 0
+    },
+    {
+      "id": 2,
+      "title": "آیین دادرسی مدنی کاربردی",
+      "subtitle": "",
+      "slug": "آیین-دادرسی-مدنی-کاربردی-دکتر-حسینی",
+      "cover": null,
+      "authors": [
+        {
+          "id": 2,
+          "name": "دکتر حسینی",
+          "slug": "دکتر-حسینی"
+        }
+      ],
+      "subjects": [
+        {
+          "id": 2,
+          "name": "آیین دادرسی مدنی",
+          "slug": "آیین-دادرسی-مدنی",
+          "color": "#2E6F9E"
+        }
+      ],
+      "exam_types": [
+        {
+          "id": 1,
+          "name": "کانون وکلا",
+          "slug": "کانون-وکلا",
+          "short_name": "کانون"
+        },
+        {
+          "id": 2,
+          "name": "مرکز وکلا",
+          "slug": "مرکز-وکلا",
+          "short_name": "مرکز"
+        },
+        {
+          "id": 3,
+          "name": "قضاوت",
+          "slug": "قضاوت",
+          "short_name": "قضاوت"
+        }
+      ],
+      "min_price": 990000,
+      "card_price": 1480000,
+      "card_format": "PRINT",
+      "formats": [
+        "PRINT",
+        "EBOOK",
+        "BUNDLE"
+      ],
+      "in_stock": true,
+      "print_in_stock": true,
+      "is_quick_review": false,
+      "volumes": 1,
+      "resource_type": "TEXTBOOK",
+      "resource_type_label": "درسنامه",
+      "has_sample": true,
+      "kit_role": null,
+      "edition_badge": "ویرایش ۱۴۰۵",
+      "law_updated_until": "",
+      "course_badge": "دوره آیین دادرسی مدنی کاربردی",
+      "social_proof": {
+        "subject_rank": 1,
+        "season_buyers": 31
+      },
+      "badges": [
+        {
+          "code": "edition",
+          "label": "ویرایش ۱۴۰۵",
+          "tone": "primary"
+        },
+        {
+          "code": "bestseller",
+          "label": "پرفروش‌ترین #۱ آیین دادرسی مدنی",
+          "tone": "accent"
+        }
+      ],
+      "card_compare_price": 1650000,
+      "card_discount_percent": 10,
+      "quick_add_variant_id": 104,
+      "rating_avg": null,
+      "rating_count": 0
+    }
+  ],
+  "testimonials": []
+}

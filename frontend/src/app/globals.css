@@ -1,0 +1,578 @@
+@import "../styles/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-feature-settings: "ss01";
+    overflow-x: clip;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* stretched card links show the ring on the whole card */
+  a:focus-visible::after {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+  input:focus-visible {
+    outline-offset: 0;
+  }
+}
+
+@layer components {
+  /* Rich text from the API (sanitised HTML) */
+  .rich-text {
+    line-height: 2;
+    color: var(--color-text);
+  }
+  .rich-text > * + * {
+    margin-top: 0.875rem;
+  }
+  .rich-text h2,
+  .rich-text h3 {
+    font-weight: 800;
+    font-size: 1.0625rem;
+    margin-top: 1.25rem;
+  }
+  .rich-text ul,
+  .rich-text ol {
+    padding-inline-start: 1.5rem;
+  }
+  .rich-text ul {
+    list-style: disc;
+  }
+  .rich-text ol {
+    list-style: decimal;
+  }
+  .rich-text li + li {
+    margin-top: 0.25rem;
+  }
+  .rich-text a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .rich-text strong {
+    font-weight: 800;
+  }
+  .rich-text img {
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+    border-radius: 0.5rem;
+  }
+  .rich-text table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+  .rich-text th,
+  .rich-text td {
+    border: 1px solid var(--color-border);
+    padding: 0.25rem 0.75rem;
+    text-align: start;
+  }
+  .rich-text blockquote {
+    border-inline-start: 4px solid var(--color-accent);
+    padding-inline-start: 1rem;
+    color: var(--color-text-muted);
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Study plan print / «ذخیره PDF» (A4, black on white, no site chrome, one week per page) */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  body:has(.plan-print) > :not(main) {
+    display: none !important;
+  }
+  body:has(.plan-print) {
+    background: #fff;
+  }
+  .plan-print {
+    max-width: none;
+    padding: 0;
+    font-size: 11pt;
+  }
+  .plan-print,
+  .plan-print * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .plan-print .plan-hero {
+    border: 1.5pt solid #000;
+    border-radius: 0;
+    padding: 10pt 12pt;
+  }
+  .plan-print .plan-hero * {
+    border-color: #000 !important;
+  }
+  .plan-print .plan-week + .plan-week {
+    break-before: page;
+  }
+  .plan-print .plan-day {
+    break-inside: avoid;
+  }
+  .plan-print ol,
+  .plan-print dl {
+    border-color: #000 !important;
+    border-radius: 0;
+  }
+  .plan-print .plan-dot {
+    background: var(--dot, #000) !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    border: 0.75pt solid #000;
+  }
+}
+
+/* ---------- Phase 4 ebook reader ---------- */
+
+/* full-screen reader: hide the store chrome (header, category nav, footer, countdown) */
+body:has(.reader-root) {
+  overflow: hidden;
+}
+/* only the known chrome elements: pdf.js appends measuring nodes to <body> that must stay rendered */
+body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
+  display: none !important;
+}
+
+.reader-page {
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  -webkit-touch-callout: none;
+}
+.reader-highlight {
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+}
+.reader-highlight-active {
+  opacity: 0.6;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* pdf.js text layer (subset of pdfjs-dist/web/pdf_viewer.css): transparent, selectable text */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 1;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.textLayer .markedContent {
+  display: contents;
+}
+.textLayer span[role="img"] {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+.textLayer ::selection {
+  background: color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+.textLayer br::selection {
+  background: transparent;
+}
+.textLayer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.textLayer.selecting .endOfContent {
+  top: 0;
+}
+
+/* no printing of ebooks: nothing of the book (pages, canvases, dialogs, overlays) reaches paper/PDF */
+@media print {
+  .reader-root,
+  .reader-root *,
+  body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
+    display: none !important;
+  }
+  .reader-print-block {
+    display: block !important;
+  }
+}
+
+/* ---------- Phase 6c: screen guard ----------
+ * ScreenGuard sets <html data-screen-guard="on"> synchronously in the event handler; no transition,
+ * so the next painted frame is white. The reader is visibility:hidden (top-layer dialogs inherit it). */
+.screen-guard-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 0;
+  width: 100%;
+  background: var(--guard-paper);
+  color: var(--guard-ink);
+  text-align: center;
+  cursor: pointer;
+  transition: none;
+}
+.screen-guard-overlay svg {
+  color: var(--guard-muted);
+}
+html[data-screen-guard="on"] .reader-root {
+  visibility: hidden;
+}
+html[data-screen-guard="on"] .reader-root .screen-guard-overlay {
+  display: flex;
+  visibility: visible;
+}
+html[data-screen-guard="on"] dialog::backdrop {
+  visibility: hidden;
+  background: transparent;
+}
+html[data-screen-guard="on"] body {
+  background: var(--guard-paper);
+}
+
+/* «high»: reading band — blurred, semi-opaque layers above and below the sharp band */
+.reading-band-mask {
+  z-index: 5;
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .reading-band-mask {
+    background: var(--color-surface);
+  }
+}
+.reading-band-edge {
+  z-index: 5;
+  border-block: 1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+/* ---------- Reader themes (UI refresh) ----------
+ * Chrome colours come from tokens.css; the rendered PDF page is tinted with a CSS filter so the
+ * pixels (text + burned-in watermark) stay one layer and the watermark keeps its relative contrast. */
+.reader-root .reader-page canvas {
+  transition: filter 0.2s ease;
+}
+.reader-root[data-reader-theme="sepia"] .reader-page {
+  background-color: var(--reader-paper-sepia);
+}
+.reader-root[data-reader-theme="sepia"] .reader-page canvas {
+  filter: sepia(0.55) saturate(1.15) brightness(0.97) contrast(0.96);
+}
+.reader-root[data-reader-theme="dark"] .reader-page {
+  background-color: var(--reader-paper-dark);
+}
+/* invert the page, then rotate hues back so colour figures keep their hue; soften pure white */
+.reader-root[data-reader-theme="dark"] .reader-page canvas {
+  filter: invert(0.88) hue-rotate(180deg) brightness(1.05) contrast(0.92);
+}
+.reader-root[data-reader-theme="dark"] .reader-highlight {
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader-root .reader-page canvas {
+    transition: none;
+  }
+}
+
+/* ---------- Phase 6: EPUB reader ----------
+ * Real text in theme colours (tokens.css restates them per data-reader-theme); no canvas filter.
+ * Ragged start-aligned text by default: browsers cannot kashida-justify Persian, so .epub-justify
+ * is opt-in and only stretches inter-word spaces. */
+.epub-content {
+  color: var(--color-text);
+  overflow-wrap: break-word;
+  text-align: start;
+  -webkit-text-size-adjust: 100%;
+}
+.epub-content.epub-justify :is(p, li, dd, blockquote, aside) {
+  text-align: justify;
+  text-justify: inter-word;
+}
+.epub-content :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 1.6em 0 0.7em;
+  color: var(--color-primary);
+  text-align: start;
+}
+.epub-content h1 { font-size: 1.45em; margin-top: 0.4em; }
+.epub-content h2 { font-size: 1.25em; }
+.epub-content h3 { font-size: 1.1em; }
+.epub-content :is(h4, h5, h6) { font-size: 1em; }
+.epub-content p { margin: 0 0 0.9em; }
+.epub-content :is(ul, ol) { margin: 0 0 0.9em; padding-inline-start: 1.6em; }
+.epub-content ul { list-style: disc; }
+.epub-content ol { list-style: decimal; }
+.epub-content li { margin-bottom: 0.3em; }
+.epub-content dt { font-weight: 700; }
+.epub-content dd { margin: 0 0 0.6em; padding-inline-start: 1.2em; }
+.epub-content :is(blockquote, aside) {
+  margin: 1em 0;
+  padding: 0.6em 1em;
+  border-inline-start: 4px solid var(--color-accent);
+  background: var(--color-neutral-soft);
+  border-radius: 0.375rem;
+}
+.epub-content aside { font-size: 0.9em; }
+.epub-content :is(blockquote, aside) > :last-child { margin-bottom: 0; }
+.epub-content :is(strong, b) { font-weight: 700; }
+.epub-content :is(em, i) { font-style: italic; }
+.epub-content :is(sub, sup) { font-size: 0.75em; }
+.epub-content small { font-size: 0.85em; }
+.epub-content hr { margin: 1.5em 0; border: 0; border-top: 1px solid var(--color-border); }
+.epub-content a { color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.2em; }
+.epub-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1em 0;
+  border-collapse: collapse;
+  font-size: 0.88em;
+  line-height: 1.7;
+}
+.epub-content :is(th, td) { border: 1px solid var(--color-border-strong); padding: 0.35em 0.6em; text-align: start; vertical-align: top; }
+.epub-content th { background: var(--color-primary-soft); font-weight: 700; }
+.epub-content :is(img, figure) { max-width: 100%; height: auto; margin-inline: auto; }
+.epub-content img {
+  display: block;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.epub-content figcaption { font-size: 0.85em; color: var(--color-text-muted); text-align: center; }
+.epub-content ::selection { background: color-mix(in srgb, var(--color-primary) 28%, transparent); }
+
+/* saved highlights (and search result snippets): tinted background, text keeps the theme colour */
+.reader-mark {
+  --mark: #f7d64a;
+  background: color-mix(in srgb, var(--mark) 50%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  cursor: pointer;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.reader-mark-yellow { --mark: #f7d64a; }
+.reader-mark-green { --mark: #7fd18b; }
+.reader-mark-blue { --mark: #7db7f0; }
+.reader-mark-pink { --mark: #f29cc4; }
+.reader-mark-active { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.reader-root[data-reader-theme="dark"] .reader-mark { background: color-mix(in srgb, var(--mark) 32%, transparent); }
+
+/* Phase 6b: paginated EPUB mode (CSS columns, one screen per column) */
+.epub-content.epub-paged :is(img, figure) {
+  break-inside: avoid;
+}
+.epub-content.epub-paged img {
+  max-height: calc(var(--epub-page-h, 80vh) - 3em);
+  width: auto;
+  object-fit: contain;
+}
+.epub-content.epub-paged :is(h1, h2, h3, h4, h5, h6) {
+  break-after: avoid;
+  break-inside: avoid;
+}
+/* overflow:auto would make a table one unbreakable block: let rows flow across pages instead */
+.epub-content.epub-paged table {
+  display: table;
+  width: 100%;
+  overflow: visible;
+}
+.epub-content.epub-paged tr {
+  break-inside: avoid;
+}
+
+/* ---------- retention stream: goal / streak celebration (CSS only) ----------
+ * Small gold and navy dots burst once around the badge; transform/opacity only. Under
+ * prefers-reduced-motion nothing moves: the badge and text simply appear. */
+.study-burst {
+  position: relative;
+}
+.study-burst > i {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  opacity: 0;
+  animation: study-burst 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms 1 both;
+}
+.study-burst > i:nth-child(even) {
+  background: var(--color-primary);
+}
+.study-burst > i:nth-child(1) { --dx: -3.2rem; --dy: -2.2rem; }
+.study-burst > i:nth-child(2) { --dx: 3rem; --dy: -2.6rem; }
+.study-burst > i:nth-child(3) { --dx: -3.6rem; --dy: 0.6rem; }
+.study-burst > i:nth-child(4) { --dx: 3.4rem; --dy: 1rem; }
+.study-burst > i:nth-child(5) { --dx: -1.4rem; --dy: -3.4rem; }
+.study-burst > i:nth-child(6) { --dx: 1.6rem; --dy: 3rem; }
+.study-burst > i:nth-child(7) { --dx: -2rem; --dy: 2.8rem; }
+.study-burst > i:nth-child(8) { --dx: 1.2rem; --dy: -3.6rem; }
+@keyframes study-burst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+}
+.study-pop {
+  animation: study-pop 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes study-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study-burst > i {
+    display: none;
+  }
+  .study-pop {
+    animation: none;
+  }
+}
+/* ---------- end retention stream ---------- */
+/* ---------- ux stream (ج۸): motion utilities ----------
+ * Durations/easing come from tokens.css (they drop to 0 under prefers-reduced-motion, and the global
+ * reduced-motion rule above also clamps animations). transform/opacity only. */
+@layer components {
+  /* pressed state on tappables: a small scale-down, haptic-like */
+  .press {
+    transition: transform var(--motion-fast) var(--ease-out);
+  }
+  .press:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+  /* cart badge bump on add */
+  .motion-bump {
+    animation: dr-bump var(--motion-slow) var(--ease-out);
+  }
+  /* heart / check pop */
+  .motion-pop {
+    animation: dr-pop var(--motion-base) var(--ease-out);
+  }
+  /* menus and popovers */
+  .motion-pop-in:not([hidden]) {
+    animation: dr-pop-in var(--motion-base) var(--ease-out);
+  }
+  /* kit: «درس … کامل شد» pulse */
+  .motion-complete {
+    animation: dr-complete var(--motion-slow) var(--ease-out) 3;
+  }
+  /* undo row: the 6-second window shrinking */
+  .undo-timer {
+    animation-name: dr-undo-timer;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+}
+@keyframes dr-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+@keyframes dr-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes dr-pop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dr-complete {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.1); }
+}
+@keyframes dr-undo-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .press:active:not(:disabled) {
+    transform: none;
+  }
+  .undo-timer {
+    animation: none;
+  }
+}

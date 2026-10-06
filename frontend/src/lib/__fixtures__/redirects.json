@@ -1,0 +1,9 @@
+{
+  "version": "fixture",
+  "redirects": {
+    "/products": ["/", 301],
+    "/profile": ["/", 301],
+    "/blog": ["https://dadrose.com/blog/", 301],
+    "/category/دوره-های-آموزشی": ["https://dadrose.com/", 301]
+  }
+}

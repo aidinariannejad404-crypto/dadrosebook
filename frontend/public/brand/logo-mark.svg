@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- PLACEHOLDER mark: replace this file with the official Dadrose mark (see README.md). -->
+  <rect width="64" height="64" rx="15" fill="#12264A"/>
+  <g fill="none" stroke="#C8A24B" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 15.5V44" stroke-width="3"/>
+    <path d="M17 20.5h30" stroke-width="3"/>
+    <path d="M17 20.5 12.5 31M17 20.5 21.5 31M47 20.5 42.5 31M47 20.5 51.5 31" stroke-width="1.6"/>
+    <path d="M11 44.5c7-3.2 14.5-2.6 21 1.8 6.5-4.4 14-5 21-1.8" stroke-width="3"/>
+    <path d="M11 50.5c7-3.2 14.5-2.6 21 1.8 6.5-4.4 14-5 21-1.8" stroke-width="3"/>
+  </g>
+  <g fill="#C8A24B">
+    <circle cx="32" cy="13" r="3"/>
+    <path d="M11.5 31h12a6 4 0 0 1-12 0Z"/>
+    <path d="M40.5 31h12a6 4 0 0 1-12 0Z"/>
+  </g>
+</svg>

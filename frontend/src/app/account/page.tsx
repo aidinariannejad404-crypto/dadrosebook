@@ -1,0 +1,156 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import type { LibraryEntry, OrderSummary, Paginated } from "@/lib/account-types";
+import { getMe, serverApiGet } from "@/lib/server-session";
+import { accountRoutes } from "@/lib/account-routes";
+import { formatToman, toPersianDigits } from "@/lib/format";
+import { formatJalaliDay, orderStatusLabel, orderStatusTone, tehranWallClock } from "@/lib/order-status";
+import { OrderStatusChip } from "@/components/account/StatusPill";
+import { EmptyState } from "@/components/account/EmptyState";
+import { ProfileForm } from "@/components/account/ProfileForm";
+import { ContinueReading } from "@/components/account/ContinueReading";
+import { mostRecentInProgress } from "@/components/account/ReadingProgressMeter";
+import { BookOpenIcon, ChatIcon, ChevronIcon, HeartIcon, MapPinIcon, PackageIcon } from "@/components/ui/Icons";
+// د۴ (impl/trust): readiness headline
+import type { Readiness } from "@/lib/trust-types";
+import { selectedExamSlug } from "@/lib/exam-server";
+import { ReadinessHeadline } from "@/components/trust/ReadinessDashboard";
+import { StudyDashboard } from "@/components/study/StudyDashboard"; // retention stream
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "پیشخوان", robots: { index: false, follow: false } };
+
+async function safe<T>(p: Promise<T>): Promise<T | null> {
+  try {
+    return await p;
+  } catch {
+    return null;
+  }
+}
+
+function greeting(): string {
+  const h = tehranWallClock(new Date()).getHours();
+  return h >= 4 && h < 12 ? "صبح بخیر" : h >= 12 && h < 17 ? "روز بخیر" : "عصر بخیر";
+}
+
+export default async function AccountDashboard() {
+  const exam = await selectedExamSlug();
+  const [me, orders, library, readiness] = await Promise.all([
+    getMe(),
+    safe(serverApiGet<Paginated<OrderSummary>>("/orders/")),
+    safe(serverApiGet<LibraryEntry[]>("/library/")),
+    safe(serverApiGet<Readiness>(`/me/readiness/${exam ? `?exam=${encodeURIComponent(exam)}` : ""}`)),
+  ]);
+  if (!me) return null; // the layout already handled anonymous visitors
+
+  const latest = orders?.results.slice(0, 3) ?? [];
+  const reading = library ? mostRecentInProgress(library) : null;
+  const pending = orders?.results.filter((o) => o.status === "PENDING_PAYMENT").length ?? 0;
+  const links = [
+    { href: accountRoutes.orders, label: "سفارش‌ها", note: orders ? `${toPersianDigits(orders.count)} سفارش` : "", Icon: PackageIcon },
+    { href: accountRoutes.library, label: "کتابخانه من", note: library ? `${toPersianDigits(library.length)} کتاب الکترونیک` : "", Icon: BookOpenIcon },
+    { href: accountRoutes.addresses, label: "نشانی‌ها", note: "مدیریت نشانی‌های ارسال", Icon: MapPinIcon },
+    { href: accountRoutes.wishlist, label: "علاقه‌مندی‌ها", note: "کتاب‌هایی که نشان کرده‌اید", Icon: HeartIcon },
+    { href: accountRoutes.reviews, label: "نظرات من", note: "وضعیت نظرهای ثبت‌شده", Icon: ChatIcon },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-card bg-surface p-4 shadow-card md:p-6">
+        <h1 className="text-xl font-black text-ink">
+          {greeting()}
+          {me.first_name ? `، ${me.first_name}` : ""}
+        </h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          شماره موبایل: <bdi>{toPersianDigits(me.phone)}</bdi>
+        </p>
+        <div className="mt-2">
+          <ProfileForm me={me} />
+        </div>
+      </section>
+
+      {readiness && readiness.total_subjects > 0 && <ReadinessHeadline data={readiness} link />}
+
+      {reading && <ContinueReading entry={reading} />}
+
+      {/* --- retention stream: minutes/goal/streak, plan «امروز», review prompt --- */}
+      <StudyDashboard readable={(library ?? []).filter((e) => e.can_read).map((e) => e.book.slug)} />
+      {/* --- end retention stream --- */}
+
+      {pending > 0 && (
+        <p className="rounded-control bg-warning-soft px-4 py-3 text-sm font-bold leading-7 text-warning">
+          {toPersianDigits(pending)} سفارش در انتظار پرداخت دارید.{" "}
+          <Link href={accountRoutes.orders} className="underline underline-offset-4">
+            مشاهده و پرداخت
+          </Link>
+        </p>
+      )}
+
+      <section aria-labelledby="latest-orders">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 id="latest-orders" className="text-lg font-extrabold text-ink">
+            آخرین سفارش‌ها
+          </h2>
+          {latest.length > 0 && (
+            <Link
+              href={accountRoutes.orders}
+              className="inline-flex min-h-11 items-center gap-1 rounded-control px-2 text-sm font-bold text-primary hover:bg-primary-soft"
+            >
+              همه سفارش‌ها
+              <ChevronIcon size={18} />
+            </Link>
+          )}
+        </div>
+        {orders == null ? (
+          <p className="rounded-card bg-surface p-4 text-sm text-ink-muted shadow-card">فهرست سفارش‌ها فعلاً در دسترس نیست.</p>
+        ) : latest.length === 0 ? (
+          <EmptyState icon={<PackageIcon size={36} />} title="هنوز سفارشی ثبت نکرده‌اید" href="/" action="دیدن کتاب‌ها" headingLevel={3}>
+            منابع آزمون وکالت، قضاوت و سردفتری را ببینید؛ کتاب الکترونیک را همین حالا بخوانید.
+          </EmptyState>
+        ) : (
+          <ul className="divide-y divide-line overflow-hidden rounded-card bg-surface shadow-card">
+            {latest.map((o) => (
+              <li key={o.number}>
+                <Link
+                  href={accountRoutes.order(o.number)}
+                  className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-primary-soft"
+                >
+                  <span className="font-bold text-ink">
+                    <bdi>{o.number}</bdi>
+                  </span>
+                  <OrderStatusChip status={o.status} tone={orderStatusTone(o.status)}>{orderStatusLabel(o.status, o.status_label)}</OrderStatusChip>
+                  <span className="text-xs text-ink-muted">{formatJalaliDay(o.created_at)}</span>
+                  <span className="ms-auto text-sm font-bold text-ink">{formatToman(o.total)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="quick-links">
+        <h2 id="quick-links" className="mb-3 text-lg font-extrabold text-ink">
+          دسترسی سریع
+        </h2>
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {links.map(({ href, label, note, Icon }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="flex min-h-11 items-center gap-3 rounded-card bg-surface p-4 shadow-card hover:shadow-raised"
+              >
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                  <Icon size={20} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-bold text-ink">{label}</span>
+                  {note && <span className="block text-xs text-ink-muted">{note}</span>}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}

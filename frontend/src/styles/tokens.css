@@ -1,0 +1,111 @@
+/*
+ * Brand tokens — the ONLY place brand colours are defined.
+ * Change a hex here and the whole site restyles (tailwind.config.ts maps these variables).
+ * Derived tokens are computed with color-mix() from the base tokens.
+ */
+:root {
+  /* base brand */
+  --color-primary: #12264a; /* navy */
+  --color-accent: #c8a24b; /* gold — backgrounds/borders only, or text on primary */
+  --color-bg: #f5f6f9; /* page background */
+  --color-text: #10182b; /* ink */
+
+  /* derived */
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, #000);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 8%, #fff);
+  --color-primary-tint: color-mix(in srgb, var(--color-primary) 16%, #fff);
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 18%, #fff);
+  --color-accent-strong: color-mix(in srgb, var(--color-accent) 70%, #000); /* AA on white for large accents */
+  --color-surface: #ffffff;
+  --color-surface-muted: color-mix(in srgb, var(--color-bg) 60%, var(--color-primary-soft));
+  --color-text-muted: color-mix(in srgb, var(--color-text) 72%, #fff); /* ≥ 4.5:1 on surface and bg */
+  --color-border: color-mix(in srgb, var(--color-text) 12%, #fff);
+  --color-border-strong: color-mix(in srgb, var(--color-text) 28%, #fff);
+  --color-focus: var(--color-accent);
+
+  /* state */
+  --color-success: #17643f;
+  --color-success-soft: #e5f3ec;
+  --color-danger: #a12a2a;
+  --color-danger-soft: #fbeaea;
+  --color-warning: #8a4500; /* 6.4:1 on warning-soft, 7.2:1 on white */
+  --color-warning-soft: #fdf1e2;
+  --color-info: #1d5a80; /* 6.5:1 on info-soft */
+  --color-info-soft: #e7f1f8;
+
+  /* badge tones (P1-20) — text/background pairs are all ≥ 4.5:1 */
+  --color-accent-ink: color-mix(in srgb, var(--color-accent) 45%, #000); /* gold-brown text on accent-soft, ≈ 7.5:1 */
+  --color-neutral-soft: color-mix(in srgb, var(--color-text) 6%, #fff);
+
+  /* shape */
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+  --shadow-card: 0 1px 2px rgb(16 24 43 / 0.06), 0 4px 16px rgb(16 24 43 / 0.06);
+  --shadow-raised: 0 8px 28px rgb(16 24 43 / 0.14);
+
+  /* motion (ux stream ج۸) — animate transform/opacity only; nothing over --motion-slow on a blocking path */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}
+
+/* ---------- Reader themes (UI refresh) ----------
+ * The reader root carries data-reader-theme; every token its chrome uses is restated here
+ * (derived tokens are resolved at :root, so they are restated, not re-derived).
+ * All text/background pairs ≥ 4.5:1. */
+:root {
+  --color-on-accent: #10182b; /* text on gold, in every theme */
+  --reader-paper-light: #ffffff;
+  --reader-ink-light: #10182b;
+  --reader-paper-sepia: #f6ecd4;
+  --reader-ink-sepia: #3b2d1a;
+  --reader-paper-dark: #1b2130;
+  --reader-ink-dark: #e6e8ee;
+  /* Phase 6c screen guard: the blank screen is white in every reader theme (owner's ask) */
+  --guard-paper: #ffffff;
+  --guard-ink: #10182b;
+  --guard-muted: #4a5468;
+}
+.reader-root[data-reader-theme="sepia"] {
+  --color-bg: #f1e5c9;
+  --color-surface: var(--reader-paper-sepia);
+  --color-surface-muted: #e6d7b5;
+  --color-text: var(--reader-ink-sepia);
+  --color-text-muted: #5e4a2f; /* ≈ 7:1 on paper */
+  --color-border: #dbc9a1;
+  --color-border-strong: #b49f74;
+  --color-primary: #6a4718; /* ≈ 7:1 on paper */
+  --color-primary-hover: #523610;
+  --color-primary-soft: #ecdcb6;
+  --color-primary-tint: #e0cc9d;
+  --color-neutral-soft: #ebdfc3;
+}
+.reader-root[data-reader-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #141924;
+  --color-surface: var(--reader-paper-dark);
+  --color-surface-muted: #10141c;
+  --color-text: var(--reader-ink-dark);
+  --color-text-muted: #aeb5c4; /* ≈ 7.5:1 on surface */
+  --color-border: #2c3446;
+  --color-border-strong: #4a5570;
+  --color-primary: #a9c1ee; /* ≈ 8.5:1 on surface */
+  --color-primary-hover: #c6d6f4;
+  --color-primary-soft: #263250;
+  --color-primary-tint: #33415f;
+  --color-neutral-soft: #262d3d;
+  --color-danger: #ff9e9e;
+  --color-danger-soft: #3a1f24;
+  --color-success: #8fd9b0;
+  --color-success-soft: #173326;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 8px 28px rgb(0 0 0 / 0.55);
+}
