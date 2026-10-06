@@ -190,7 +190,10 @@ export async function renderQuoteCard(input: QuoteCardInput, { withCover = true 
   ctx.fillStyle = accent;
   ctx.font = font(900, 180);
   ctx.textAlign = "right";
+  // the opening «: drawn LTR so the RTL context does not mirror it into »
+  ctx.direction = "ltr";
   ctx.fillText("«", panel.x + panel.w - 40, panel.y + 170);
+  ctx.direction = "rtl";
 
   const measure: Measure = (text, size) => {
     ctx.font = font(500, size);
