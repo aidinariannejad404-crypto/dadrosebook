@@ -23,6 +23,9 @@ api_v1 = [
     path("back-in-stock/", include("apps.engagement.api.urls")),
     path("library/", include("apps.reader.api.urls")),
     path("seo/", include("apps.seo.api.urls")),
+    # --- platform stream: inbox/me/changelog (PF-2/3/8/17) and support tickets (PF-11) ---
+    path("", include("apps.inbox.api.urls")),
+    path("support/", include("apps.support.api.urls")),
 ]
 
 urlpatterns = [

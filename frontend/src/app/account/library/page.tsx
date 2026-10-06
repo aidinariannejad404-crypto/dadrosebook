@@ -13,6 +13,7 @@ import { ReadingProgressMeter, isFinished, isInProgress, mostRecentInProgress } 
 import { BookOpenIcon, ChevronIcon } from "@/components/ui/Icons";
 import { NotesExportMenu } from "@/components/reader/NotesExport";
 import { OfflineBadge } from "@/components/account/OfflineBadge";
+import { InstallPrompt } from "@/components/platform/InstallPrompt"; // platform stream (PF-14)
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "کتابخانه من", robots: { index: false, follow: false } };
@@ -53,6 +54,9 @@ export default async function LibraryPage() {
               <ContinueReading entry={current} />
             </div>
           )}
+          <div className="mb-5 empty:hidden">
+            <InstallPrompt placement="library" />
+          </div>
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {entries.map((entry) => (
               <LibraryCard key={entry.book.id} entry={entry} />

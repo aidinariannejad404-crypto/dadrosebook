@@ -11,6 +11,10 @@ import { matchesPath } from "./HideOn";
 import { HomeIcon } from "./NavIcons";
 import styles from "./BottomNav.module.css";
 import { CategorySheet } from "./CategorySheet";
+// --- platform stream (PF-9): «کتابخانه» replaces «دسته‌ها» for customers who own an ebook ---
+import { libraryTabEnabled, useNavSummary } from "@/lib/nav-summary";
+import { BookOpenIcon } from "@/components/ui/Icons";
+import { OPEN_CATEGORIES_EVENT } from "@/components/platform/OpenCategoriesButton";
 import type { CategoryNode, ExamTypeMini, SubjectMini } from "@/lib/types";
 
 /** Routes with their own bottom UI (sticky buy bar, checkout bar, reader): no tab bar there. */
@@ -64,6 +68,15 @@ export function BottomNav({
 
   useEffect(() => setSheetOpen(false), [pathname]);
 
+  // platform stream (PF-9)
+  const { data: navSummary } = useNavSummary();
+  const showLibrary = libraryTabEnabled(navSummary);
+  useEffect(() => {
+    const open = () => setSheetOpen(true);
+    window.addEventListener(OPEN_CATEGORIES_EVENT, open);
+    return () => window.removeEventListener(OPEN_CATEGORIES_EVENT, open);
+  }, []);
+
   if (matchesPath(pathname, BOTTOM_NAV_HIDDEN)) return null;
 
   const at = (...prefixes: string[]) => matchesPath(pathname, { prefixes });
@@ -71,7 +84,8 @@ export function BottomNav({
   const browse = sheetOpen || at("/category", "/search");
   const kit = at(routes.kit);
   const cart = at(routes.cart);
-  const account = at(routes.account, routes.login);
+  const library = at(routes.library); // platform stream (PF-9)
+  const account = !library && at(routes.account, routes.login);
 
   return (
     <>
@@ -90,6 +104,15 @@ export function BottomNav({
               خانه
             </Link>
           </li>
+          {showLibrary ? (
+            <li className="flex flex-1">
+              <Link prefetch={false} href={routes.library} aria-current={library ? "page" : undefined} className={tab(library)}>
+                <Indicator on={library} />
+                <BookOpenIcon size={24} />
+                کتابخانه
+              </Link>
+            </li>
+          ) : (
           <li className="flex flex-1">
             <button
               type="button"
@@ -104,6 +127,7 @@ export function BottomNav({
               دسته‌ها
             </button>
           </li>
+          )}
           <li className="flex flex-1">
             <Link prefetch={false} href={routes.kit} aria-current={kit ? "page" : undefined} className={tab(kit)}>
               <Indicator on={kit} />

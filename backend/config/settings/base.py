@@ -46,6 +46,10 @@ INSTALLED_APPS = [
     "apps.engagement",
     "apps.reader",
     "apps.seo",
+    # --- platform stream (PF-2/3/8/11/17) ---
+    "apps.inbox",
+    "apps.support",
+    # --- end platform stream ---
     "apps.backoffice",  # last: its post_migrate roles need every app's permissions
 ]
 
@@ -183,6 +187,9 @@ REST_FRAMEWORK = {
         "back_in_stock": env("BACK_IN_STOCK_THROTTLE_RATE", default="10/hour"),
         # Redirect-hit and 404 beacons (``/seo/redirects/hit/``, ``/seo/not-found/``).
         "seo_beacon": env("SEO_BEACON_THROTTLE_RATE", default="120/min"),
+        # --- platform stream (PF-11): support tickets ---
+        "support_ticket": env("SUPPORT_TICKET_THROTTLE_RATE", default="10/hour"),
+        "support_lookup": env("SUPPORT_LOOKUP_THROTTLE_RATE", default="20/hour"),
     },
     # Set to the number of trusted reverse proxies in prod so the client IP is read correctly.
     "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
@@ -251,6 +258,12 @@ CELERY_BEAT_SCHEDULE = {
 
 # --- integrations -------------------------------------------------------------------------------
 SMS_PROVIDER = env("SMS_PROVIDER", default="console")
+# --- platform stream (PF-1/PF-2/PF-3) ---
+# Called by apps.accounts.sms.deliver_sms before every store SMS: the inbox copy + preferences.
+SMS_DELIVERY_HOOKS = ["apps.inbox.services.dispatch.on_sms"]
+# Offer «دریافت کد با تماس صوتی» (needs a provider with supports_voice_otp; off by default).
+OTP_VOICE_ENABLED = env.bool("OTP_VOICE_ENABLED", default=False)
+# --- end platform stream ---
 # Public storefront origin, used in SMS links (e.g. back-in-stock → {SITE_URL}/product/<slug>).
 SITE_URL = env("SITE_URL", default="http://localhost:3000")
 
@@ -405,6 +418,13 @@ UNFOLD = {
                     _nav("استفاده‌های کد تخفیف", "redeem", "orders_discountredemption"),
                     _nav("روش‌های ارسال", "local_shipping", "orders_shippingmethod"),
                     _nav("سبدهای خرید و رهاشده", "shopping_cart", "cart_cart"),
+                    # --- platform stream (PF-11) ---
+                    _nav(
+                        "درخواست‌های پشتیبانی",
+                        "support_agent",
+                        "support_supportticket",
+                        "apps.support.services.tickets.open_badge",
+                    ),
                     _nav(
                         "موجود شد خبرم کن", "notifications_active", "engagement_backinstockrequest"
                     ),
@@ -480,6 +500,10 @@ UNFOLD = {
                 "items": [
                     _nav("بنرها", "view_carousel", "content_banner"),
                     _nav("ویدیوهای راهنما", "play_circle", "content_guidevideo"),
+                    # --- platform stream (PF-2/PF-17) ---
+                    _nav("تازه‌های دادرُز", "new_releases", "inbox_changelogentry"),
+                    _nav("پیام‌های کاربران", "mark_email_unread", "inbox_notification"),
+                    _nav("پروفایل‌های مطالعه", "school", "inbox_userstudyprofile"),
                 ],
             },
             {

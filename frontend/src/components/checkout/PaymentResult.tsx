@@ -8,6 +8,7 @@ import { routes } from "@/lib/config";
 import { formatJalaliDate, formatToman, toPersianDigits } from "@/lib/format";
 import { apiFetch, errorMessage } from "@/lib/session";
 import { BookOpenIcon, CheckIcon, ClockIcon, CloseIcon } from "@/components/ui/Icons";
+import { InstallPrompt } from "@/components/platform/InstallPrompt"; // platform stream (PF-14)
 import { clearCheckoutKeys } from "./checkout-key";
 
 export type ResultStatus = "paid" | "failed" | "cancelled" | "pending";
@@ -152,6 +153,12 @@ export function PaymentResult({ orderNumber, status: urlStatus }: { orderNumber:
             <Link href={routes.library} className={`${primaryBtn} mt-3 w-full`}>
               رفتن به کتابخانه من
             </Link>
+          </div>
+        )}
+        {/* platform stream (PF-14): «نصب کتابخوان» after an ebook purchase */}
+        {canRead && (
+          <div className="mt-4 text-start empty:hidden">
+            <InstallPrompt placement="purchase" />
           </div>
         )}
         {order?.needs_shipping && (

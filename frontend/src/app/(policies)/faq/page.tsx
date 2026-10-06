@@ -3,6 +3,7 @@ import { FAQ, FAQ_PAGE, faqJsonLd } from "@/lib/content/policies";
 import { serializeJsonLd } from "@/lib/jsonld";
 import { ChevronIcon } from "@/components/ui/Icons";
 import { PolicyShell } from "../PolicyShell";
+import Link from "next/link"; // platform stream (PF-11)
 
 export const metadata: Metadata = {
   title: FAQ_PAGE.title,
@@ -35,6 +36,21 @@ export default function FaqPage() {
             </div>
           </section>
         ))}
+        {/* platform stream (PF-11): answer not found → ticket */}
+        <section aria-labelledby="faq-support" className="rounded-card bg-primary-soft p-4">
+          <h2 id="faq-support" className="text-lg font-extrabold text-ink">
+            پاسخ پرسشتان را پیدا نکردید؟
+          </h2>
+          <p className="mt-1 text-sm leading-7 text-ink">درخواست پشتیبانی ثبت کنید؛ کد پیگیری می‌گیرید و پاسخ برایتان پیامک می‌شود.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/support?source=faq" className="inline-flex min-h-11 items-center rounded-control bg-primary px-5 font-bold text-white hover:bg-primary-hover">
+              ثبت درخواست پشتیبانی
+            </Link>
+            <Link href="/support/track" className="inline-flex min-h-11 items-center rounded-control px-4 font-bold text-primary hover:bg-surface">
+              پیگیری درخواست
+            </Link>
+          </div>
+        </section>
       </div>
     </PolicyShell>
   );

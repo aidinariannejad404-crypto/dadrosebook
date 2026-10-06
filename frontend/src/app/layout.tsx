@@ -14,6 +14,10 @@ import { HideOn } from "@/components/layout/HideOn";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { CheckoutFooter, CheckoutHeader } from "@/components/layout/CheckoutChrome";
 import { CartProvider } from "@/components/cart/CartProvider";
+// --- platform stream (PF-8 onboarding, PF-14 install prompt, PF-17 «تازه‌ها») ---
+import { OnboardingSheet } from "@/components/platform/OnboardingSheet";
+import { PwaInstallListener } from "@/components/platform/PwaInstallListener";
+import { WhatsNewSheet } from "@/components/platform/WhatsNewSheet";
 
 const vazirmatn = localFont({
   src: "../fonts/Vazirmatn-wght.woff2",
@@ -98,6 +102,10 @@ export default async function RootLayout({ children, topbar }: { children: React
           </HideOn>
           <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
           <Umami />
+          {/* platform stream: client-only sheets, rendered for logged-in visitors only */}
+          <OnboardingSheet examTypes={browse.examTypes} subjects={browse.subjects} />
+          <WhatsNewSheet />
+          <PwaInstallListener />
         </CartProvider>
       </body>
     </html>

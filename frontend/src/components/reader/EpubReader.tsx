@@ -82,6 +82,10 @@ import {
 import { useCopyQuota } from "./useCopyQuota";
 import { useOfflineBook, type OfflineStart } from "./useOfflineBook";
 import { OfflinePanel } from "./OfflinePanel";
+// --- platform stream (PF-6): reader font family + Persian digits ---
+import { ReaderTypographyControls, useReaderTypography } from "@/components/platform/ReaderTypographyControls";
+import { fontFamilyFor, persianizeDigits, restoreDigits, type DigitOriginals } from "@/lib/reader-typography";
+// --- end platform stream ---
 import type { ReaderTheme } from "./theme";
 
 /** Where to put the reader once a chapter is on screen. */
@@ -156,6 +160,11 @@ export function EpubReader({
   const [chapterError, setChapterError] = useState<ReaderError | null>(null);
   const [offset, setOffset] = useState(0);
   const [settings, setSettingsState] = useState<EpubSettings>(DEFAULT_EPUB_SETTINGS);
+  // --- platform stream (PF-6) ---
+  const [typography, setTypography] = useReaderTypography();
+  const readerFont = fontFamilyFor(typography.font);
+  const digitOriginals = useRef<DigitOriginals>(new Map());
+  // --- end platform stream ---
   const [chrome, setChrome] = useState(true);
   const [panel, setPanel] = useState<"toc" | "search" | "notes" | "settings" | null>(null);
   const [notesTab, setNotesTab] = useState<NotesTab>("highlights");
@@ -543,6 +552,15 @@ export function EpubReader({
     // prefetch the next chapter
     if (chapter.next !== null) void fetchChapter(chapter.next, { prefetch: true });
   }, [chapter, applyTarget, measure, fetchChapter]);
+
+  // --- platform stream (PF-6): display-only Persian digits (same text length, so offsets hold) ---
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || !chapter) return;
+    if (typography.persianDigits) persianizeDigits(root, digitOriginals.current);
+    else restoreDigits(digitOriginals.current);
+  }, [chapter, typography.persianDigits]);
+  // --- end platform stream ---
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -1079,6 +1097,7 @@ export function EpubReader({
               paged
                 ? ({
                     fontSize: `${fontPx}px`,
+                    fontFamily: readerFont /* platform stream (PF-6) */,
                     lineHeight,
                     width: `${geo.colWidth}px`,
                     height: `${geo.height}px`,
@@ -1088,7 +1107,13 @@ export function EpubReader({
                     columnFill: "auto",
                     "--epub-page-h": `${geo.height}px`,
                   } as React.CSSProperties)
-                : { fontSize: `${fontPx}px`, lineHeight, maxWidth: `${margin.maxEm}em`, paddingInline: `${margin.padding}px` }
+                : {
+                    fontSize: `${fontPx}px`,
+                    fontFamily: readerFont /* platform stream (PF-6) */,
+                    lineHeight,
+                    maxWidth: `${margin.maxEm}em`,
+                    paddingInline: `${margin.padding}px`,
+                  }
             }
           >
             <h2 className="sr-only">{chapter?.title ?? "در حال بارگذاری فصل"}</h2>
@@ -1243,6 +1268,8 @@ export function EpubReader({
         theme={theme}
         onTheme={onTheme}
       >
+        {/* platform stream (PF-6) */}
+        <ReaderTypographyControls value={typography} onChange={setTypography} />
         {session.offline && <OfflinePanel off={off} info={session.offline} />}
       </EpubSettingsSheet>
 

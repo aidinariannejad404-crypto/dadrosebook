@@ -20,6 +20,9 @@ export interface OtpRequested {
   expires_in: number;
   resend_in: number;
   length: number;
+  /** platform stream (PF-1): "sms" | "voice" and whether a voice call can be offered */
+  channel?: "sms" | "voice";
+  voice_available?: boolean;
 }
 
 export interface OtpVerified {

@@ -2,6 +2,7 @@ import type { CategoryNode, ExamTypeMini, SubjectMini } from "@/lib/types";
 import { routes } from "@/lib/config";
 import { MegaMenu } from "./MegaMenu";
 import { NavLink } from "./NavLink";
+import { OpenCategoriesButton } from "@/components/platform/OpenCategoriesButton"; // platform stream (PF-9)
 
 function descendantPaths(node: CategoryNode): string[] {
   return node.children.flatMap((c) => [routes.category(c.slug), ...descendantPaths(c)]);
@@ -24,6 +25,7 @@ export function CategoryNav({
   return (
     <nav aria-label="دسته‌بندی کتاب‌ها" className="relative border-b border-line bg-surface">
       <div className="mx-auto flex max-w-site items-center gap-2 md:px-4">
+        <OpenCategoriesButton />
         {examTypes.length > 0 && subjects.length > 0 && (
           <MegaMenu label="آزمون‌ها و دروس" examTypes={examTypes} subjects={subjects} />
         )}

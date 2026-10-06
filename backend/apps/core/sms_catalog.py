@@ -21,6 +21,8 @@ ORDER_SHIPPED = "order_shipped"
 BACK_IN_STOCK = "back_in_stock"
 ABANDONED_CART = "abandoned_cart"
 REFUND_DONE = "refund_done"
+# --- platform stream (PF-11): support ticket replies ---
+TICKET_REPLY = "ticket_reply"
 
 KINDS: dict[str, SmsKind] = {
     k.key: k
@@ -61,6 +63,13 @@ KINDS: dict[str, SmsKind] = {
             {"order": "شماره سفارش", "amount": "مبلغ بازگشتی", "reference": "شماره پیگیری"},
             "مبلغ {amount} بابت سفارش {order} به شما بازگردانده شد. شماره پیگیری: {reference}"
             "\nدادرُز",
+        ),
+        # --- platform stream (PF-11) ---
+        SmsKind(
+            TICKET_REPLY,
+            "پاسخ به درخواست پشتیبانی",
+            {"code": "کد پیگیری درخواست", "link": "لینک مشاهده پاسخ"},
+            "دادرُز: درخواست پشتیبانی {code} پاسخ داده شد. مشاهده پاسخ: {link}",
         ),
     )
 }

@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path("auth/otp/request/", views.OtpRequestView.as_view(), name="auth-otp-request"),
+    path("auth/otp/voice/", views.OtpVoiceView.as_view(), name="auth-otp-voice"),  # PF-1
     path("auth/otp/verify/", views.OtpVerifyView.as_view(), name="auth-otp-verify"),
     path("auth/refresh/", views.RefreshView.as_view(), name="auth-refresh"),
     path("auth/logout/", views.LogoutView.as_view(), name="auth-logout"),

@@ -402,3 +402,12 @@ export async function getStudyKits(examType: string | null = null): Promise<Stud
   }
   return apiGet<StudyKit[]>(`/catalog/study-kits/${queryString({ exam_type: examType })}`);
 }
+
+/* ---------- platform stream (PF-17) ---------- */
+
+/** GET /changelog/ — public «تازه‌های دادرُز» (first page, newest first). */
+export async function getChangelog(): Promise<import("./platform-types").ChangelogEntry[]> {
+  if (fixturesEnabled()) return [];
+  const page = await apiGet<Paginated<import("./platform-types").ChangelogEntry>>("/changelog/", 300);
+  return page.results;
+}

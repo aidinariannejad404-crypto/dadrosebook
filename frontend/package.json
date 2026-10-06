@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . && node scripts/check-crypto-keys.mjs",
+    "lint:crypto": "node scripts/check-crypto-keys.mjs",
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

@@ -2,6 +2,7 @@ import { Logo } from "@/components/brand/Logo";
 import { CartBadge } from "@/components/cart/CartBadge";
 import { SearchAutocomplete } from "@/components/discovery/SearchAutocomplete";
 import { UserChip } from "@/components/auth/UserChip";
+import { InboxBell } from "@/components/platform/InboxBell"; // platform stream (PF-2)
 import styles from "./Header.module.css";
 
 /**
@@ -17,6 +18,7 @@ export function Header({ fixtures = false }: { fixtures?: boolean }) {
         <SearchAutocomplete fixtures={fixtures} className="order-3 w-full md:order-2 md:mx-4 md:max-w-xl md:flex-1" />
 
         <nav aria-label="حساب کاربری و سبد خرید" className="order-2 ms-auto flex items-center gap-1 md:order-3 md:ms-0">
+          <InboxBell />
           <UserChip />
           <CartBadge />
         </nav>

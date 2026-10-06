@@ -12,6 +12,9 @@ import {
   normalizePhone,
 } from "@/lib/otp";
 import { announceAuth } from "./auth-events";
+// --- platform stream (PF-1 «کد نیامد؟», PF-8 onboarding after login) ---
+import { OtpHelp } from "@/components/platform/OtpHelp";
+import { markOnboardingPending } from "@/lib/onboarding";
 
 interface OtpLoginProps {
   /** Called after a successful verify (cookies are already set). */
@@ -69,6 +72,8 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
   const [resendUntil, setResendUntil] = useState<number | null>(null);
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [sentAt, setSentAt] = useState<number | null>(null); // PF-1
+  const [voiceAvailable, setVoiceAvailable] = useState(false); // PF-1
   const phoneRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const firstRender = useRef(true);
@@ -95,6 +100,8 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
       setLength(res.data.length > 0 ? res.data.length : 5);
       setResendUntil(Date.now() + Math.max(0, res.data.resend_in) * 1000);
       setBlockedUntil(null);
+      setSentAt(Date.now());
+      setVoiceAvailable(!!res.data.voice_available);
       return true;
     }
     if (res.status === 429) {
@@ -141,6 +148,7 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
     setError(null);
     const res = await apiFetch<OtpVerified>("/auth/otp/verify/", { method: "POST", json: { phone, code: value } });
     if (res.ok) {
+      markOnboardingPending(); // PF-8: the sheet opens once if the profile is still empty
       announceAuth(res.data.user);
       onSuccess(res.data.user, res.data.is_new);
       return; // stay busy: the parent navigates or swaps the step
@@ -286,6 +294,20 @@ export function OtpLogin({ onSuccess, headingLevel = 2, hideTitle = false, autoF
         <button type="button" onClick={onResend} disabled={busy || resendLeft > 0} className={linkBtn}>
           ارسال دوباره کد
         </button>
+        {/* PF-1 */}
+        <OtpHelp
+          phone={phone}
+          sentAt={sentAt}
+          resendLeft={resendLeft}
+          voiceAvailable={voiceAvailable}
+          onResend={() => void onResend()}
+          onVoiceSent={(data) => {
+            setResendUntil(Date.now() + Math.max(0, data.resend_in) * 1000);
+            setSentAt(Date.now());
+            setCode("");
+            codeRef.current?.focus();
+          }}
+        />
         {resendLeft > 0 && (
           <span className="text-ink-muted" aria-hidden="true">
             <span dir="ltr">{formatCountdown(resendLeft)}</span> تا ارسال دوباره
