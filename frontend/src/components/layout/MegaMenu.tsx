@@ -92,7 +92,10 @@ export function MegaMenu({
   );
 }
 
-/** Desktop mega menu panel: one column per exam, each listing the subjects (exam × subject search). */
+/**
+ * Desktop mega menu panel: one column per exam (heading → exam hub /exam/<slug>), each listing the
+ * subjects (exam × subject search), then a row of subject hubs (/subject/<slug>, package ب).
+ */
 function ExamSubjectPanel({ examTypes, subjects }: { examTypes: ExamTypeMini[]; subjects: SubjectMini[] }) {
   return (
     <div className="mx-auto max-w-site px-4 py-5">
@@ -104,7 +107,7 @@ function ExamSubjectPanel({ examTypes, subjects }: { examTypes: ExamTypeMini[]; 
               <h3 id={headingId} className="border-b border-line pb-1">
                 <Link
                   prefetch={false}
-                  href={routes.search({ exam_type: exam.slug })}
+                  href={routes.exam(exam.slug)}
                   className="inline-flex min-h-11 items-center text-sm font-extrabold text-primary hover:underline"
                 >
                   آزمون {exam.name}
@@ -125,7 +128,7 @@ function ExamSubjectPanel({ examTypes, subjects }: { examTypes: ExamTypeMini[]; 
                 <li>
                   <Link
                     prefetch={false}
-                    href={routes.search({ exam_type: exam.slug })}
+                    href={routes.exam(exam.slug)}
                     className="flex min-h-11 items-center px-1 text-sm font-bold text-primary underline-offset-4 hover:underline"
                   >
                     مشاهده همه منابع {exam.short_name || exam.name}
@@ -136,7 +139,26 @@ function ExamSubjectPanel({ examTypes, subjects }: { examTypes: ExamTypeMini[]; 
           );
         })}
       </div>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
+      <section aria-labelledby="mega-subject-hubs" className="mt-4 border-t border-line pt-3">
+        <h3 id="mega-subject-hubs" className="text-sm font-extrabold text-ink-muted">
+          صفحه هر درس
+        </h3>
+        <ul className="mt-1 flex flex-wrap gap-x-1">
+          {subjects.map((s) => (
+            <li key={s.id}>
+              <Link
+                prefetch={false}
+                href={routes.subject(s.slug)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-control px-2 text-sm text-ink hover:bg-primary-soft hover:text-primary"
+              >
+                <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: s.color }} />
+                {s.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-4">
         {[
           { href: routes.kit, label: "بسته مطالعاتی آزمون" },
           { href: routes.search({ quick_review: "true" }), label: "سریع‌خوان و جمع‌بندی" },

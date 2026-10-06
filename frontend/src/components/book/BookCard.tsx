@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import type { BookCard as BookCardData } from "@/lib/types";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { formatAverage } from "@/lib/reviews";
@@ -89,7 +90,24 @@ export function BookCard({ book, showNotify = false, priority = false }: BookCar
             {book.title}
           </Link>
         </h3>
-        {author && <p className="line-clamp-1 text-xs text-ink-muted">{author}</p>}
+        {author && (
+          // author pages (package ب): links lifted above the stretched title link; the line itself lets
+          // clicks through (pointer-events-none) and each name gets a 44px-tall hit area (py-3 -my-3)
+          <p className="pointer-events-none relative z-10 -my-3 truncate py-3 text-xs text-ink-muted">
+            {book.authors.map((a, i) => (
+              <Fragment key={a.id}>
+                {i > 0 && "، "}
+                <Link
+                  prefetch={false}
+                  href={routes.author(a.slug)}
+                  className="pointer-events-auto -my-3 inline-block py-3 hover:text-primary hover:underline"
+                >
+                  {a.name}
+                </Link>
+              </Fragment>
+            ))}
+          </p>
+        )}
         {rating && (
           <p className="flex items-center gap-1 text-[0.6875rem] leading-5 text-ink-muted">
             <Stars value={rating.avg} size={13} />

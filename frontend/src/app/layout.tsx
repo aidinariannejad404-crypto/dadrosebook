@@ -95,7 +95,7 @@ export default async function RootLayout({ children, topbar }: { children: React
             {children}
           </main>
           <HideOn {...enclosed} fallback={<CheckoutFooter />}>
-            <Footer store={store} />
+            <Footer store={store} examTypes={browse.examTypes} />
           </HideOn>
           <BottomNav categories={categories} examTypes={browse.examTypes} subjects={browse.subjects} />
           <Umami />

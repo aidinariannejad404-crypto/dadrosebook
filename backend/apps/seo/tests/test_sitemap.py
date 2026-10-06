@@ -34,8 +34,9 @@ def test_only_active_books_with_active_variants(world):
         [world["on_sale"].slug, world["ebook_only"].slug]
     )
     assert [c["slug"] for c in data["categories"]] == ["آزمون-وکالت"]
-    assert [s["slug"] for s in data["subjects"]] == ["حقوق-مدنی"]
-    assert [e["slug"] for e in data["exam_types"]] == ["کانون-وکلا"]
+    # hubs (package ب): only pages that pass the indexability guardrail — no intros here
+    assert data["subjects"] == []
+    assert data["exam_types"] == []
 
 
 def test_updated_at_is_utc_and_follows_variant_changes(world):
@@ -54,7 +55,16 @@ def test_api_shape_and_absolute_cover(api, world):
     response = api.get(URL)
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"books", "categories", "subjects", "exam_types"}
+    assert set(body) == {
+        "books",
+        "categories",
+        "subjects",
+        "exam_types",
+        "authors",
+        "publishers",
+        "guides",
+        "lists",
+    }
     row = next(b for b in body["books"] if b["slug"] == book.slug)
     assert set(row) == {"slug", "updated_at", "cover"}
     assert row["cover"].startswith("http://testserver/media/covers/")

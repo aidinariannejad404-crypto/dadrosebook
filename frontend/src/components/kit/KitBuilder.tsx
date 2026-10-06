@@ -165,7 +165,7 @@ export function KitBuilder({ examTypes, exam, kits, subjectsParam, event, server
                 <p className="mt-2 leading-7 text-ink-muted">آزمون دیگری را انتخاب کنید یا کتاب‌های این آزمون را ببینید.</p>
                 {exam && (
                   <Link
-                    href={routes.search({ exam_type: exam })}
+                    href={routes.exam(exam)}
                     className="mt-5 inline-flex min-h-12 items-center justify-center rounded-control bg-primary px-5 font-bold text-white hover:bg-primary-hover"
                   >
                     کتاب‌های {examName || "این آزمون"}

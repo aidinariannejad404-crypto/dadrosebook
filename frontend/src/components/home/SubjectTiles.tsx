@@ -43,7 +43,7 @@ export function SubjectTiles({ subjects, examName }: { subjects: HomeSubject[]; 
           <li key={s.id}>
             <Link
               prefetch={false}
-              href={routes.search({ subject: s.slug })}
+              href={routes.subject(s.slug)}
               className="relative flex min-h-24 flex-col justify-between overflow-hidden rounded-card p-4 pb-3.5 text-white shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-raised"
               style={{ backgroundColor: s.color }}
             >

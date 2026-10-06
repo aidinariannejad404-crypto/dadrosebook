@@ -4,7 +4,7 @@ import { routes } from "@/lib/config";
 
 interface SubjectTagProps {
   subject: SubjectMini;
-  /** link to the subject listing (Phase 2 search page) */
+  /** link to the subject hub /subject/<slug> (package ب; was the noindexed /search?subject=) */
   link?: boolean;
   size?: "sm" | "md";
 }
@@ -29,7 +29,7 @@ export function SubjectTag({ subject, link = false, size = "sm" }: SubjectTagPro
   );
   if (link) {
     return (
-      <Link prefetch={false} href={routes.search({ subject: subject.slug })} className={`${cls} hover:brightness-95`} style={style}>
+      <Link prefetch={false} href={routes.subject(subject.slug)} className={`${cls} hover:brightness-95`} style={style}>
         {content}
       </Link>
     );

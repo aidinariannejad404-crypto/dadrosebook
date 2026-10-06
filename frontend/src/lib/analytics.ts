@@ -36,7 +36,9 @@ export type AnalyticsEvent =
   | "delivery_exam_clash_shown"
   | "start_studying_action"
   | "readiness_add_to_cart"
-  | "notify_me_cancelled";
+  | "notify_me_cancelled"
+  // hubs (package ب, impl/hubs)
+  | "hub_cta_click";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -318,6 +320,21 @@ export function trackOwnedBookNotice(p: { item_id: number; formats: string[]; su
 /** د۳: a post-purchase «شروع مطالعه» action. */
 export function trackStartStudying(action: "read_first" | "study_plan" | "reminders_on" | "reminders_off", order: string): void {
   track("start_studying_action", { action, transaction_id: order });
+}
+
+/* --- hubs (package ب, impl/hubs) --- */
+
+export interface HubCtaClick {
+  /** exam | subject | author | publisher | guide | list */
+  hub: string;
+  slug: string;
+  /** which call to action, e.g. "kit", "guide", "all_books" */
+  cta: string;
+}
+
+/** Click on a call to action inside a hub page (kit CTA, guide link…). */
+export function trackHubCtaClick(c: HubCtaClick): void {
+  track("hub_cta_click", { hub: c.hub, slug: c.slug, cta: c.cta });
 }
 
 /** Test helper: reset the queue, dedupe set and poller. */

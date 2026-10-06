@@ -309,6 +309,15 @@ SITE_HOST = env("SITE_HOST", default="")
 # --- caching knobs ------------------------------------------------------------------------------
 HOME_CACHE_SECONDS = env.int("HOME_CACHE_SECONDS", default=60)
 
+# --- hubs & guides (package ب, impl/hubs) -------------------------------------------------------
+# Indexability guardrail (apps.content.services.indexing): thin hubs are noindex + left out of the
+# sitemap (Google "scaled content abuse" policy, March 2024).
+HUB_INDEX_MIN_INTRO_WORDS = env.int("HUB_INDEX_MIN_INTRO_WORDS", default=150)
+HUB_INDEX_MIN_BOOKS = env.int("HUB_INDEX_MIN_BOOKS", default=3)
+AUTHOR_INDEX_MIN_BOOKS = env.int("AUTHOR_INDEX_MIN_BOOKS", default=2)
+PUBLISHER_INDEX_MIN_BOOKS = env.int("PUBLISHER_INDEX_MIN_BOOKS", default=3)
+HUB_CACHE_SECONDS = env.int("HUB_CACHE_SECONDS", default=60)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -482,6 +491,9 @@ UNFOLD = {
                 "items": [
                     _nav("بنرها", "view_carousel", "content_banner"),
                     _nav("ویدیوهای راهنما", "play_circle", "content_guidevideo"),
+                    # hubs & guides (package ب, impl/hubs)
+                    _nav("راهنماها (مقاله)", "article", "content_guide"),
+                    _nav("فهرست‌های پیشنهادی", "format_list_numbered", "content_curatedlist"),
                 ],
             },
             {

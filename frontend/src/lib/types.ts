@@ -756,6 +756,112 @@ export interface SitemapBook extends SitemapEntry {
 export interface SitemapData {
   books: SitemapBook[];
   categories: SitemapEntry[];
+  /** hubs (package ب): only pages that pass the indexability guardrail */
   subjects: SitemapEntry[];
   exam_types: SitemapEntry[];
+  /** optional so an older backend (before package ب) still parses */
+  authors?: SitemapEntry[];
+  publishers?: SitemapEntry[];
+  guides?: SitemapEntry[];
+  lists?: SitemapEntry[];
+}
+
+/* ---------- hubs, guides and curated lists (package ب, impl/hubs; GET /content/…) ---------- */
+
+/** Author / translator / reviewer with credentials (bylines, Person JSON-LD). */
+export interface PersonProfile extends PersonMini {
+  job_title: string;
+  affiliation: string;
+  photo: string | null;
+}
+
+export interface GuideCard {
+  id: number;
+  title: string;
+  slug: string;
+  summary: string;
+  /** ISO date of the last content review, or null */
+  updated_on: string | null;
+  author: PersonProfile | null;
+  reviewer: PersonProfile | null;
+}
+
+/** Fields every hub carries for the indexability guardrail (ب۷). */
+export interface HubBase {
+  book_count: number;
+  /** server verdict: intro long enough + enough books (exam/subject), see backend services/indexing.py */
+  indexable: boolean;
+  updated_at: string;
+}
+
+export interface HubIntro {
+  /** sanitised HTML */
+  intro: string;
+  intro_byline: string;
+  intro_is_placeholder: boolean;
+}
+
+export interface ExamHub extends HubBase {
+  intro_words: number;
+  exam: ExamTypeMini & HubIntro;
+  next_event: { id: number; name: string; date: string } | null;
+  kit: { essential_count: number; book_count: number; subject_count: number };
+  groups: { subject: SubjectMini | null; weight: number | null; book_count: number; books: BookCard[] }[];
+  courses: Course[];
+  guides: GuideCard[];
+}
+
+export interface SubjectHub extends HubBase {
+  intro_words: number;
+  subject: SubjectMini & HubIntro & { description: string };
+  books: BookCard[];
+  exams: { exam: ExamTypeMini; book_count: number }[];
+  authors: { person: PersonProfile; book_count: number }[];
+  courses: Course[];
+  guides: GuideCard[];
+}
+
+export interface AuthorHub extends HubBase {
+  person: PersonProfile & { bio: string };
+  same_as: string[];
+  bio_words: number;
+  authored: BookCard[];
+  translated: BookCard[];
+  subjects: SubjectMini[];
+  guides_written: GuideCard[];
+  guides_reviewed: GuideCard[];
+}
+
+export interface PublisherHub extends HubBase {
+  intro_words: number;
+  publisher: PublisherMini & { website: string; intro: string };
+  books: BookCard[];
+  subjects: SubjectMini[];
+  authors: { person: PersonProfile; book_count: number }[];
+}
+
+export interface GuideDetail extends GuideCard {
+  intro: string;
+  body: string;
+  published_at: string | null;
+  updated_at: string;
+  is_published: boolean;
+  indexable: boolean;
+  exam_types: ExamTypeMini[];
+  subjects: SubjectMini[];
+  books: BookCard[];
+}
+
+export interface CuratedListDetail {
+  id: number;
+  title: string;
+  slug: string;
+  intro: string;
+  ends_on: string | null;
+  updated_at: string;
+  intro_words: number;
+  is_expired: boolean;
+  indexable: boolean;
+  book_count: number;
+  entries: { book: BookCard; note: string }[];
 }

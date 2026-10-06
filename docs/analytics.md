@@ -43,6 +43,7 @@ Call sites use the typed helpers, not `track()` directly.
 | `start_studying_action` | `trackStartStudying(action, order)` | `action` (`read_first` \| `study_plan` \| `reminders_on` \| `reminders_off`), `transaction_id` | Post-purchase «شروع مطالعه» action (د۳) | impl/trust — `components/trust/StartStudying.tsx` |
 | `readiness_add_to_cart` | `track()` | `item_id`, `item_name`, `value`, `quantity` (or `items`, `source: add_missing`) | Missing essential book added from «آمادگی من» (د۴) | impl/trust — `components/trust/ReadinessActions.tsx` |
 | `notify_me_cancelled` | `track()` | `item_id`, `variant` | «خبرم کن» cancelled in the account (د۴) | impl/trust — `components/trust/NotifyList.tsx` |
+| `hub_cta_click` | `trackHubCtaClick(c)` | `hub` (exam/subject/…), `slug`, `cta` (`kit`, `all_books`, `subject_hub`) | Call to action clicked on a hub page (package ب) | `components/hub/HubCtaLink.tsx` (exam hub) |
 
 ## Adding an event
 

@@ -305,7 +305,7 @@ function buildGroups(data: SearchSuggestions | null, uid: string): { section: Ex
       options: data.subjects.map((s) => ({
         id: `${uid}-s-${s.id}`,
         section: "subjects",
-        href: routes.search({ subject: s.slug }),
+        href: routes.subject(s.slug),
         render: (
           <>
             <span aria-hidden="true" className="size-3 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
@@ -330,7 +330,7 @@ function buildGroups(data: SearchSuggestions | null, uid: string): { section: Ex
       options: data.authors.map((a) => ({
         id: `${uid}-a-${a.id}`,
         section: "authors",
-        href: routes.search({ q: a.name }),
+        href: routes.author(a.slug),
         render: <span className="min-w-0 truncate">{a.name}</span>,
       })),
     });

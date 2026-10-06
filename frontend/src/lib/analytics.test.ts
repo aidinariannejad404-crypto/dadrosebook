@@ -9,6 +9,7 @@ import {
   trackAddToCart,
   trackBeginCheckout,
   trackCourseCrossSellClick,
+  trackHubCtaClick,
   trackKitBuilt,
   trackNotifyMeRequested,
   trackPurchase,
@@ -143,6 +144,11 @@ describe("sanitizeParams", () => {
 });
 
 describe("typed helpers", () => {
+  it("trackHubCtaClick (package ب)", () => {
+    trackHubCtaClick({ hub: "exam", slug: "کانون-وکلا", cta: "kit" });
+    expect(domEvents[0]).toEqual({ event: "hub_cta_click", params: { hub: "exam", slug: "کانون-وکلا", cta: "kit" } });
+  });
+
   it("trackViewItem / trackAddToCart", () => {
     trackViewItem({ item_id: 7, item_name: "ب", price: null, subject: "مدنی" });
     trackAddToCart({ item_id: 7, item_name: "ب", variant: "PRINT", price: 100, quantity: 2, source: "sticky" });
