@@ -10,6 +10,10 @@ export const accountRoutes = {
   devices: "/account/devices",
   wishlist: "/account/wishlist",
   reviews: "/account/reviews",
+  // --- retention stream: «کارنامه مطالعه» and the living study plan ---
+  report: "/account/report",
+  plan: "/account/plan",
+  // --- end retention stream ---
   /** Phase 4 reader. */
   read: (slug: string) => `/read/${encodeURIComponent(slug)}`,
   /** Login with a return path (only same-site absolute paths are kept). */

@@ -23,6 +23,7 @@ api_v1 = [
     path("back-in-stock/", include("apps.engagement.api.urls")),
     path("library/", include("apps.reader.api.urls")),
     path("seo/", include("apps.seo.api.urls")),
+    path("study/", include("apps.study.api.urls")),  # retention stream
 ]
 
 urlpatterns = [

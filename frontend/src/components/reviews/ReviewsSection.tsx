@@ -1,13 +1,11 @@
-import type { Review } from "@/lib/account-types";
 import type { ExamTypeMini } from "@/lib/types";
 import { getBookReviews } from "@/lib/reviews-api";
-import { authorInitial, authorName, distributionRows, formatAverage } from "@/lib/reviews";
-import { formatJalaliDay } from "@/lib/order-status";
+import { distributionRows, formatAverage } from "@/lib/reviews";
 import { formatPercent, toPersianDigits } from "@/lib/format";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { CheckIcon } from "@/components/ui/Icons";
 import { Stars } from "./Stars";
 import { ReviewForm } from "./ReviewForm";
+import { ReviewList } from "./ReviewList";
 
 interface ReviewsSectionProps {
   slug: string;
@@ -72,11 +70,8 @@ export async function ReviewsSection({ slug, examTypes }: ReviewsSectionProps) {
         </div>
 
         {results.length > 0 ? (
-          <ul className="space-y-3">
-            {results.map((r) => (
-              <ReviewItem key={r.id} review={r} />
-            ))}
-          </ul>
+          /* retention stream (ه۷): filter by exam and by rating */
+          <ReviewList slug={slug} initial={results} summary={summary} />
         ) : (
           <p className="rounded-card border border-dashed border-line-strong bg-surface p-6 text-center text-sm leading-7 text-ink-muted">
             تجربه خود از این کتاب را با داوطلبان دیگر به اشتراک بگذارید.
@@ -84,47 +79,5 @@ export async function ReviewsSection({ slug, examTypes }: ReviewsSectionProps) {
         )}
       </div>
     </section>
-  );
-}
-
-function ReviewItem({ review }: { review: Review }) {
-  const name = authorName(review.author);
-  return (
-    <li className="rounded-card bg-surface p-4 shadow-card">
-      <article aria-label={`نظر ${name}`}>
-        <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span
-            aria-hidden="true"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary"
-          >
-            {authorInitial(name)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-bold text-ink">{name}</p>
-            <p className="text-xs text-ink-muted">
-              <time dateTime={review.created_at}>{formatJalaliDay(review.created_at)}</time>
-            </p>
-          </div>
-          <Stars value={review.rating} />
-        </header>
-        {(review.is_verified_purchase || review.exam_type) && (
-          <p className="mt-3 flex flex-wrap gap-2 text-xs">
-            {review.is_verified_purchase && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 font-bold text-success">
-                <CheckIcon size={13} strokeWidth={2.6} />
-                خریدار این کتاب
-              </span>
-            )}
-            {review.exam_type && (
-              <span className="rounded-full bg-primary-soft px-2 py-0.5 font-bold text-primary">
-                <span className="sr-only">آزمون: </span>
-                {review.exam_type.short_name || review.exam_type.name}
-              </span>
-            )}
-          </p>
-        )}
-        {review.body && <p className="mt-3 whitespace-pre-line text-sm leading-8 text-ink">{toPersianDigits(review.body)}</p>}
-      </article>
-    </li>
   );
 }

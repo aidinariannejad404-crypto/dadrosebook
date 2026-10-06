@@ -7,7 +7,9 @@ import { apiFetch } from "@/lib/session";
 import { accountRoutes } from "@/lib/account-routes";
 import {
   BookOpenIcon,
+  CalendarIcon,
   ChatIcon,
+  ClockIcon,
   DevicesIcon,
   GridIcon,
   HeartIcon,
@@ -20,6 +22,10 @@ const ITEMS = [
   { href: accountRoutes.dashboard, label: "پیشخوان", Icon: GridIcon, exact: true },
   { href: accountRoutes.orders, label: "سفارش‌ها", Icon: PackageIcon },
   { href: accountRoutes.library, label: "کتابخانه من", Icon: BookOpenIcon },
+  // --- retention stream ---
+  { href: accountRoutes.plan, label: "برنامه مطالعه", Icon: CalendarIcon },
+  { href: accountRoutes.report, label: "کارنامه مطالعه", Icon: ClockIcon },
+  // --- end retention stream ---
   { href: accountRoutes.devices, label: "دستگاه‌های من", Icon: DevicesIcon },
   { href: accountRoutes.addresses, label: "نشانی‌ها", Icon: MapPinIcon },
   { href: accountRoutes.wishlist, label: "علاقه‌مندی‌ها", Icon: HeartIcon },

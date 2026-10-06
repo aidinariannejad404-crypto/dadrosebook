@@ -160,6 +160,12 @@ def compute(
             }
         )
 
+    # --- retention stream (ه۲): owners of an older edition get the upgrade discount ---
+    from apps.study.services.editions import apply_upgrade_discounts
+
+    upgrade_total = apply_upgrade_discounts(lines, user)
+    # --- end retention stream ---
+
     items_total = sum(line["line_total"] for line in lines)
     needs_shipping = any(line["variant_type"] in SHIPPED_TYPES for line in lines)
     ebook_now = any(line["variant_type"] in DIGITAL_TYPES for line in lines)
@@ -203,6 +209,7 @@ def compute(
         "free_shipping_remaining": remaining,
         "ebook_now": ebook_now,
         "problems": problems,
+        "upgrade_discount_total": upgrade_total,  # retention stream: already in items_total
     }
     return Pricing(
         quote=quote, variants=variants, discount_code=discount_obj, shipping_method=method

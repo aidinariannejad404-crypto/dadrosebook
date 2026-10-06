@@ -94,8 +94,39 @@ def approved_reviews(book: Book) -> QuerySet:
     )
 
 
-def public_reviews(book: Book, limit: int = PUBLIC_LIMIT) -> list[Review]:
-    return list(approved_reviews(book)[:limit])
+def public_reviews(
+    book: Book,
+    limit: int = PUBLIC_LIMIT,
+    *,
+    rating: int | None = None,
+    exam_type: str | None = None,
+) -> list[Review]:
+    """Newest approved reviews; optionally only one star rating and/or one exam (slug)."""
+    qs = approved_reviews(book)
+    if rating:
+        qs = qs.filter(rating=rating)
+    if exam_type:
+        qs = qs.filter(exam_type__slug=exam_type)
+    return list(qs[:limit])
+
+
+def exam_breakdown(book: Book) -> list[dict]:
+    """Approved reviews per exam («برای آزمون»), most reviewed first — the exam filter chips."""
+    rows = (
+        Review.objects.filter(book=book, status=Review.Status.APPROVED, exam_type__isnull=False)
+        .values("exam_type__slug", "exam_type__name", "exam_type__short_name", "exam_type__order")
+        .annotate(n=Count("id"))
+        .order_by("-n", "exam_type__order")
+    )
+    return [
+        {
+            "slug": r["exam_type__slug"],
+            "name": r["exam_type__name"],
+            "short_name": r["exam_type__short_name"],
+            "count": r["n"],
+        }
+        for r in rows
+    ]
 
 
 def summary(book: Book) -> dict:
@@ -112,7 +143,12 @@ def summary(book: Book) -> dict:
     if count >= MIN_COUNT_FOR_AVERAGE:
         total = sum(int(k) * v for k, v in distribution.items())
         average = round(total / count, 1)
-    return {"average": average, "count": count, "distribution": distribution}
+    return {
+        "average": average,
+        "count": count,
+        "distribution": distribution,
+        "exam_types": exam_breakdown(book),
+    }
 
 
 def author_display(user) -> str:

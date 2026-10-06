@@ -9,6 +9,7 @@ import { NOINDEX } from "@/lib/seo";
 import type { StudyPlanDay } from "@/lib/types";
 import { CourseCard } from "@/components/course/CourseCard";
 import { PrintButton } from "@/components/plan/PrintButton";
+import { LinkPlanButton } from "@/components/study/LinkPlanButton"; // retention stream (ه۵)
 import { CalendarIcon, ClockIcon } from "@/components/ui/Icons";
 
 type Params = Promise<{ token: string }>;
@@ -72,7 +73,11 @@ export default async function StudyPlanPage({ params }: { params: Params }) {
             </div>
           )}
         </div>
-        <PrintButton className="relative mt-5 bg-white text-primary hover:bg-primary-soft" />
+        <div className="relative mt-5 flex flex-wrap items-start gap-3">
+          <PrintButton className="bg-white text-primary hover:bg-primary-soft" />
+          {/* --- retention stream (ه۵): link this plan to the account for daily check-off --- */}
+          <LinkPlanButton token={plan.token} className="print:hidden" />
+        </div>
       </header>
 
       <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-5">

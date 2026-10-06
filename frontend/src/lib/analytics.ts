@@ -22,7 +22,15 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // --- retention stream (ه۲–ه۵، ه۷) ---
+  | "reading_goal_met"
+  | "study_plan_linked"
+  | "study_plan_item_checked"
+  | "study_plan_compressed"
+  | "edition_upgrade_offer_view"
+  | "review_prompt_rated";
+// --- end retention stream ---
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -291,3 +299,30 @@ export function _resetAnalyticsForTests(): void {
 export function _queuedEventsForTests(): number {
   return queue.length;
 }
+
+/* --- retention stream (ه۲–ه۵، ه۷) --- */
+
+export function trackReadingGoalMet(p: { goal_minutes: number; streak: number; milestone: number }): void {
+  track("reading_goal_met", { goal_minutes: p.goal_minutes, streak: p.streak, milestone: p.milestone });
+}
+
+export function trackStudyPlanLinked(p: { source: "lead" | "library" }): void {
+  track("study_plan_linked", { source: p.source });
+}
+
+export function trackStudyPlanItemChecked(p: { done: boolean; where: "today" | "plan" }): void {
+  track("study_plan_item_checked", { done: p.done, where: p.where });
+}
+
+export function trackStudyPlanCompressed(p: { behind_days: number }): void {
+  track("study_plan_compressed", { behind_days: p.behind_days });
+}
+
+export function trackEditionUpgradeOfferView(p: { item_id: string; percent: number }): void {
+  track("edition_upgrade_offer_view", { item_id: p.item_id, percent: p.percent });
+}
+
+export function trackReviewPromptRated(p: { rating: number; reason: string }): void {
+  track("review_prompt_rated", { rating: p.rating, reason: p.reason });
+}
+/* --- end retention stream --- */

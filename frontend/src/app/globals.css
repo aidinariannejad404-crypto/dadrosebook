@@ -404,3 +404,53 @@ body:has(.reader-root) > :is(header, nav, footer, a[href="#main"]) {
 .epub-content.epub-paged tr {
   break-inside: avoid;
 }
+
+/* ---------- retention stream: goal / streak celebration (CSS only) ----------
+ * Small gold and navy dots burst once around the badge; transform/opacity only. Under
+ * prefers-reduced-motion nothing moves: the badge and text simply appear. */
+.study-burst {
+  position: relative;
+}
+.study-burst > i {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  opacity: 0;
+  animation: study-burst 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms 1 both;
+}
+.study-burst > i:nth-child(even) {
+  background: var(--color-primary);
+}
+.study-burst > i:nth-child(1) { --dx: -3.2rem; --dy: -2.2rem; }
+.study-burst > i:nth-child(2) { --dx: 3rem; --dy: -2.6rem; }
+.study-burst > i:nth-child(3) { --dx: -3.6rem; --dy: 0.6rem; }
+.study-burst > i:nth-child(4) { --dx: 3.4rem; --dy: 1rem; }
+.study-burst > i:nth-child(5) { --dx: -1.4rem; --dy: -3.4rem; }
+.study-burst > i:nth-child(6) { --dx: 1.6rem; --dy: 3rem; }
+.study-burst > i:nth-child(7) { --dx: -2rem; --dy: 2.8rem; }
+.study-burst > i:nth-child(8) { --dx: 1.2rem; --dy: -3.6rem; }
+@keyframes study-burst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+}
+.study-pop {
+  animation: study-pop 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes study-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study-burst > i {
+    display: none;
+  }
+  .study-pop {
+    animation: none;
+  }
+}
+/* ---------- end retention stream ---------- */

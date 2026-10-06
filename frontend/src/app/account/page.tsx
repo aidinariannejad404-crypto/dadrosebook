@@ -11,6 +11,7 @@ import { ProfileForm } from "@/components/account/ProfileForm";
 import { ContinueReading } from "@/components/account/ContinueReading";
 import { mostRecentInProgress } from "@/components/account/ReadingProgressMeter";
 import { BookOpenIcon, ChatIcon, ChevronIcon, HeartIcon, MapPinIcon, PackageIcon } from "@/components/ui/Icons";
+import { StudyDashboard } from "@/components/study/StudyDashboard"; // retention stream
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "پیشخوان", robots: { index: false, follow: false } };
@@ -63,6 +64,10 @@ export default async function AccountDashboard() {
       </section>
 
       {reading && <ContinueReading entry={reading} />}
+
+      {/* --- retention stream: minutes/goal/streak, plan «امروز», review prompt --- */}
+      <StudyDashboard readable={(library ?? []).filter((e) => e.can_read).map((e) => e.book.slug)} />
+      {/* --- end retention stream --- */}
 
       {pending > 0 && (
         <p className="rounded-control bg-warning-soft px-4 py-3 text-sm font-bold leading-7 text-warning">

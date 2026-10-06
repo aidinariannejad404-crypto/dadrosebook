@@ -83,6 +83,9 @@ import { useCopyQuota } from "./useCopyQuota";
 import { useOfflineBook, type OfflineStart } from "./useOfflineBook";
 import { OfflinePanel } from "./OfflinePanel";
 import type { ReaderTheme } from "./theme";
+// --- retention stream (ه۳/ه۴): active-reading heartbeat, goal and time left ---
+import { ReaderStudyBar } from "@/components/study/ReaderStudyBar";
+// --- end retention stream ---
 
 /** Where to put the reader once a chapter is on screen. */
 type Target =
@@ -1165,6 +1168,18 @@ export function EpubReader({
         )}
       </div>
 
+      {/* --- retention stream: heartbeat always runs; the strip shows with the chrome --- */}
+      <div className={chrome ? "border-t border-line bg-surface" : ""}>
+        <ReaderStudyBar
+          slug={slug}
+          page={page}
+          totalPages={total}
+          chapterEnd={meta ? meta.start_page + meta.pages - 1 : null}
+          visible={chrome}
+          className="mx-auto max-w-3xl px-3"
+        />
+      </div>
+      {/* --- end retention stream --- */}
       {chrome && (
         <footer className="pb-safe border-t border-line bg-surface">
           <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2 text-xs">

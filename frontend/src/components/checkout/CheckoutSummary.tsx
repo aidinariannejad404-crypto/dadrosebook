@@ -33,6 +33,12 @@ export function OrderLines({ quote, compact = false }: { quote: Quote; compact?:
                   </del>
                 </p>
               )}
+              {/* retention stream (ه۲): edition upgrade discount */}
+              {l.upgrade_discount ? (
+                <p className="text-xs font-bold text-success">
+                  {l.upgrade_label}: {formatToman(l.upgrade_discount)}
+                </p>
+              ) : null}
               {problem && (
                 <p className="mt-1 rounded-control bg-danger-soft px-2 py-1 text-xs font-bold leading-6 text-danger">{problem.message}</p>
               )}

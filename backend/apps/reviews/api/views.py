@@ -38,10 +38,15 @@ class BookReviewsView(APIView):
 
     def get(self, request, slug):
         book = self._book(slug)
+        # ``?rating=1..5`` and ``?exam_type=<slug>`` filter the list; the summary is the whole book.
+        rating = request.query_params.get("rating")
+        rating = int(rating) if rating in {"1", "2", "3", "4", "5"} else None
+        exam_type = (request.query_params.get("exam_type") or "").strip()[:100] or None
+        reviews = svc.public_reviews(book, rating=rating, exam_type=exam_type)
         return Response(
             {
                 "summary": svc.summary(book),
-                "results": ReviewSerializer(svc.public_reviews(book), many=True).data,
+                "results": ReviewSerializer(reviews, many=True).data,
             }
         )
 
@@ -57,6 +62,10 @@ class BookReviewsView(APIView):
             body=data.get("body") or "",
             exam_type=data.get("exam_type"),
         )
+        # retention stream (ه۷): close the «چقدر کمک کرد؟» prompt for this book
+        from apps.study.services.review_prompts import mark_answered
+
+        mark_answered(request.user, book)
         return Response(
             {"status": review.status, "message": SUBMITTED_MESSAGE},
             status=status.HTTP_201_CREATED,

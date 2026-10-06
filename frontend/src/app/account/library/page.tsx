@@ -13,6 +13,10 @@ import { ReadingProgressMeter, isFinished, isInProgress, mostRecentInProgress } 
 import { BookOpenIcon, ChevronIcon } from "@/components/ui/Icons";
 import { NotesExportMenu } from "@/components/reader/NotesExport";
 import { OfflineBadge } from "@/components/account/OfflineBadge";
+// --- retention stream (ه۴): finish forecast against the exam date ---
+import { selectedExamSlug } from "@/lib/exam-server";
+import { forecastLine, type BookForecast, type ForecastPayload } from "@/lib/study";
+// --- end retention stream ---
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "کتابخانه من", robots: { index: false, follow: false } };
@@ -25,6 +29,17 @@ export default async function LibraryPage() {
     entries = null;
   }
   const current = entries ? mostRecentInProgress(entries) : null;
+  // --- retention stream ---
+  let forecast: ForecastPayload | null = null;
+  if (entries?.length) {
+    const exam = await selectedExamSlug();
+    try {
+      forecast = await serverApiGet<ForecastPayload>(`/study/forecast/${exam ? `?exam_type=${encodeURIComponent(exam)}` : ""}`);
+    } catch {
+      forecast = null;
+    }
+  }
+  // --- end retention stream ---
 
   return (
     <div>
@@ -55,7 +70,12 @@ export default async function LibraryPage() {
           )}
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {entries.map((entry) => (
-              <LibraryCard key={entry.book.id} entry={entry} />
+              <LibraryCard
+                key={entry.book.id}
+                entry={entry}
+                forecast={forecast?.books[entry.book.slug] ?? null}
+                examName={forecast?.exam?.name ?? null}
+              />
             ))}
           </ul>
         </>
@@ -64,7 +84,16 @@ export default async function LibraryPage() {
   );
 }
 
-function LibraryCard({ entry: { book, granted_at, can_read, progress } }: { entry: LibraryEntry }) {
+function LibraryCard({
+  entry: { book, granted_at, can_read, progress },
+  forecast,
+  examName,
+}: {
+  entry: LibraryEntry;
+  forecast: BookForecast | null;
+  examName: string | null;
+}) {
+  const line = can_read && forecast && isInProgress(progress) ? forecastLine(forecast, examName) : null;
   const started = isInProgress(progress);
   const finished = isFinished(progress);
   const action = finished ? "مرور دوباره" : started ? "ادامه مطالعه" : "شروع مطالعه";
@@ -101,7 +130,14 @@ function LibraryCard({ entry: { book, granted_at, can_read, progress } }: { entr
         )}
         <div className="mt-3">
           {can_read ? (
-            <ReadingProgressMeter progress={progress} title={book.title} />
+            <>
+              <ReadingProgressMeter progress={progress} title={book.title} />
+              {line && (
+                <p className={`mt-1.5 text-xs font-bold leading-5 ${line.tone === "warn" ? "text-warning" : line.tone === "ok" ? "text-success" : "text-ink-muted"}`}>
+                  {line.text}
+                </p>
+              )}
+            </>
           ) : (
             <p className="text-xs text-ink-muted">
               افزوده‌شده: <time dateTime={granted_at}>{formatJalaliDay(granted_at)}</time>
