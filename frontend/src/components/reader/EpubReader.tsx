@@ -23,6 +23,7 @@ import {
 } from "@/lib/reader";
 import { applyIdMap, localBookmark, localHighlight, tempId, type QueuedOp, type ReplayOutcome } from "@/lib/offline-queue";
 import { readOfflineState } from "@/lib/reader-offline";
+import { getSampleChapter } from "@/lib/reader-stream";
 import {
   DEFAULT_EPUB_SETTINGS,
   FONT_SIZES,
@@ -56,6 +57,7 @@ import type {
   HighlightColor,
   ReaderSession,
   ReadingProgress,
+  SampleSession,
   SearchResult,
 } from "@/lib/types";
 import { BookmarkIcon, ChevronIcon, HighlighterIcon, ListIcon, SearchIcon } from "@/components/ui/Icons";
@@ -86,6 +88,10 @@ import { OfflinePanel } from "./OfflinePanel";
 import { ReaderTypographyControls, useReaderTypography } from "@/components/platform/ReaderTypographyControls";
 import { fontFamilyFor, persianizeDigits, restoreDigits, type DigitOriginals } from "@/lib/reader-typography";
 // --- end platform stream ---
+import { ProblemReportDialog } from "./ProblemReportDialog";
+import { QuoteCardDialog } from "./QuoteCardDialog";
+import { FlagIcon } from "./ReaderIcons";
+import { SampleEndCta, StatuteLinkCards } from "./SampleParts";
 import type { ReaderTheme } from "./theme";
 // --- retention stream (ه۳/ه۴): active-reading heartbeat, goal and time left ---
 import { ReaderStudyBar } from "@/components/study/ReaderStudyBar";
@@ -148,6 +154,7 @@ export function EpubReader({
   onTheme,
   onFatal,
   offlineStart = null,
+  sample = null,
 }: {
   slug: string;
   session: ReaderSession;
@@ -157,6 +164,8 @@ export function EpubReader({
   onFatal: (e: ReaderFatalError) => void;
   /** Phase 6b: the book was opened from the local copy (no network) */
   offlineStart?: OfflineStart | null;
+  /** د۵ free sample (no login): sample chapters only, no annotations/progress/copy, CTA at the end */
+  sample?: SampleSession | null;
 }) {
   const [chapter, setChapter] = useState<EpubChapter | null>(null);
   const [loading, setLoading] = useState(true);
@@ -177,6 +186,12 @@ export function EpubReader({
   const [editor, setEditor] = useState<Editor>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  // و۲ quote card text, ه۸ report dialog
+  const [quote, setQuote] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const isSample = sample !== null;
+  /** ه۱: the file version every new annotation/position points into */
+  const fileVersion = session.file.version || null;
   // paged mode: viewport width (default mode), reading box, visible column and column count
   const [vw, setVw] = useState(0);
   const [box, setBox] = useState({ width: 0, height: 0 });
@@ -214,7 +229,7 @@ export function EpubReader({
     if (out.highlights.size) setHighlights((list) => applyIdMap(list, out.highlights));
     if (out.bookmarks.size) setBookmarks((list) => applyIdMap(list, out.bookmarks));
   }, []);
-  const off = useOfflineBook({ slug, session, start: offlineStart, onFatal, onReplayed });
+  const off = useOfflineBook({ slug, session, start: offlineStart, onFatal, onReplayed, disabled: isSample });
   const offRef = useRef(off);
   offRef.current = off;
   const annotationsLoaded = useRef(false);
@@ -295,14 +310,14 @@ export function EpubReader({
       }
       const hit = cache.current.get(index);
       if (hit && Date.now() - hit.at < CHAPTER_CACHE_MS) return hit.data;
-      const res = await getChapter(slug, index);
+      const res = await (isSample ? getSampleChapter(slug, index) : getChapter(slug, index));
       if (res.ok) {
         cache.current.set(index, { data: res.data, at: Date.now() });
         o.noteOnline();
         return res.data;
       }
       // no network: read on from the local copy when this device has one
-      if (res.error.kind === "network" && (await o.enterOffline())) {
+      if (!isSample && res.error.kind === "network" && (await o.enterOffline())) {
         const local = o.chapterFromPackage(index);
         if (local) return local;
       }
@@ -312,7 +327,7 @@ export function EpubReader({
       }
       return null;
     },
-    [slug, onFatal],
+    [slug, onFatal, isSample],
   );
 
   /* ---------- paged mode: columns ---------- */
@@ -485,6 +500,7 @@ export function EpubReader({
   /* ---------- annotations ---------- */
 
   useEffect(() => {
+    if (isSample) return; // the free sample has no annotations
     let cancelled = false;
     void (async () => {
       if (!offRef.current.offlineRef.current) {
@@ -535,6 +551,7 @@ export function EpubReader({
   const chapterMarks = useMemo(() => {
     if (!chapter) return [];
     return highlights
+      .filter((h) => h.anchor_status !== "orphaned") // ه۱: listed under «یادداشت‌های جابه‌جا شده»
       .map((h) => ({ h, loc: parseEpubLocation(h.location) }))
       .filter((x) => x.loc?.kind === "range" && x.loc.chapter === chapter.index)
       .map(({ h, loc }) => ({ h, start: loc!.kind === "range" ? loc!.start : 0, end: loc!.kind === "range" ? loc!.end : 0 }))
@@ -620,7 +637,7 @@ export function EpubReader({
       if (offRef.current.offlineRef.current) return; // package images are inline
       imgRetried.current.add(c.index);
       cache.current.delete(c.index);
-      void getChapter(slug, c.index).then((res) => {
+      void (isSample ? getSampleChapter(slug, c.index) : getChapter(slug, c.index)).then((res) => {
         if (!res.ok || chapterRef.current?.index !== c.index) return;
         cache.current.set(c.index, { data: res.data, at: Date.now() });
         targetRef.current = { kind: "offset", offset: offsetRef.current };
@@ -629,12 +646,14 @@ export function EpubReader({
     };
     root.addEventListener("error", onError, true);
     return () => root.removeEventListener("error", onError, true);
-  }, [slug]);
+  }, [slug, isSample]);
 
   /* ---------- progress ---------- */
   /** PUT progress, or queue it offline; the local snapshot follows either way. */
   const persistProgress = useCallback(
-    (body: { page: number; total_pages: number; location: string }, keepalive = false) => {
+    (position: { page: number; total_pages: number; location: string }, keepalive = false) => {
+      if (isSample) return; // the sample keeps no reading position
+      const body = { ...position, ebook_version: fileVersion };
       const local: ReadingProgress = {
         ...body,
         percent: progressPercent(body.page, body.total_pages),
@@ -643,7 +662,7 @@ export function EpubReader({
       offRef.current.updateState({ progress: local });
       void write(() => saveProgress(slug, body, { keepalive }), { kind: "progress", body }, () => local);
     },
-    [slug, write],
+    [slug, write, isSample, fileVersion],
   );
   const saver = useMemo(
     () =>
@@ -831,6 +850,7 @@ export function EpubReader({
         color,
         note,
         location: formatEpubRange(sel.chapter, sel.start, sel.end),
+        ebook_version: fileVersion,
       };
       const temp = tempId();
       const res = await write(
@@ -849,7 +869,7 @@ export function EpubReader({
       flash(res.queued ? `هایلایت ذخیره شد؛${QUEUED_NOTE}` : "هایلایت ذخیره شد.");
       return true;
     },
-    [epub.chapters, slug, flash, write],
+    [epub.chapters, slug, flash, write, fileVersion],
   );
 
   const saveEditor = useCallback(
@@ -888,7 +908,7 @@ export function EpubReader({
   }, [editor, slug, flash, write]);
 
   /* ---------- bookmarks ---------- */
-  const currentBookmark = bookmarks.find((b) => b.page === page) ?? null;
+  const currentBookmark = bookmarks.find((b) => b.page === page && b.anchor_status !== "orphaned") ?? null;
   const toggleBookmark = useCallback(async () => {
     if (!chapter) return;
     setBusy(true);
@@ -900,7 +920,12 @@ export function EpubReader({
       setBookmarks((list) => list.filter((b) => b.id !== id));
       return flash(res.queued ? `نشانک برداشته شد؛${QUEUED_NOTE}` : "نشانک برداشته شد.");
     }
-    const body = { page, location: formatEpubPoint(chapter.index, offset), label: chapter.title.slice(0, 120) };
+    const body = {
+      page,
+      location: formatEpubPoint(chapter.index, offset),
+      label: chapter.title.slice(0, 120),
+      ebook_version: fileVersion,
+    };
     const temp = tempId();
     const res = await write(
       () => createBookmark(slug, body),
@@ -911,7 +936,7 @@ export function EpubReader({
     if (!res.ok) return flash("افزودن نشانک انجام نشد. دوباره تلاش کنید.");
     setBookmarks((list) => [...list.filter((b) => b.id !== res.data.id), res.data]);
     flash(res.queued ? `این صفحه نشانک‌گذاری شد؛${QUEUED_NOTE}` : "این صفحه نشانک‌گذاری شد.");
-  }, [chapter, currentBookmark, slug, page, offset, flash, write]);
+  }, [chapter, currentBookmark, slug, page, offset, flash, write, fileVersion]);
 
   const removeBookmark = useCallback(
     async (b: Bookmark) => {
@@ -978,18 +1003,23 @@ export function EpubReader({
     },
     [write],
   );
-  const { quota: copyQuota, copyText } = useCopyQuota(slug, session, flash, recordCopyOrQueue);
+  const { quota: copyQuota, copyText, spend } = useCopyQuota(slug, session, flash, recordCopyOrQueue);
   useEffect(() => {
     if (copyQuota) offRef.current.updateState({ copy_quota: copyQuota });
   }, [copyQuota]);
   const onCopy = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
+      if (isSample) {
+        e.preventDefault();
+        flash("کپی متن در نمونه رایگان ممکن نیست.");
+        return;
+      }
       const out = copyText(window.getSelection()?.toString() ?? "");
       if (out === null) return;
       e.preventDefault();
       e.clipboardData.setData("text/plain", out);
     },
-    [copyText],
+    [copyText, isSample, flash],
   );
 
   const onSearchOpen = useCallback(
@@ -1020,30 +1050,36 @@ export function EpubReader({
             <button type="button" className={iconBtn} aria-label="فهرست مطالب" onClick={() => setPanel("toc")}>
               <ListIcon size={22} />
             </button>
-            <button type="button" className={iconBtn} aria-label="جست‌وجو در کتاب" onClick={() => setPanel("search")}>
-              <SearchIcon size={22} />
-            </button>
-            <button
-              type="button"
-              className={iconBtn}
-              aria-label={currentBookmark ? "برداشتن نشانک این صفحه" : "نشانک‌گذاری این صفحه"}
-              aria-pressed={currentBookmark !== null}
-              disabled={busy || !chapter}
-              onClick={() => void toggleBookmark()}
-            >
-              <BookmarkIcon size={22} filled={currentBookmark !== null} />
-            </button>
-            <button
-              type="button"
-              className={iconBtn}
-              aria-label="هایلایت‌ها و نشانک‌ها"
-              onClick={() => {
-                setNotesTab("highlights");
-                setPanel("notes");
-              }}
-            >
-              <HighlighterIcon size={22} />
-            </button>
+            {isSample ? (
+              <span className="shrink-0 rounded-full bg-accent-soft px-2 py-1 text-xs font-bold text-accent-ink">نمونه رایگان</span>
+            ) : (
+              <>
+                <button type="button" className={iconBtn} aria-label="جست‌وجو در کتاب" onClick={() => setPanel("search")}>
+                  <SearchIcon size={22} />
+                </button>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label={currentBookmark ? "برداشتن نشانک این صفحه" : "نشانک‌گذاری این صفحه"}
+                  aria-pressed={currentBookmark !== null}
+                  disabled={busy || !chapter}
+                  onClick={() => void toggleBookmark()}
+                >
+                  <BookmarkIcon size={22} filled={currentBookmark !== null} />
+                </button>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label="هایلایت‌ها و نشانک‌ها"
+                  onClick={() => {
+                    setNotesTab("highlights");
+                    setPanel("notes");
+                  }}
+                >
+                  <HighlighterIcon size={22} />
+                </button>
+              </>
+            )}
             <button type="button" className={`${iconBtn} text-base font-black`} aria-label="تنظیمات نمایش" onClick={() => setPanel("settings")}>
               <span aria-hidden="true" dir="ltr">
                 Aa
@@ -1122,6 +1158,7 @@ export function EpubReader({
             <h2 className="sr-only">{chapter?.title ?? "در حال بارگذاری فصل"}</h2>
             <div
               ref={rootRef}
+              className={isSample ? "select-none" : undefined}
               onCopy={onCopy}
               onCut={onCopy}
               onContextMenu={(e) => {
@@ -1131,7 +1168,17 @@ export function EpubReader({
                 if (e.target instanceof HTMLImageElement) e.preventDefault();
               }}
             />
-            {chapter && !loading && (
+            {chapter && !loading && chapter.statute_links && chapter.statute_links.length > 0 && (
+              <div className="[break-inside:avoid]">
+                <StatuteLinkCards links={chapter.statute_links} />
+              </div>
+            )}
+            {chapter && !loading && sample && (chapter.sample_end || !nextMeta) && (
+              <div className="[break-inside:avoid]">
+                <SampleEndCta sample={sample} />
+              </div>
+            )}
+            {chapter && !loading && !(sample && (chapter.sample_end || !nextMeta)) && (
               <div className="mt-10 border-t border-line pt-6 text-center [break-inside:avoid]">
                 {nextMeta ? (
                   <button
@@ -1216,16 +1263,30 @@ export function EpubReader({
               <span className="shrink-0 tabular-nums text-ink-muted">{`صفحه ${formatNumber(col + 1)} از ${formatNumber(colCount)} این فصل`}</span>
             )}
             <span className="shrink-0 tabular-nums text-ink-muted">{formatPercent(percent)}</span>
+            {!isSample && (
+              <button
+                type="button"
+                onClick={() => setReporting(true)}
+                className="-me-2 inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-control px-2 font-bold text-primary hover:bg-primary-soft"
+              >
+                <FlagIcon size={18} />
+                گزارش مشکل
+              </button>
+            )}
           </div>
         </footer>
       )}
 
-      {pending && !editor && (
+      {pending && !editor && !isSample && (
         <SelectionPopover
           anchor={pending.anchor}
           busy={busy}
           onColor={(c) => void create(pending, c)}
           onNote={() => setEditor({ mode: "create", selection: pending })}
+          onShareImage={() => {
+            setQuote(pending.text);
+            setPending(null);
+          }}
         />
       )}
 
@@ -1239,7 +1300,39 @@ export function EpubReader({
         onClose={() => setEditor(null)}
         onSave={(v) => void saveEditor(v)}
         onDelete={editor?.mode === "edit" ? () => void removeHighlight() : undefined}
+        onShareImage={
+          editor && !isSample
+            ? () => {
+                setQuote(editor.mode === "create" ? editor.selection.text : editor.highlight.text);
+                setEditor(null);
+              }
+            : undefined
+        }
       />
+      {!isSample && (
+        <>
+          <QuoteCardDialog
+            open={quote !== null}
+            onClose={() => setQuote(null)}
+            quote={quote ?? ""}
+            book={session.book}
+            quota={copyQuota}
+            spend={spend}
+          />
+          <ProblemReportDialog
+            open={reporting}
+            onClose={() => setReporting(false)}
+            slug={slug}
+            context={{
+              page,
+              location: location ?? "",
+              chapterTitle: chapter?.title,
+              ebookVersion: fileVersion,
+              format: "EPUB",
+            }}
+          />
+        </>
+      )}
 
       <EpubTocDrawer
         open={panel === "toc"}
@@ -1265,7 +1358,8 @@ export function EpubReader({
         onJump={(h) => jumpToLocation(h.location, h.page)}
         onEdit={(h) => {
           setPanel(null);
-          jumpToLocation(h.location, h.page);
+          // ه۱: a relocated highlight has no place in this version — edit it where you are
+          if (h.anchor_status !== "orphaned") jumpToLocation(h.location, h.page);
           setEditor({ mode: "edit", highlight: h });
         }}
         onJumpBookmark={(b) => jumpToLocation(b.location, b.page)}

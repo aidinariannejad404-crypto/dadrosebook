@@ -470,6 +470,13 @@ class Book(SluggedModel):
     )
     is_featured = models.BooleanField("ویژه", default=False)
     is_quick_review = models.BooleanField("سریع‌خوان", default=False)
+    # --- free statute ebooks (ه۶, apps.library «دریافت رایگان») ---
+    is_free_ebook = models.BooleanField(
+        "کتاب الکترونیک رایگان",
+        default=False,
+        help_text="مثلاً متن قوانین. کاربر با «دریافت رایگان» (پس از ورود) آن را به کتابخانه‌اش "
+        "اضافه می‌کند. فایل EPUB/PDF را در «فایل‌های کتاب الکترونیک» بارگذاری کنید.",
+    )
     sales_count = models.PositiveIntegerField("تعداد فروش", default=0)
     season_sales_count = models.PositiveIntegerField(
         "خریداران این فصل",

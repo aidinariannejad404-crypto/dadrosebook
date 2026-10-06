@@ -25,7 +25,9 @@ import {
   updateHighlight,
   type ReaderError,
 } from "@/lib/reader";
-import type { Bookmark, FractionRect, Highlight, HighlightColor, ReaderSession } from "@/lib/types";
+import type { Bookmark, FractionRect, Highlight, HighlightColor, ReaderSession, SampleSession } from "@/lib/types";
+import { trackReaderSampleOpened } from "@/lib/analytics";
+import { getSampleSession } from "@/lib/reader-stream";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BookmarkIcon, ChevronIcon, HighlighterIcon, MinusIcon, PlusIcon } from "@/components/ui/Icons";
 import { PdfPageView, type PdfPageHandle } from "./PdfPageView";
@@ -45,6 +47,10 @@ import { ReaderStudyBar } from "@/components/study/ReaderStudyBar";
 import { pdfChapterStarts } from "@/components/study/pdf-chapters";
 import { chapterEndFor } from "@/lib/study";
 // --- end retention stream ---
+import { ProblemReportDialog } from "./ProblemReportDialog";
+import { QuoteCardDialog } from "./QuoteCardDialog";
+import { FlagIcon } from "./ReaderIcons";
+import { SampleEndCta } from "./SampleParts";
 
 type State =
   | { status: "loading" }
@@ -96,13 +102,31 @@ async function openWithRefresh(
   }
 }
 
+/** د۵: the sample as a reader session (no progress, no copying, no offline copy). */
+export function sampleAsSession(sample: SampleSession): ReaderSession {
+  return {
+    book: sample.book,
+    file: { format: sample.format, version: sample.version, url: sample.file_url, expires_at: "" },
+    progress: null,
+    watermark: sample.watermark,
+    copy_limit: 0,
+    epub: sample.epub,
+    copy_quota: { limit: 0, used: 0 },
+    offline: null,
+  };
+}
+
 function isTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName);
 }
 
-export function Reader({ slug }: { slug: string }) {
+export function Reader({ slug, sample: sampleMode = false }: { slug: string; sample?: boolean }) {
   const [state, setState] = useState<State>({ status: "loading" });
+  /** د۵ free sample (`/read/<slug>?sample=1`): loaded instead of the reader session */
+  const [sample, setSample] = useState<SampleSession | null>(null);
+  const [quote, setQuote] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [page, setPage] = useState(1);
   const [zoomIndex, setZoomIndex] = useState(1);
@@ -142,6 +166,10 @@ export function Reader({ slug }: { slug: string }) {
 
   pageNow.current = page;
   totalNow.current = total;
+  /** ه۱: file version of the open PDF (sent with progress, bookmarks and highlights) */
+  const fileVersion = ready?.session.file.version || null;
+  const versionNow = useRef<number | null>(null);
+  versionNow.current = fileVersion;
 
   /* ---------- load session + document ---------- */
   useEffect(() => {
@@ -149,6 +177,33 @@ export function Reader({ slug }: { slug: string }) {
     let opened: PdfDocument | null = null;
     setState({ status: "loading" });
     (async () => {
+      if (sampleMode) {
+        const res = await getSampleSession(slug);
+        if (cancelled) return;
+        if (!res.ok) return setState({ status: "error", error: res.error });
+        const data = res.data;
+        const s = sampleAsSession(data);
+        setSample(data);
+        trackReaderSampleOpened({ book: slug, format: data.format, pages: data.sample_pages });
+        if (data.format !== "PDF") {
+          if (!data.epub) return setState({ status: "error", error: { kind: "load" } });
+          return setState({ status: "epub", session: s, epub: data.epub, offline: null });
+        }
+        let doc: PdfDocument;
+        try {
+          doc = await openPdf(data.file_url);
+        } catch {
+          if (!cancelled) setState({ status: "error", error: { kind: "load" } });
+          return;
+        }
+        opened = doc;
+        if (cancelled) {
+          void doc.destroy();
+          return;
+        }
+        setPage(1);
+        return setState({ status: "ready", session: s, doc, total: doc.numPages });
+      }
       const res = await getReaderSession(slug);
       if (cancelled) return;
       if (!res.ok) {
@@ -198,7 +253,7 @@ export function Reader({ slug }: { slug: string }) {
       cancelled = true;
       if (opened) void opened.destroy();
     };
-  }, [slug, attempt]);
+  }, [slug, attempt, sampleMode]);
 
   // --- retention stream: chapter boundaries from the PDF outline (for «تا پایان فصل») ---
   const readyDoc = state.status === "ready" ? state.doc : null;
@@ -230,24 +285,24 @@ export function Reader({ slug }: { slug: string }) {
     () =>
       debounce((p: number, t: number) => {
         lastSaved.current = p;
-        void saveProgress(slug, { page: p, total_pages: t });
+        void saveProgress(slug, { page: p, total_pages: t, ebook_version: versionNow.current });
       }, PROGRESS_SAVE_DELAY_MS),
     [slug],
   );
 
   useEffect(() => {
-    if (!ready || page === lastSaved.current) return;
+    if (!ready || sampleMode || page === lastSaved.current) return;
     saver(page, ready.total);
-  }, [page, ready, saver]);
+  }, [page, ready, saver, sampleMode]);
 
   useEffect(() => {
     const flushNow = () => {
       saver.cancel();
       const p = pageNow.current;
       const t = totalNow.current;
-      if (t > 0 && p !== lastSaved.current) {
+      if (t > 0 && !sampleMode && p !== lastSaved.current) {
         lastSaved.current = p;
-        void saveProgress(slug, { page: p, total_pages: t }, { keepalive: true });
+        void saveProgress(slug, { page: p, total_pages: t, ebook_version: versionNow.current }, { keepalive: true });
       }
     };
     const onVisibility = () => {
@@ -260,7 +315,7 @@ export function Reader({ slug }: { slug: string }) {
       window.removeEventListener("pagehide", flushNow);
       flushNow();
     };
-  }, [saver, slug]);
+  }, [saver, slug, sampleMode]);
 
   /* ---------- navigation ---------- */
   const goTo = useCallback(
@@ -305,7 +360,7 @@ export function Reader({ slug }: { slug: string }) {
 
   /* ---------- selection → highlight popover ---------- */
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || sampleMode) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const read = () => {
       const sel = window.getSelection();
@@ -330,7 +385,7 @@ export function Reader({ slug }: { slug: string }) {
       document.removeEventListener("selectionchange", onChange);
       if (timer) clearTimeout(timer);
     };
-  }, [ready]);
+  }, [ready, sampleMode]);
 
   const onFatal = useCallback(
     (error: ReaderFatalError) => {
@@ -353,7 +408,14 @@ export function Reader({ slug }: { slug: string }) {
   const create = useCallback(
     async (sel: PendingSelection, color: HighlightColor, note = "") => {
       setBusy(true);
-      const res = await createHighlight(slug, { page: sel.page, text: sel.text, rects: sel.rects, color, note });
+      const res = await createHighlight(slug, {
+        page: sel.page,
+        text: sel.text,
+        rects: sel.rects,
+        color,
+        note,
+        ebook_version: versionNow.current,
+      });
       setBusy(false);
       if (!res.ok) {
         flash("ذخیره هایلایت انجام نشد. دوباره تلاش کنید.");
@@ -398,7 +460,7 @@ export function Reader({ slug }: { slug: string }) {
   }, [editor, slug, flash]);
 
   /* ---------- bookmarks ---------- */
-  const currentBookmark = bookmarks.find((b) => b.page === page) ?? null;
+  const currentBookmark = bookmarks.find((b) => b.page === page && b.anchor_status !== "orphaned") ?? null;
   const toggleBookmark = useCallback(async () => {
     setBusy(true);
     if (currentBookmark) {
@@ -408,7 +470,7 @@ export function Reader({ slug }: { slug: string }) {
       setBookmarks((list) => list.filter((b) => b.id !== currentBookmark.id));
       return flash("نشانک برداشته شد.");
     }
-    const res = await createBookmark(slug, { page: pageNow.current });
+    const res = await createBookmark(slug, { page: pageNow.current, ebook_version: versionNow.current });
     setBusy(false);
     if (!res.ok) return flash("افزودن نشانک انجام نشد. دوباره تلاش کنید.");
     setBookmarks((list) => [...list.filter((b) => b.id !== res.data.id), res.data]);
@@ -425,10 +487,15 @@ export function Reader({ slug }: { slug: string }) {
   );
 
   /* ---------- copy: limited selection + citation, counted against the book's total quota ---------- */
-  const { quota: copyQuota, copyText } = useCopyQuota(slug, ready?.session ?? null, flash);
+  const { quota: copyQuota, copyText, spend } = useCopyQuota(slug, sampleMode ? null : (ready?.session ?? null), flash);
   const onCopy = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
       if (!ready) return;
+      if (sampleMode) {
+        e.preventDefault();
+        flash("کپی متن در نمونه رایگان ممکن نیست.");
+        return;
+      }
       const sel = window.getSelection();
       const text = sel?.toString() ?? "";
       if (!sel || !text || sel.rangeCount === 0) return;
@@ -439,11 +506,13 @@ export function Reader({ slug }: { slug: string }) {
       const out = copyText(text.replace(/\s+/g, " ").trim());
       if (out !== null) e.clipboardData.setData("text/plain", out);
     },
-    [ready, copyText],
+    [ready, copyText, sampleMode, flash],
   );
 
-  const pageHighlights = useMemo(() => highlights.filter((h) => h.page === page), [highlights, page]);
-  const nextHighlights = useMemo(() => highlights.filter((h) => h.page === page + 1), [highlights, page]);
+  // ه۱: relocated (orphaned) highlights are listed in the drawer, not drawn on a page
+  const placed = useMemo(() => highlights.filter((h) => h.anchor_status !== "orphaned"), [highlights]);
+  const pageHighlights = useMemo(() => placed.filter((h) => h.page === page), [placed, page]);
+  const nextHighlights = useMemo(() => placed.filter((h) => h.page === page + 1), [placed, page]);
 
   const onPageClick = useCallback(
     (x: number, y: number) => {
@@ -475,6 +544,7 @@ export function Reader({ slug }: { slug: string }) {
         onTheme={setTheme}
         onFatal={onFatal}
         offlineStart={state.offline}
+        sample={sample}
       />
     );
   }
@@ -502,28 +572,43 @@ export function Reader({ slug }: { slug: string }) {
             </p>
           </div>
           <ReaderThemeToggle value={theme} onChange={setTheme} />
-          <button
-            type="button"
-            onClick={() => void toggleBookmark()}
-            disabled={busy}
-            aria-pressed={currentBookmark !== null}
-            aria-label={currentBookmark ? "برداشتن نشانک این صفحه" : "نشانک‌گذاری این صفحه"}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-primary hover:bg-primary-soft disabled:opacity-60"
-          >
-            <BookmarkIcon size={22} filled={currentBookmark !== null} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="relative inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-sm font-bold text-primary hover:bg-primary-soft"
-          >
-            <HighlighterIcon size={22} />
-            <span className="hidden md:inline">هایلایت‌ها و نشانک‌ها</span>
-            <span className="sr-only md:hidden">هایلایت‌ها و نشانک‌ها</span>
-            {highlights.length > 0 && (
-              <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-[color:var(--color-on-accent)]">{formatNumber(highlights.length)}</span>
-            )}
-          </button>
+          {sample ? (
+            <span className="shrink-0 rounded-full bg-accent-soft px-2 py-1 text-xs font-bold text-accent-ink">نمونه رایگان</span>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setReporting(true)}
+                aria-label="گزارش مشکل"
+                title="گزارش مشکل"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-primary hover:bg-primary-soft"
+              >
+                <FlagIcon size={22} />
+              </button>
+              <button
+                type="button"
+                onClick={() => void toggleBookmark()}
+                disabled={busy}
+                aria-pressed={currentBookmark !== null}
+                aria-label={currentBookmark ? "برداشتن نشانک این صفحه" : "نشانک‌گذاری این صفحه"}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-primary hover:bg-primary-soft disabled:opacity-60"
+              >
+                <BookmarkIcon size={22} filled={currentBookmark !== null} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(true)}
+                className="relative inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-sm font-bold text-primary hover:bg-primary-soft"
+              >
+                <HighlighterIcon size={22} />
+                <span className="hidden md:inline">هایلایت‌ها و نشانک‌ها</span>
+                <span className="sr-only md:hidden">هایلایت‌ها و نشانک‌ها</span>
+                {highlights.length > 0 && (
+                  <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-[color:var(--color-on-accent)]">{formatNumber(highlights.length)}</span>
+                )}
+              </button>
+            </>
+          )}
         </div>
         <div
           role="progressbar"
@@ -576,8 +661,10 @@ export function Reader({ slug }: { slug: string }) {
                 watermark={session.watermark}
                 highlights={pageHighlights}
                 activeHighlightId={editor?.mode === "edit" ? editor.highlight.id : null}
-                onPageClick={onPageClick}
+                onPageClick={sample ? undefined : onPageClick}
+                selectable={!sample}
               />
+              {sample && page >= total && <SampleEndCta sample={sample} />}
               {page < total && (
                 <PdfPageView
                   key={page + 1}
@@ -586,6 +673,7 @@ export function Reader({ slug }: { slug: string }) {
                   cssWidth={cssWidth}
                   watermark={session.watermark}
                   highlights={nextHighlights}
+                  selectable={!sample}
                   hidden
                 />
               )}
@@ -680,12 +768,16 @@ export function Reader({ slug }: { slug: string }) {
         </div>
       </nav>
 
-      {pending && !editor && (
+      {pending && !editor && !sample && (
         <SelectionPopover
           anchor={pending.anchor}
           busy={busy}
           onColor={(c) => void create(pending, c)}
           onNote={() => setEditor({ mode: "create", selection: pending })}
+          onShareImage={() => {
+            setQuote(pending.text);
+            setPending(null);
+          }}
         />
       )}
 
@@ -699,7 +791,34 @@ export function Reader({ slug }: { slug: string }) {
         onClose={() => setEditor(null)}
         onSave={(v) => void saveEditor(v)}
         onDelete={editor?.mode === "edit" ? () => void removeHighlight() : undefined}
+        onShareImage={
+          editor
+            ? () => {
+                setQuote(editor.mode === "create" ? editor.selection.text : editor.highlight.text);
+                setEditor(null);
+              }
+            : undefined
+        }
       />
+
+      {!sample && (
+        <>
+          <QuoteCardDialog
+            open={quote !== null}
+            onClose={() => setQuote(null)}
+            quote={quote ?? ""}
+            book={session.book}
+            quota={copyQuota}
+            spend={spend}
+          />
+          <ProblemReportDialog
+            open={reporting}
+            onClose={() => setReporting(false)}
+            slug={slug}
+            context={{ page, location: "", ebookVersion: fileVersion, format: "PDF" }}
+          />
+        </>
+      )}
 
       <HighlightsDrawer
         open={drawerOpen}
@@ -710,7 +829,7 @@ export function Reader({ slug }: { slug: string }) {
         onJump={(h) => goTo(h.page)}
         onEdit={(h) => {
           setDrawerOpen(false);
-          goTo(h.page);
+          if (h.anchor_status !== "orphaned") goTo(h.page);
           setEditor({ mode: "edit", highlight: h });
         }}
         onJumpBookmark={(b) => goTo(b.page)}

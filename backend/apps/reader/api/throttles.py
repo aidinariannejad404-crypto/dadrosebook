@@ -52,3 +52,31 @@ class OfflineThrottle(_SettingsRateThrottle):
     scope = "reader_offline"
     setting = "READER_OFFLINE_RATE"
     default = "10/day"
+
+
+# ---------- د۵ free sample (anyone, by IP) and ه۸ problem reports ----------
+
+
+class _IpRateThrottle(_SettingsRateThrottle):
+    """Keyed by client IP for everyone (the sample is open to visitors without an account)."""
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+class SampleThrottle(_IpRateThrottle):
+    scope = "reader_sample"
+    setting = "READER_SAMPLE_RATE"
+    default = "120/hour"
+
+
+class SampleFileThrottle(_IpRateThrottle):
+    scope = "reader_sample_file"
+    setting = "READER_SAMPLE_FILE_RATE"
+    default = "30/hour"
+
+
+class ProblemReportThrottle(_SettingsRateThrottle):
+    scope = "reader_problem"
+    setting = "READER_PROBLEM_RATE"
+    default = "10/day"

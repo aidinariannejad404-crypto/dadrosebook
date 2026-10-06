@@ -12,7 +12,16 @@ export type ResourceType = "TEXTBOOK" | "TESTS" | "LAWS" | "QUICK_REVIEW" | "COU
 export type KitRole = "essential" | "optional";
 
 /** (added after research, P1-20) */
-export type BadgeCode = "edition" | "kit_essential" | "bestseller" | "quick_review" | "bundle" | "sample" | "course";
+export type BadgeCode =
+  | "edition"
+  | "kit_essential"
+  | "bestseller"
+  | "quick_review"
+  | "bundle"
+  | "sample"
+  | "course"
+  // --- reader stream: ه۶ «رایگان» (free statute ebook) ---
+  | "free_ebook";
 export type BadgeTone = "primary" | "success" | "accent" | "warning" | "info" | "neutral";
 
 /** Server-side card badge (P1-20): ordered, at most 2 — render as-is. */
@@ -891,4 +900,106 @@ export interface SearchZeroState {
   /** best sellers for the exam (no query log yet) */
   popular: { id: number; slug: string; title: string }[];
   subjects: SubjectMini[];
+}
+
+/* ---------- reader stream: ه۱ re-anchoring, د۵ sample, ه۶ free statutes, ه۸ problem reports (declaration merging) ---------- */
+
+/** ه۱: "orphaned" = not found again in a newer file version (listed under «یادداشت‌های جابه‌جا شده»). */
+export type AnchorStatus = "anchored" | "orphaned";
+
+export interface Highlight {
+  /** file version the highlight points into */
+  ebook_version?: number | null;
+  context_before?: string;
+  context_after?: string;
+  anchor_status?: AnchorStatus;
+  /** page in the version it was last found in (orphans: where it used to be) */
+  previous_page?: number | null;
+}
+
+export interface HighlightCreate {
+  ebook_version?: number | null;
+  /** PDF: the text-layer context around the selection (the server prefers its own) */
+  context_before?: string;
+  context_after?: string;
+}
+
+export interface Bookmark {
+  ebook_version?: number | null;
+  anchor_status?: AnchorStatus;
+  previous_page?: number | null;
+  context_after?: string;
+}
+
+/** ه۶: «شرح این ماده» card under a statute chapter/article. */
+export interface StatuteLink {
+  id: number;
+  /** element id inside the chapter ("" = whole chapter) */
+  anchor: string;
+  label: string;
+  book: { slug: string; title: string; authors: string[] };
+}
+
+export interface EpubChapter {
+  /** ه۶: links of this chapter (full reader only) */
+  statute_links?: StatuteLink[];
+  /** د۵: the last chapter of a free sample */
+  sample_end?: boolean;
+}
+
+/** د۵: an ebook / bundle variant offered at the end of the sample. */
+export interface SampleOffer {
+  id: number;
+  type: "EBOOK" | "BUNDLE";
+  label: string;
+  /** integer toman */
+  price: number;
+  in_stock: boolean;
+}
+
+/** `GET /library/<slug>/sample/` (no login). */
+export interface SampleSession {
+  book: ReaderSession["book"];
+  format: EbookFormat;
+  version: number;
+  watermark: string;
+  sample_pages: number;
+  total_pages: number;
+  /** PDF: the sample file (first pages only); "" for EPUB */
+  file_url: string;
+  epub: EpubInfo | null;
+  offers: SampleOffer[];
+  /** the signed-in visitor already owns the book */
+  owned: boolean;
+}
+
+export type ProblemKind = "typo" | "missing_page" | "display" | "other";
+
+export interface ProblemReportBody {
+  kind: ProblemKind;
+  description?: string;
+  page?: number | null;
+  location?: string;
+  chapter_title?: string;
+  ebook_version?: number | null;
+  device_label?: string;
+}
+
+export interface ProblemReport extends ProblemReportBody {
+  id: number;
+  status: "new" | "in_progress" | "resolved" | "rejected";
+  created_at: string;
+}
+
+
+export interface BookCard {
+  /** ه۶: free ebook (statute text) — «دریافت رایگان» */
+  is_free_ebook?: boolean;
+}
+
+export interface BookDetail {
+  /** د۵: «نمونه را در کتاب‌خوان بخوانید» */
+  reader_sample?: boolean;
+  /** ه۶: the free ebook has a file and can be claimed */
+  free_ebook_ready?: boolean;
 }

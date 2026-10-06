@@ -31,7 +31,15 @@ class EbookFileForm(forms.ModelForm):
 
     class Meta:
         model = EbookFile
-        fields = ("book", "format", "file", "version", "is_active")
+        fields = (
+            "book",
+            "format",
+            "file",
+            "version",
+            "is_active",
+            "sample_enabled",
+            "sample_pages",
+        )
 
     def clean_file(self):
         file = self.cleaned_data.get("file")
@@ -56,8 +64,16 @@ class EbookFileForm(forms.ModelForm):
 @admin.register(EbookFile)
 class EbookFileAdmin(ModelAdmin):
     form = EbookFileForm
-    list_display = ("book", "format", "version", "file_name", "file_size", "is_active")
-    list_filter = ("format", "is_active")
+    list_display = (
+        "book",
+        "format",
+        "version",
+        "file_name",
+        "file_size",
+        "is_active",
+        "sample_enabled",
+    )
+    list_filter = ("format", "is_active", "sample_enabled")
     search_fields = ("book__title",)
     autocomplete_fields = ("book",)
     list_select_related = ("book",)
@@ -74,7 +90,8 @@ class EbookFileAdmin(ModelAdmin):
             except InvalidEbookFile as exc:
                 messages.error(request, f"پردازش EPUB انجام نشد: {exc}")
         if obj.is_active:
-            activate(obj)
+            # a file replaced under the same version number: re-check its annotations too (ه۱)
+            activate(obj, force=change and "file" in form.changed_data)
 
     @admin.action(description="فعال‌کردن این فایل (غیرفعال‌شدن بقیه‌ی فایل‌های کتاب)")
     def make_active(self, request, queryset):

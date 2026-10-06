@@ -1,6 +1,6 @@
 from apps.catalog.models import Book
 
-from ..models import Highlight
+from ..models import AnchorStatus, Highlight
 
 MAX_RECTS = 50
 MAX_PER_BOOK = 2000
@@ -32,13 +32,35 @@ def clean_rects(rects) -> list[dict]:
 
 
 def user_highlights(user, book: Book, page: int | None = None):
+    """All the user's highlights (orphaned ones too: the reader lists them separately)."""
     qs = Highlight.objects.filter(user=user, book=book)
     if page is not None:
-        qs = qs.filter(page=page)
+        qs = qs.filter(page=page, anchor_status=AnchorStatus.ANCHORED)
     return qs.order_by("page", "created_at", "id")
 
 
-def create_highlight(user, book: Book, **data) -> Highlight:
+def create_highlight(user, book: Book, *, ebook_version: int | None = None, **data) -> Highlight:
+    """Save a highlight with its file version and text context (ه۱).
+
+    ``ebook_version`` is the version the reader had open (an offline write replayed after a new
+    version went live still points into the old one; it is re-anchored right away).
+    """
+    from .reanchor import stamp_highlight
+
     if Highlight.objects.filter(user=user, book=book).count() >= MAX_PER_BOOK:
         raise HighlightLimit("به سقف تعداد هایلایت این کتاب رسیده‌اید.")
-    return Highlight.objects.create(user=user, book=book, **data)
+    data = stamp_highlight(book, data, version=ebook_version)
+    highlight = Highlight.objects.create(user=user, book=book, **data)
+    queue_if_stale(book, highlight.ebook_version)
+    return highlight
+
+
+def queue_if_stale(book: Book, version: int | None) -> None:
+    """A write that points into an older file version: re-anchor the book now."""
+    from .reanchor import active_ebook
+
+    active = active_ebook(book)
+    if active is not None and version is not None and version != active.version:
+        from ..tasks import queue_reanchor
+
+        queue_reanchor(active)

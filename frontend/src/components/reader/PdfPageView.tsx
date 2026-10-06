@@ -1,8 +1,9 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { HIGHLIGHT_COLORS } from "@/lib/reader";
-import type { Highlight } from "@/lib/types";
+import { HIGHLIGHT_COLORS, mergeRects, rectsToFractions } from "@/lib/reader";
+import { locateInChunks } from "@/lib/reader-anchor";
+import type { FractionRect, Highlight } from "@/lib/types";
 import { loadPdfjs, type PdfDocument } from "./pdfjs";
 
 interface PdfPageViewProps {
@@ -17,6 +18,8 @@ interface PdfPageViewProps {
   hidden?: boolean;
   /** A tap/click on the page with no text selected, in page fractions. */
   onPageClick?: (x: number, y: number) => void;
+  /** د۵ sample: false = no text layer (nothing to select, highlight or copy) */
+  selectable?: boolean;
 }
 
 const SWATCH = Object.fromEntries(HIGHLIGHT_COLORS.map((c) => [c.value, c.swatch]));
@@ -54,6 +57,30 @@ function drawWatermark(canvas: HTMLCanvasElement, text: string) {
   ctx.restore();
 }
 
+/**
+ * ه۱: boxes for highlights the server moved to this page after a new file version (`rects: []`),
+ * found again in the text layer by compact text comparison.
+ */
+function deriveRects(box: HTMLDivElement, textDiv: HTMLDivElement, missing: Highlight[]): Record<number, FractionRect[]> {
+  const nodes: Text[] = [];
+  const walker = document.createTreeWalker(textDiv, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) nodes.push(n as Text);
+  if (!nodes.length) return {};
+  const chunks = nodes.map((n) => n.data);
+  const frame = box.getBoundingClientRect();
+  const out: Record<number, FractionRect[]> = {};
+  for (const h of missing) {
+    const hit = locateInChunks(chunks, h.text, h.context_before ?? "");
+    if (!hit) continue;
+    const range = document.createRange();
+    range.setStart(nodes[hit.start.chunk]!, hit.start.offset);
+    range.setEnd(nodes[hit.end.chunk]!, hit.end.offset);
+    const rects = mergeRects(rectsToFractions(Array.from(range.getClientRects()), frame));
+    if (rects.length) out[h.id] = rects;
+  }
+  return out;
+}
+
 export interface PdfPageHandle {
   /** The page box (canvas + layers) used to turn selection rects into fractions. */
   element: HTMLDivElement | null;
@@ -61,7 +88,7 @@ export interface PdfPageHandle {
 
 /** One PDF page: canvas sized for devicePixelRatio, selectable text layer, highlights. */
 export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function PdfPageView(
-  { doc, pageNumber, cssWidth, watermark, highlights, activeHighlightId, hidden = false, onPageClick },
+  { doc, pageNumber, cssWidth, watermark, highlights, activeHighlightId, hidden = false, onPageClick, selectable = true },
   ref,
 ) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -69,6 +96,9 @@ export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function 
   const textRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [failed, setFailed] = useState(false);
+  // ه۱: text layer ready (bumped after each render) → boxes derived for highlights without rects
+  const [textReady, setTextReady] = useState(0);
+  const [derived, setDerived] = useState<Record<number, FractionRect[]>>({});
 
   useImperativeHandle(ref, () => ({ get element() { return boxRef.current; } }), []);
 
@@ -114,9 +144,11 @@ export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function 
       off.height = 0;
 
       textDiv.replaceChildren();
+      if (!selectable) return;
       const layer = new lib.TextLayer({ textContentSource: page.streamTextContent(), container: textDiv, viewport });
       textLayer = layer;
       await layer.render();
+      if (!cancelled) setTextReady((n) => n + 1);
     })().catch((err: unknown) => {
       if (cancelled) return;
       if (err instanceof Error && (err.name === "RenderingCancelledException" || err.name === "AbortException")) return;
@@ -128,7 +160,15 @@ export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function 
       renderTask?.cancel();
       textLayer?.cancel();
     };
-  }, [doc, pageNumber, cssWidth, watermark]);
+  }, [doc, pageNumber, cssWidth, watermark, selectable]);
+
+  useEffect(() => {
+    const box = boxRef.current;
+    const textDiv = textRef.current;
+    const missing = highlights.filter((h) => !h.rects.length && h.text);
+    if (!textReady || !box || !textDiv || !missing.length) return setDerived({});
+    setDerived(deriveRects(box, textDiv, missing));
+  }, [textReady, highlights]);
 
   const style = size ? { width: `${size.w}px`, height: `${size.h}px` } : { width: `${cssWidth}px`, aspectRatio: "1 / 1.414" };
 
@@ -153,7 +193,7 @@ export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function 
       {/* highlights sit under the transparent text layer so selection keeps working */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         {highlights.flatMap((h) =>
-          h.rects.map((r, i) => (
+          (h.rects.length ? h.rects : (derived[h.id] ?? [])).map((r, i) => (
             <div
               key={`${h.id}-${i}`}
               className={`reader-highlight absolute rounded-[2px] ${h.id === activeHighlightId ? "reader-highlight-active" : ""}`}

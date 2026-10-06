@@ -403,6 +403,9 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<ReaderResu
 
 const ok = <T>(data: T): ReaderResult<T> => ({ ok: true, data });
 
+/** Reader stream: the same same-origin `/library…` call for the sample, problem report and free-claim clients. */
+export const libraryCall = call;
+
 /** GET /library/<slug>/read/ — book, signed file URL, progress and watermark. */
 export function getReaderSession(slug: string): Promise<ReaderResult<ReaderSession>> {
   if (readerFixtureEnabled()) {
@@ -418,7 +421,7 @@ export function getReaderSession(slug: string): Promise<ReaderResult<ReaderSessi
 /** PUT /library/<slug>/progress/. `keepalive` lets the save finish while the tab is being hidden/closed. */
 export function saveProgress(
   slug: string,
-  body: { page: number; total_pages: number; location?: string },
+  body: { page: number; total_pages: number; location?: string; ebook_version?: number | null },
   { keepalive = false } = {},
 ): Promise<ReaderResult<ReadingProgress>> {
   if (readerFixtureEnabled()) {
@@ -535,9 +538,14 @@ export function listBookmarks(slug: string): Promise<ReaderResult<Bookmark[]>> {
 
 export function createBookmark(
   slug: string,
-  body: { page: number; location?: string; label?: string },
+  body: { page: number; location?: string; label?: string; ebook_version?: number | null },
 ): Promise<ReaderResult<Bookmark>> {
-  const clean = { page: body.page, location: body.location ?? "", label: (body.label ?? "").slice(0, MAX_BOOKMARK_LABEL) };
+  const clean = {
+    page: body.page,
+    location: body.location ?? "",
+    label: (body.label ?? "").slice(0, MAX_BOOKMARK_LABEL),
+    ...(body.ebook_version ? { ebook_version: body.ebook_version } : {}),
+  };
   if (readerFixtureEnabled()) {
     if (fixtureDown()) return down();
     const same = fixtureBookmarks.find((b) => b.page === clean.page && b.location === clean.location);

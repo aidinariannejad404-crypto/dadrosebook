@@ -44,12 +44,15 @@ export function useOfflineBook({
   start,
   onFatal,
   onReplayed,
+  disabled = false,
 }: {
   slug: string;
   session: ReaderSession;
   start: OfflineStart | null;
   onFatal: (e: ReaderFatalError) => void;
   onReplayed: (out: ReplayOutcome) => void;
+  /** د۵ free sample: no local copy, no queue, no reconciling (the hook stays inert) */
+  disabled?: boolean;
 }) {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [meta, setMeta] = useState<SavedMeta | null>(start?.meta ?? null);
@@ -211,6 +214,7 @@ export function useOfflineBook({
   /* ---------- mount: availability, reconcile, pending queue ---------- */
 
   useEffect(() => {
+    if (disabled) return;
     let cancelled = false;
     void (async () => {
       const store = await getOfflineStore();
@@ -240,6 +244,7 @@ export function useOfflineBook({
   /* ---------- back online ---------- */
 
   useEffect(() => {
+    if (disabled) return;
     const onOnline = async () => {
       if (!offlineRef.current) {
         void flush();
@@ -265,7 +270,7 @@ export function useOfflineBook({
     const handler = () => void onOnline();
     window.addEventListener("online", handler);
     return () => window.removeEventListener("online", handler);
-  }, [slug, flush, setOffline, setMetaBoth]);
+  }, [slug, flush, setOffline, setMetaBoth, disabled]);
 
   return {
     /** null while checking; false: no IndexedDB/WebCrypto here (private window, old browser) */

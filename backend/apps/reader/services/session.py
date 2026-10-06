@@ -105,8 +105,11 @@ def chapter_payload(user, package: EpubPackage, index: int) -> dict:
         asset = assets.get(int(match.group(1)))
         return f'src="{escape(asset_url(asset, user))}"' if asset else 'src=""'
 
+    from .statute import chapter_links
+
     last = package.chapters.count() - 1
     return {
+        "statute_links": chapter_links(package.ebook.book, chapter.index),
         "index": chapter.index,
         "title": chapter.title,
         "start_page": chapter.start_page,

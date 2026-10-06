@@ -64,6 +64,12 @@ def incomplete_books() -> int:
     return annotate_completeness(Book.objects.filter(is_active=True)).exclude(complete_q()).count()
 
 
+def _open_problem_reports() -> int:
+    from apps.reader.services.problems import open_reports
+
+    return open_reports()
+
+
 def upcoming_exams(days: int = 90, *, today=None) -> list[ExamEvent]:
     today = today or timezone.localdate()
     return list(
@@ -160,6 +166,16 @@ def work_items(user=None) -> list[dict]:
             "url": _url("catalog_book_changelist", "complete=no"),
             "icon": "edit_note",
             "level": "info",
+        },
+        # --- reader stream (ه۸): problems reported from the ebook reader ---
+        {
+            "key": "reader_problems",
+            "perm": "reader.view_problemreport",
+            "title": "گزارش مشکل کتاب الکترونیک (جدید یا در حال بررسی)",
+            "count": _open_problem_reports(),
+            "url": _url("reader_problemreport_changelist", "status__in=new,in_progress"),
+            "icon": "report",
+            "level": "warning",
         },
     ]
     # --- platform stream (PF-11) ---

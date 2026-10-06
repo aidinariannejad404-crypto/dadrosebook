@@ -185,6 +185,8 @@ class BookCardSerializer(serializers.ModelSerializer):
             "quick_add_variant_id",
             "rating_avg",
             "rating_count",
+            # ه۶ free statute ebooks («دریافت رایگان»)
+            "is_free_ebook",
         ]
 
     def _exam_year(self) -> int:
@@ -409,6 +411,9 @@ class BookDetailSerializer(BookCardSerializer):
     kit_placements = serializers.SerializerMethodField()
     # --- ux stream (ج۷): file formats of the ebook edition, e.g. ["EPUB"] ---
     ebook_formats = serializers.SerializerMethodField()
+    # د۵ / ه۶ (apps.reader): sample in the real reader; free ebook ready to claim
+    reader_sample = serializers.SerializerMethodField()
+    free_ebook_ready = serializers.SerializerMethodField()
 
     class Meta(BookCardSerializer.Meta):
         fields = [
@@ -434,7 +439,19 @@ class BookDetailSerializer(BookCardSerializer):
             "kit_placements",
             "is_featured",
             "updated_at",
+            "reader_sample",
+            "free_ebook_ready",
         ]
+
+    def get_reader_sample(self, obj: Book) -> bool:
+        from apps.reader.services.sample import sample_available
+
+        return not obj.is_free_ebook and sample_available(obj)
+
+    def get_free_ebook_ready(self, obj: Book) -> bool:
+        from apps.library.services.free import is_claimable
+
+        return obj.is_free_ebook and is_claimable(obj)
 
     def get_categories(self, obj: Book) -> list[dict]:
         cats = [c for c in obj.categories.all() if c.is_active]

@@ -110,3 +110,106 @@ def build_epub(
             if path not in omit:
                 zf.writestr(path, data.encode() if isinstance(data, str) else data)
     return buf.getvalue()
+
+
+# ---------- ه۶: a small demo statute (placeholder text, clearly not the official law) ----------
+
+STATUTE_NOTICE = (
+    "این متن نمایشی است و متن رسمی قانون نیست؛ فقط برای آزمایش کتاب‌خوان دادرُز ساخته شده است."
+)
+
+STATUTE_PARTS = [
+    (
+        "کلیات",
+        [
+            "مصوبات مجلس پس از طی مراحل قانونی به رئیس‌جمهور ابلاغ می‌شود (متن نمایشی).",
+            "قوانین پانزده روز پس از انتشار در سراسر کشور لازم‌الاجرا است (متن نمایشی).",
+            "انتشار قوانین باید در روزنامه رسمی به عمل آید (متن نمایشی).",
+            "اثر قانون نسبت به آتیه است و قانون نسبت به ماقبل خود اثر ندارد (متن نمایشی).",
+        ],
+    ),
+    (
+        "در اموال",
+        [
+            "مال بر دو قسم است: منقول و غیرمنقول (متن نمایشی).",
+            "مالی که نقل آن از محلی به محل دیگر ممکن نباشد غیرمنقول است (متن نمایشی).",
+            "اشیایی که منقول است و صاحب آن را برای استفاده از ملک غیرمنقول قرار داده "
+            "غیرمنقول حکمی است (متن نمایشی).",
+        ],
+    ),
+    (
+        "در قراردادها",
+        [
+            "قراردادهای خصوصی نسبت به کسانی که آن را منعقد نموده‌اند در صورتی که مخالف "
+            "صریح قانون نباشد نافذ است (متن نمایشی).",
+            "برای صحت هر معامله قصد طرفین و رضای آنها، اهلیت، موضوع معین و مشروعیت جهت "
+            "شرط است (متن نمایشی).",
+            "عقد عبارت است از اینکه یک یا چند نفر در مقابل یک یا چند نفر دیگر تعهد بر "
+            "امری نمایند (متن نمایشی).",
+        ],
+    ),
+]
+
+STATUTE_OPF = """<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="id">dadrose-demo-statute</dc:identifier>
+    <dc:title>قانون مدنی (نسخه نمایشی)</dc:title>
+    <dc:language>fa</dc:language>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+    {items}
+  </manifest>
+  <spine page-progression-direction="rtl">{refs}</spine>
+</package>"""
+
+
+def statute_articles() -> list[tuple[int, int, str]]:
+    """``[(chapter index, article number, text)]`` of the demo statute (chapter 0 = notice)."""
+    out = []
+    number = 1
+    for index, (_title, articles) in enumerate(STATUTE_PARTS, start=1):
+        for text in articles:
+            out.append((index, number, text))
+            number += 1
+    return out
+
+
+def build_statute_epub() -> bytes:
+    from apps.core.money import to_persian_digits
+
+    chapters = [("پیش از متن", f"<h1>درباره این متن</h1><p>{STATUTE_NOTICE}</p>")]
+    by_chapter: dict[int, list[str]] = {}
+    for index, number, text in statute_articles():
+        by_chapter.setdefault(index, []).append(
+            f'<p id="m{number}"><strong>ماده {to_persian_digits(number)}</strong> - {text}</p>'
+        )
+    for index, (title, _articles) in enumerate(STATUTE_PARTS, start=1):
+        chapters.append(
+            (
+                title,
+                f"<h1>باب {to_persian_digits(index)}: {title}</h1>" + "".join(by_chapter[index]),
+            )
+        )
+    members: dict[str, bytes | str] = {"META-INF/container.xml": CONTAINER}
+    items, refs, nav = [], [], []
+    for i, (title, body) in enumerate(chapters):
+        path = f"text/s{i}.xhtml"
+        members[f"OEBPS/{path}"] = PAGE.format(title=title, body=body)
+        items.append(f'<item id="s{i}" href="{path}" media-type="application/xhtml+xml"/>')
+        refs.append(f'<itemref idref="s{i}"/>')
+        nav.append(f'<li><a href="{path}">{title}</a></li>')
+    members["OEBPS/content.opf"] = STATUTE_OPF.format(items="".join(items), refs="".join(refs))
+    members["OEBPS/nav.xhtml"] = (
+        '<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" '
+        'xmlns:epub="http://www.idpf.org/2007/ops"><body><nav epub:type="toc"><ol>'
+        + "".join(nav)
+        + "</ol></nav></body></html>"
+    )
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
+        for path, data in members.items():
+            zf.writestr(path, data.encode() if isinstance(data, str) else data)
+    return buf.getvalue()

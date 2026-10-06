@@ -8,8 +8,9 @@ import type { Bookmark, Highlight, HighlightColor, HighlightCreate } from "./typ
  * into the queued create, so the server never sees a temporary id.
  */
 
-export type ProgressBody = { page: number; total_pages: number; location: string };
-export type BookmarkBody = { page: number; location: string; label: string };
+/* ه۱: `ebook_version` = the file version the position points into (re-anchoring on a new version) */
+export type ProgressBody = { page: number; total_pages: number; location: string; ebook_version?: number | null };
+export type BookmarkBody = { page: number; location: string; label: string; ebook_version?: number | null };
 export type HighlightPatch = { note?: string; color?: HighlightColor };
 
 export type QueuedOp =
