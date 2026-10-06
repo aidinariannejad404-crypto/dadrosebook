@@ -12,7 +12,6 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ✅ |
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
 | 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
-| 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
 | 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
 | Admin | Back office, step 1: dashboard (work queue, KPIs, goal metrics), sales report + CSV, staff roles, audit log, order print/CSV, quick price/stock edit, customer summary, admin session timeout (`apps.backoffice`, see `docs/admin-panel-summary.md`); step 2: returns/refunds (`orders.ReturnRequest`), staff SMS 2FA + admin IP allowlist, editable SMS templates (`core.SmsTemplate`), abandoned-cart reminders; next: shipment API (paid), formal invoices | 🚧 |
@@ -20,10 +19,11 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | ب | SEO content hubs: `/exam`, `/subject`, `/author`, `/publisher` hubs, `/guide` (author + legal reviewer) and `/list` pages, indexability guardrail (thin hubs noindex + out of the sitemap), per-type sitemaps (see `docs/hubs-summary.md`) | ✅ |
 | Retention | `apps.study`: reading minutes + daily goal + gentle streak + «کارنامه مطالعه» (`/account/report`), time-left in reader and library forecast, living study plan (`/account/plan`), edition-upgrade discount + owner SMS, review prompts + review filters (see `docs/retention-summary.md`) | ✅ |
 | UX ج | Quick UX wins from the UX/SEO research: WebOTP, route skeletons, search zero state, undo on remove, add-to-calendar, guest wishlist, ebook price anchor, motion tokens, compare 2-3 books (see `docs/ux-quick-wins-summary.md`) | ✅ |
-| 2 | Category/search page, study-kit builder, cart (guest + merge), back-in-stock requests | ⏳ |
-| 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements | ⏳ |
-| 4 | Secure ebook reader, reading progress, highlights | ⏳ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment config (see `docs/phase-5-summary.md`, `docs/deploy.md`) | ✅ (real deployment waits for the hosting decision) |
+| د | Trust & conversion: «این کتاب را دارید» (`/me/owned/`), delivery date promise with Friday/holidays/cutoff and exam-clash warning, post-purchase «شروع مطالعه», `/account/readiness` dashboard + «خبرم کن» list (`apps.studyhub`) | ✅ |
+| Reader+ | Annotations re-anchored across ebook file versions, free sample in the real reader, free statute ebooks + «شرح این ماده», in-reader problem reports, quote image cards | ✅ |
+| Platform | Lessons from Taaghche/Fidibo features: onboarding study profile, library tab + continue reading, inbox + notification preferences, support tickets, OTP help/voice hook, PWA install, reader fonts, crypto-key guard, changelog (`apps.inbox`, `apps.support`) | ✅ |
+| UX/SEO integration | All branches above merged on `claude/project-thread-j6j21e`; summary in `docs/ux-seo-implementation-summary.md` | ✅ (owner decisions pending) |
 
 ---
 
