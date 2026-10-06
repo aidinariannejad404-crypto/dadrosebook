@@ -83,6 +83,8 @@ import { useCopyQuota } from "./useCopyQuota";
 import { useOfflineBook, type OfflineStart } from "./useOfflineBook";
 import { OfflinePanel } from "./OfflinePanel";
 import type { ReaderTheme } from "./theme";
+import { ReadingBand, ScreenGuard, TraceCodeLabel, TraceLayer, useBandHint } from "./ScreenGuard";
+import { bandHeight, bandTopFor, protectionOf, stepBand } from "@/lib/screen-guard";
 
 /** Where to put the reader once a chapter is on screen. */
 type Target =
@@ -234,6 +236,20 @@ export function EpubReader({
   pagedRef.current = paged;
   geoRef.current = geo;
 
+  /* ---------- Phase 6c: screenshot protection ---------- */
+  const protection = protectionOf(session.protection);
+  const high = protection.level === "high";
+  const highRef = useRef(high);
+  highRef.current = high;
+  const linePx = fontPx * lineHeight;
+  // scroll mode: the band sits at the vertical centre of the text area; paged: the reader moves it
+  const bandBoxH = paged ? geo.height : box.height;
+  const bandH = bandHeight(linePx, bandBoxH);
+  const [bandTop, setBandTop] = useState(0);
+  const bandRef = useRef({ top: 0, h: 0, line: 0, boxH: 0 });
+  bandRef.current = { top: bandTop, h: bandH, line: linePx, boxH: bandBoxH };
+  const bandScrollPad = high && !paged ? Math.max(24, Math.round(box.height / 2 - bandH / 2)) : 0;
+
   const total = epub.total_pages;
   const meta = chapter ? epub.chapters[chapter.index] ?? chapter : null;
   // paged: the column on screen mapped onto the chapter's virtual pages; scroll: the first visible offset
@@ -269,6 +285,7 @@ export function EpubReader({
     if (noticeTimer.current) clearTimeout(noticeTimer.current);
     noticeTimer.current = setTimeout(() => setNotice(""), 4000);
   }, []);
+  useBandHint(high, flash);
 
   /* ---------- chapters ---------- */
 
@@ -729,16 +746,33 @@ export function EpubReader({
     }, 160);
   }, [measure, showCol]);
 
+  /** «high» + paged: move the reading band one step; at the end of the page, turn it. */
+  const moveBand = useCallback(
+    (dir: 1 | -1) => {
+      const b = bandRef.current;
+      const step = stepBand(b.top, dir, b.h, b.line, b.boxH);
+      if (step === "next") {
+        setBandTop(0);
+        forward();
+      } else if (step === "prev") {
+        setBandTop(Math.max(0, b.boxH - b.h));
+        back();
+      } else setBandTop(step);
+    },
+    [forward, back],
+  );
+
   const onWheel = useCallback(
     (e: React.WheelEvent<HTMLDivElement>) => {
       if (!pagedRef.current || Math.abs(e.deltaY) < 4 || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
       const now = Date.now();
       if (now - lastWheel.current < WHEEL_PAGE_MS) return;
       lastWheel.current = now;
-      if (e.deltaY > 0) forward();
+      if (highRef.current) moveBand(e.deltaY > 0 ? 1 : -1);
+      else if (e.deltaY > 0) forward();
       else back();
     },
-    [forward, back],
+    [forward, back, moveBand],
   );
 
   useEffect(() => {
@@ -750,6 +784,12 @@ export function EpubReader({
       }
       if (e.altKey || e.ctrlKey || e.metaKey || isTypingTarget(e.target)) return;
       if (document.querySelector("dialog[open]")) return;
+      // «high» + paged: ArrowDown/ArrowUp/Space move the reading band, then turn the page at its end
+      if (highRef.current && pagedRef.current && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === " ")) {
+        e.preventDefault();
+        moveBand(e.key === "ArrowUp" ? -1 : 1);
+        return;
+      }
       // RTL book: forward is to the left (mirrored for LTR books)
       const fwdArrow = rtl ? "ArrowLeft" : "ArrowRight";
       const backArrow = rtl ? "ArrowRight" : "ArrowLeft";
@@ -763,7 +803,7 @@ export function EpubReader({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [forward, back, rtl]);
+  }, [forward, back, rtl, moveBand]);
 
   /* ---------- selection → highlight popover ---------- */
   useEffect(() => {
@@ -1088,7 +1128,14 @@ export function EpubReader({
                     columnFill: "auto",
                     "--epub-page-h": `${geo.height}px`,
                   } as React.CSSProperties)
-                : { fontSize: `${fontPx}px`, lineHeight, maxWidth: `${margin.maxEm}em`, paddingInline: `${margin.padding}px` }
+                : {
+                    fontSize: `${fontPx}px`,
+                    lineHeight,
+                    maxWidth: `${margin.maxEm}em`,
+                    paddingInline: `${margin.padding}px`,
+                    // «high»: room above/below so the first and last lines can reach the band
+                    ...(bandScrollPad ? { paddingBlock: `${bandScrollPad}px` } : {}),
+                  }
             }
           >
             <h2 className="sr-only">{chapter?.title ?? "در حال بارگذاری فصل"}</h2>
@@ -1129,6 +1176,23 @@ export function EpubReader({
           className="pointer-events-none absolute inset-0 select-none"
           style={{ backgroundImage: watermarkTile(session.watermark, watermarkFill), backgroundRepeat: "repeat" }}
         />
+        <TraceLayer code={protection.traceCode} theme={theme} />
+
+        {high && box.height > 0 && !loading && (
+          <ReadingBand
+            top={paged ? PAGE_PAD_BLOCK + Math.min(bandTop, Math.max(0, geo.height - bandH)) : bandTopFor(box.height / 2, bandH, box.height)}
+            height={bandH}
+            interactive={paged}
+            onPoint={(y) => setBandTop(bandTopFor(y - PAGE_PAD_BLOCK, bandH, geo.height))}
+            onSwipe={(dx) => {
+              // RTL book: dragging to the right brings in the next page
+              setBandTop(0);
+              if ((dx > 0) === rtl) forward();
+              else back();
+            }}
+            onWheel={onWheel}
+          />
+        )}
 
         {loading && (
           <div className="absolute inset-0 overflow-hidden bg-surface p-6" role="status">
@@ -1176,6 +1240,7 @@ export function EpubReader({
               <span className="shrink-0 tabular-nums text-ink-muted">{`صفحه ${formatNumber(col + 1)} از ${formatNumber(colCount)} این فصل`}</span>
             )}
             <span className="shrink-0 tabular-nums text-ink-muted">{formatPercent(percent)}</span>
+            <TraceCodeLabel code={protection.traceCode} className="shrink-0" />
           </div>
         </footer>
       )}
@@ -1247,6 +1312,7 @@ export function EpubReader({
       </EpubSettingsSheet>
 
       <ReaderNotice text={notice} />
+      <ScreenGuard slug={slug} />
     </ReaderShell>
   );
 }

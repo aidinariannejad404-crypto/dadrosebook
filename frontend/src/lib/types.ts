@@ -566,7 +566,22 @@ export interface ReaderSession {
   copy_quota?: CopyQuota | null;
   /** Phase 6b: offline reading (EPUB only; null for PDF or when disabled) */
   offline?: OfflineInfo | null;
+  /** Phase 6c: screenshot protection; missing/null = standard without a trace code */
+  protection?: ReaderProtection | null;
 }
+
+/* ---------- Phase 6c: screenshot protection ---------- */
+
+export type ProtectionLevel = "standard" | "high";
+
+export interface ReaderProtection {
+  /** «high» adds the reading band (only a few lines sharp at a time) */
+  level: ProtectionLevel;
+  /** per user+book code drawn faintly over every page; staff look it up in the admin */
+  trace_code: string;
+}
+
+export type CaptureEventKind = "print_screen" | "shortcut" | "multi_touch" | "devtools";
 
 /* ---------- Phase 6b: offline reading (EPUB) ---------- */
 
@@ -594,6 +609,8 @@ export interface OfflinePackage {
   watermark: string;
   copy_limit: number;
   copy_quota?: CopyQuota | null;
+  /** Phase 6c: carried into the offline session when the server includes it */
+  protection?: ReaderProtection | null;
 }
 
 export interface OfflineGrant {

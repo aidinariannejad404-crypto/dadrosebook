@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { HIGHLIGHT_COLORS } from "@/lib/reader";
 import type { Highlight } from "@/lib/types";
+import { tracePlacements } from "@/lib/screen-guard";
 import { loadPdfjs, type PdfDocument } from "./pdfjs";
 
 interface PdfPageViewProps {
@@ -11,6 +12,8 @@ interface PdfPageViewProps {
   /** Target CSS width of the page in px (fit-to-width × zoom). */
   cssWidth: number;
   watermark: string;
+  /** Phase 6c: per user+book trace code, burned in densely and faintly */
+  traceCode?: string;
   highlights: Highlight[];
   activeHighlightId?: number | null;
   /** Pre-render only (kept out of view and out of the accessibility tree). */
@@ -54,6 +57,36 @@ function drawWatermark(canvas: HTMLCanvasElement, text: string) {
   ctx.restore();
 }
 
+/** Trace ink: ≈6% of the text colour; the theme filters (sepia/dark invert) adapt it with the page. */
+const TRACE_FILL = "rgba(16, 24, 43, 0.065)";
+
+/**
+ * Burn the trace code into the canvas as a dense jittered grid (small, rotated): faint while
+ * reading, legible once a screenshot's contrast is raised.
+ */
+function drawTraceCode(canvas: HTMLCanvasElement, code: string, dpr: number) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx || !code) return;
+  const fontPx = Math.round(11 * dpr);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = `700 ${fontPx}px Menlo, Consolas, "DejaVu Sans Mono", monospace`;
+  ctx.fillStyle = TRACE_FILL;
+  ctx.direction = "ltr";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const stepX = ctx.measureText(code).width + fontPx * 3;
+  const stepY = fontPx * 4.5;
+  for (const p of tracePlacements(code, canvas.width, canvas.height, stepX, stepY)) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate((p.angle * Math.PI) / 180);
+    ctx.fillText(code, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
 export interface PdfPageHandle {
   /** The page box (canvas + layers) used to turn selection rects into fractions. */
   element: HTMLDivElement | null;
@@ -61,7 +94,7 @@ export interface PdfPageHandle {
 
 /** One PDF page: canvas sized for devicePixelRatio, selectable text layer, highlights. */
 export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function PdfPageView(
-  { doc, pageNumber, cssWidth, watermark, highlights, activeHighlightId, hidden = false, onPageClick },
+  { doc, pageNumber, cssWidth, watermark, traceCode = "", highlights, activeHighlightId, hidden = false, onPageClick },
   ref,
 ) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -107,6 +140,7 @@ export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function 
       await renderTask.promise;
       if (cancelled) return;
       drawWatermark(off, watermark);
+      drawTraceCode(off, traceCode, dpr);
       canvas.width = off.width;
       canvas.height = off.height;
       canvas.getContext("2d")?.drawImage(off, 0, 0);
@@ -128,7 +162,7 @@ export const PdfPageView = forwardRef<PdfPageHandle, PdfPageViewProps>(function 
       renderTask?.cancel();
       textLayer?.cancel();
     };
-  }, [doc, pageNumber, cssWidth, watermark]);
+  }, [doc, pageNumber, cssWidth, watermark, traceCode]);
 
   const style = size ? { width: `${size.w}px`, height: `${size.h}px` } : { width: `${cssWidth}px`, aspectRatio: "1 / 1.414" };
 

@@ -13,7 +13,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned
 | 3 | OTP auth, checkout, shipping, discount codes, ZarinPal, orders, account pages, ebook entitlements, reviews, wishlist | ✅ |
 | 4 | Secure ebook reader, reading progress, highlights (`apps.reader`, `/read/<book>`) | ✅ |
 | 5 | SEO hardening, Sazito 301s, performance, analytics events, production deployment | ⏳ |
-| 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
+| 6 | Ebook platform: EPUB streamed chapter by chapter (never the whole file), reflowable reader with typography settings, TOC, in-book search, bookmarks, copy limit with citation and a server-side 10% copy quota, paged and scroll modes, notebook export, «my devices» page, encrypted offline reading (3 books, 14 days), 3-device limit, anti-scraping throttles, access log, screenshot deterrence (white screen on capture signals, per-buyer trace code, optional few-lines «high» mode; see `docs/screenshot-protection.md`) (see `docs/ebook-platform-summary.md`, research in `docs/ebook-research.md`) | ✅ |
 | UI | Visual refresh: logo system, sticky header, mobile tab bar, mega menu, enclosed checkout, richer cards and 3D covers, product page (collapsible description, cover lightbox, added-to-cart sheet, complete-the-kit box), policy pages, library progress, reader themes (see `docs/ui-refresh-summary.md`) | ✅ |
 
 ---

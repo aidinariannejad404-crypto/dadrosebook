@@ -40,6 +40,8 @@ import { useCopyQuota } from "./useCopyQuota";
 import type { OfflineStart } from "./useOfflineBook";
 import { PURGE_ERRORS, openOfflineBook, purgeOfflineBook } from "@/lib/reader-offline";
 import { registerReaderSw } from "@/lib/reader-sw";
+import { bandTopFor, protectionOf } from "@/lib/screen-guard";
+import { ReadingBand, ScreenGuard, TraceCodeLabel, useBandHint } from "./ScreenGuard";
 
 type State =
   | { status: "loading" }
@@ -64,6 +66,9 @@ const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5, 2, 2.5];
 const MAX_PAGE_WIDTH = 900;
 const STAGE_GUTTER = 16;
 const SWIPE_MIN_PX = 60;
+/** «high» reading band on a PDF page: about five lines of body text, as a share of the page width. */
+const PDF_BAND_WIDTH_SHARE = 0.13;
+const PDF_BAND_MIN_PX = 96;
 
 /** Open the PDF, refreshing the signed URL first when it is about to expire and once more on failure. */
 async function openWithRefresh(
@@ -102,6 +107,7 @@ export function Reader({ slug }: { slug: string }) {
   const [page, setPage] = useState(1);
   const [zoomIndex, setZoomIndex] = useState(1);
   const [stageWidth, setStageWidth] = useState(0);
+  const [stageHeight, setStageHeight] = useState(0);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [pending, setPending] = useState<PendingSelection | null>(null);
@@ -136,6 +142,16 @@ export function Reader({ slug }: { slug: string }) {
 
   pageNow.current = page;
   totalNow.current = total;
+
+  /* ---------- Phase 6c: screenshot protection ---------- */
+  const protection = protectionOf(ready?.session.protection);
+  const high = protection.level === "high";
+  const highRef = useRef(high);
+  highRef.current = high;
+  const bandH = Math.min(Math.max(PDF_BAND_MIN_PX, Math.round(cssWidth * PDF_BAND_WIDTH_SHARE)), stageHeight);
+  const bandTop = bandTopFor(stageHeight / 2, bandH, stageHeight);
+  // room above/below the page so its first and last lines can be scrolled into the centred band
+  const bandPad = high && stageHeight > 0 ? Math.max(16, Math.round(stageHeight / 2 - bandH / 2)) : 0;
 
   /* ---------- load session + document ---------- */
   useEffect(() => {
@@ -199,7 +215,10 @@ export function Reader({ slug }: { slug: string }) {
     const el = stageRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      if (entry) setStageWidth(Math.floor(entry.contentRect.width));
+      if (!entry) return;
+      setStageWidth(Math.floor(entry.contentRect.width));
+      // clientHeight (with padding): the «high» band padding must not feed back into the measurement
+      setStageHeight(el.clientHeight);
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -270,6 +289,16 @@ export function Reader({ slug }: { slug: string }) {
       }
       if (e.altKey || e.ctrlKey || e.metaKey || isTypingTarget(e.target)) return;
       if (document.querySelector("dialog[open]")) return;
+      // «high»: ArrowDown/ArrowUp scroll the page through the reading band
+      if (highRef.current && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+        const stage = stageRef.current;
+        if (stage) {
+          e.preventDefault();
+          const h = Math.max(48, Math.round(stage.clientHeight * 0.12));
+          stage.scrollBy({ top: e.key === "ArrowDown" ? h : -h });
+        }
+        return;
+      }
       // RTL book: the next page is to the left
       if (e.key === "ArrowLeft" || e.key === "PageDown") {
         e.preventDefault();
@@ -329,6 +358,7 @@ export function Reader({ slug }: { slug: string }) {
     setNotice(msg);
     window.setTimeout(() => setNotice(""), 4000);
   }, []);
+  useBandHint(high, flash);
 
   const create = useCallback(
     async (sel: PendingSelection, color: HighlightColor, note = "") => {
@@ -519,9 +549,11 @@ export function Reader({ slug }: { slug: string }) {
       </header>
 
       {/* page stage */}
+      <div className="relative min-h-0 flex-1">
       <div
         ref={stageRef}
-        className="relative flex-1 overflow-auto bg-surface-muted py-4"
+        className="absolute inset-0 overflow-auto bg-surface-muted py-4"
+        style={bandPad ? { paddingBlock: `${bandPad}px` } : undefined}
         onCopy={onCopy}
         onCut={onCopy}
         onTouchStart={(e) => {
@@ -554,6 +586,7 @@ export function Reader({ slug }: { slug: string }) {
                 pageNumber={page}
                 cssWidth={cssWidth}
                 watermark={session.watermark}
+                traceCode={protection.traceCode}
                 highlights={pageHighlights}
                 activeHighlightId={editor?.mode === "edit" ? editor.highlight.id : null}
                 onPageClick={onPageClick}
@@ -565,6 +598,7 @@ export function Reader({ slug }: { slug: string }) {
                   pageNumber={page + 1}
                   cssWidth={cssWidth}
                   watermark={session.watermark}
+                  traceCode={protection.traceCode}
                   highlights={nextHighlights}
                   hidden
                 />
@@ -572,6 +606,8 @@ export function Reader({ slug }: { slug: string }) {
             </>
           )}
         </div>
+      </div>
+      {high && stageHeight > 0 && <ReadingBand top={bandTop} height={bandH} />}
       </div>
 
       {/* bottom bar */}
@@ -653,6 +689,11 @@ export function Reader({ slug }: { slug: string }) {
             <ChevronIcon size={22} />
           </button>
         </div>
+        {protection.traceCode && (
+          <p className="-mt-1 pb-1 text-center">
+            <TraceCodeLabel code={protection.traceCode} />
+          </p>
+        )}
       </nav>
 
       {pending && !editor && (
@@ -695,6 +736,7 @@ export function Reader({ slug }: { slug: string }) {
       />
 
       <ReaderNotice text={notice} />
+      <ScreenGuard slug={slug} />
     </ReaderShell>
   );
 }

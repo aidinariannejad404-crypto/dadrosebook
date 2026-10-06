@@ -56,6 +56,10 @@
   --reader-ink-sepia: #3b2d1a;
   --reader-paper-dark: #1b2130;
   --reader-ink-dark: #e6e8ee;
+  /* Phase 6c screen guard: the blank screen is white in every reader theme (owner's ask) */
+  --guard-paper: #ffffff;
+  --guard-ink: #10182b;
+  --guard-muted: #4a5468;
 }
 .reader-root[data-reader-theme="sepia"] {
   --color-bg: #f1e5c9;
