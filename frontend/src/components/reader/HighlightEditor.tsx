@@ -5,6 +5,7 @@ import { HIGHLIGHT_COLORS, MAX_HIGHLIGHT_TEXT } from "@/lib/reader";
 import type { HighlightColor } from "@/lib/types";
 import { Dialog } from "@/components/ui/Dialog";
 import { CheckIcon } from "@/components/ui/Icons";
+import { ImageShareIcon } from "./ReaderIcons";
 
 interface HighlightEditorProps {
   open: boolean;
@@ -16,6 +17,8 @@ interface HighlightEditorProps {
   onClose: () => void;
   onSave: (v: { color: HighlightColor; note: string }) => void;
   onDelete?: () => void;
+  /** و۲ «اشتراک به‌صورت تصویر» for this highlight's text */
+  onShareImage?: () => void;
 }
 
 /** Note + colour editor for a new selection («یادداشت») or an existing highlight. */
@@ -29,6 +32,7 @@ export function HighlightEditor({
   onClose,
   onSave,
   onDelete,
+  onShareImage,
 }: HighlightEditorProps) {
   const [color, setColor] = useState<HighlightColor>(initialColor);
   const [note, setNote] = useState(initialNote);
@@ -113,6 +117,17 @@ export function HighlightEditor({
           >
             انصراف
           </button>
+          {onShareImage && (
+            <button
+              type="button"
+              onClick={onShareImage}
+              disabled={busy}
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control px-4 font-bold text-primary hover:bg-primary-soft disabled:opacity-60"
+            >
+              <ImageShareIcon size={20} />
+              اشتراک به‌صورت تصویر
+            </button>
+          )}
           {onDelete && (
             <button
               type="button"

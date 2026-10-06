@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatNumber } from "@/lib/format";
 import { recordCopy, type ReaderResult } from "@/lib/reader";
-import { planCopy, quotaAfterCopy } from "@/lib/reader-epub";
+import { planCopy, quotaAfterCopy, quotaRemaining } from "@/lib/reader-epub";
 import type { CopyQuota, CopyRecorded, ReaderSession } from "@/lib/types";
 
 export const QUOTA_EXHAUSTED_MESSAGE = "سهمیه کپی این کتاب تمام شده است";
@@ -64,5 +64,21 @@ export function useCopyQuota(
     [slug, session, flash, setQuota, record],
   );
 
-  return { quota, copyText };
+  /**
+   * و۲ quote card: spend up to `chars` of the quota (online only) and return how many the server
+   * granted (0 = exhausted), or null when the report could not be sent.
+   */
+  const spend = useCallback(
+    async (chars: number): Promise<number | null> => {
+      const want = Math.min(Math.max(0, Math.floor(chars)), quotaRemaining(quotaRef.current));
+      if (want <= 0) return 0;
+      const res = await record(slug, want);
+      if (!res.ok) return null;
+      setQuota({ limit: res.data.limit, used: res.data.used });
+      return res.data.granted;
+    },
+    [slug, record, setQuota],
+  );
+
+  return { quota, copyText, spend };
 }

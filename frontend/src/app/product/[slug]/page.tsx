@@ -46,6 +46,9 @@ import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { getBookReviews } from "@/lib/reviews-api";
 import { aggregateRating } from "@/lib/reviews";
+// --- reader stream (د۵ sample in the reader, ه۶ free statute ebooks) ---
+import { FreeEbookBox, ReaderSampleLink } from "@/components/reader/FreeEbookBox";
+// --- end reader stream ---
 
 type Params = Promise<{ slug: string }>;
 
@@ -314,8 +317,11 @@ export default async function ProductPage({ params }: { params: Params }) {
                 />
               </CoverGallery>
             </BookTilt>
-            {(samplePages > 0 || book.sample_pdf) && (
+            {(samplePages > 0 || book.sample_pdf || book.reader_sample) && (
               <div className="flex flex-col gap-2">
+                {/* --- reader stream: د۵ «نمونه را در کتاب‌خوان بخوانید» --- */}
+                {book.reader_sample && <ReaderSampleLink slug={book.slug} prominent={samplePages === 0} />}
+                {/* --- end reader stream --- */}
                 {samplePages > 0 && <SamplePagesViewer pages={book.sample_pages} title={book.title} />}
                 {book.sample_pdf && (
                   <a
@@ -343,8 +349,13 @@ export default async function ProductPage({ params }: { params: Params }) {
           {/* info — phones: title, then the buy box, then fit/specs (research #10); tablet: buy box last */}
           <div className="flex min-w-0 flex-col">
             <div>
-            {(book.edition_badge || book.law_updated_until || highlightLabel) && (
+            {(book.edition_badge || book.law_updated_until || highlightLabel || book.is_free_ebook) && (
               <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                {/* --- reader stream: ه۶ «رایگان» badge --- */}
+                {book.is_free_ebook && (
+                  <span className="rounded-md bg-success-soft px-2 py-0.5 font-bold text-success">رایگان</span>
+                )}
+                {/* --- end reader stream --- */}
                 {highlightLabel && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-accent-soft px-2 py-0.5 font-bold text-accent-ink">
                     <PlayIcon size={12} className="shrink-0" />
@@ -392,6 +403,9 @@ export default async function ProductPage({ params }: { params: Params }) {
 
             {/* buy box sits in the info column on phones/tablet, in its own column on desktop */}
             <div className="mt-6 md:order-last lg:hidden">
+              {/* --- reader stream: ه۶ «دریافت رایگان» --- */}
+              {book.is_free_ebook && <FreeEbookBox slug={book.slug} ready={book.free_ebook_ready ?? false} className="mb-4" />}
+              {/* --- end reader stream --- */}
               <PurchasePanel footer={consult} />
             </div>
 
@@ -468,6 +482,9 @@ export default async function ProductPage({ params }: { params: Params }) {
 
           <aside className="hidden lg:block" aria-label="خرید">
             <div className="sticky top-4">
+              {/* --- reader stream: ه۶ «دریافت رایگان» --- */}
+              {book.is_free_ebook && <FreeEbookBox slug={book.slug} ready={book.free_ebook_ready ?? false} className="mb-4" />}
+              {/* --- end reader stream --- */}
               <PurchasePanel footer={consult} />
             </div>
           </aside>

@@ -22,7 +22,13 @@ export type AnalyticsEvent =
   | "kit_built"
   | "notify_me_requested"
   | "course_cross_sell_click"
-  | "study_plan_requested";
+  | "study_plan_requested"
+  // reader stream: د۵ sample, ه۶ free ebook, ه۸ problem report, و۲ quote card
+  | "reader_sample_opened"
+  | "sample_cta_click"
+  | "free_ebook_claimed"
+  | "reader_problem_reported"
+  | "quote_card_shared";
 
 export type AnalyticsValue = string | number | boolean | null | undefined;
 export type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -278,6 +284,33 @@ export function trackStudyPlanRequested(p: {
     hours_per_day: p.hours_per_day,
     book: p.book ?? undefined,
   });
+}
+
+/* ---------- reader stream (د۵, ه۶, ه۸, و۲) ---------- */
+
+/** The free sample opened in the reader (`source`: "product" button or a direct link). */
+export function trackReaderSampleOpened(p: { book: string; format: string; pages: number }): void {
+  track("reader_sample_opened", { book: p.book, format: p.format, pages: p.pages });
+}
+
+/** A buy button at the end of the sample (`variant`: EBOOK/BUNDLE, or "product" for the page link). */
+export function trackSampleCtaClick(p: { book: string; variant: string; price?: number | null }): void {
+  track("sample_cta_click", { book: p.book, variant: p.variant, price: p.price ?? undefined });
+}
+
+/** «دریافت رایگان» succeeded (`created` false = it was already in the library). */
+export function trackFreeEbookClaimed(p: { book: string; created: boolean }): void {
+  track("free_ebook_claimed", { book: p.book, created: p.created });
+}
+
+/** «گزارش مشکل» sent from the reader. */
+export function trackReaderProblemReported(p: { book: string; kind: string; format: string }): void {
+  track("reader_problem_reported", { book: p.book, kind: p.kind, format: p.format });
+}
+
+/** Quote card produced (`method`: shared through the share sheet, or downloaded). */
+export function trackQuoteCardShared(p: { book: string; chars: number; method: "shared" | "downloaded" }): void {
+  track("quote_card_shared", { book: p.book, chars: p.chars, method: p.method });
 }
 
 /** Test helper: reset the queue, dedupe set and poller. */

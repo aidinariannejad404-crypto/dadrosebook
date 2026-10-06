@@ -8,6 +8,7 @@ import { formatJalaliDate } from "@/lib/format";
 import { HIGHLIGHT_COLORS, removeDevice, type ReaderError } from "@/lib/reader";
 import type { HighlightColor, ReaderDevice } from "@/lib/types";
 import { CloseIcon, HighlighterIcon, NoteIcon } from "@/components/ui/Icons";
+import { ImageShareIcon } from "./ReaderIcons";
 import type { ReaderTheme } from "./theme";
 
 /** Shared pieces of the PDF and EPUB readers (shell, messages, error screens, popover, drawer). */
@@ -217,13 +218,16 @@ export function SelectionPopover({
   busy,
   onColor,
   onNote,
+  onShareImage,
 }: {
   anchor: { x: number; y: number };
   busy: boolean;
   onColor: (c: HighlightColor) => void;
   onNote: () => void;
+  /** و۲ «اشتراک به‌صورت تصویر» (omitted where copying is not allowed, e.g. the free sample) */
+  onShareImage?: () => void;
 }) {
-  const WIDTH = 288;
+  const WIDTH = onShareImage ? 336 : 288;
   const vw = typeof window === "undefined" ? 360 : window.innerWidth;
   const vh = typeof window === "undefined" ? 640 : window.innerHeight;
   // physical coordinates from the selection's client rect (positioning only; classes stay logical)
@@ -260,6 +264,18 @@ export function SelectionPopover({
         <NoteIcon size={18} />
         یادداشت
       </button>
+      {onShareImage && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onShareImage}
+          aria-label="اشتراک به‌صورت تصویر"
+          title="اشتراک به‌صورت تصویر"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-primary hover:bg-primary-soft disabled:opacity-60"
+        >
+          <ImageShareIcon size={22} />
+        </button>
+      )}
     </div>
   );
 }
