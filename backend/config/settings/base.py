@@ -215,6 +215,8 @@ READER_OFFLINE_ENABLED = env.bool("READER_OFFLINE_ENABLED", default=True)
 READER_OFFLINE_MAX_BOOKS = env.int("READER_OFFLINE_MAX_BOOKS", default=3)
 READER_OFFLINE_DAYS = env.int("READER_OFFLINE_DAYS", default=14)
 READER_OFFLINE_RATE = env("READER_OFFLINE_RATE", default="10/day")
+# Screenshot attempts the reader reports (beyond this they are dropped, not refused).
+READER_CAPTURE_EVENT_RATE = env("READER_CAPTURE_EVENT_RATE", default="60/hour")
 
 # --- Celery -------------------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL)

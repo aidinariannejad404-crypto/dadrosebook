@@ -9,8 +9,10 @@ from .models import (
     OfflineLicense,
     ReaderAccessLog,
     ReaderDevice,
+    ReaderTraceCode,
     ReadingProgress,
 )
+from .services.protection import normalize_code
 
 
 class ReadOnlyAdmin(ModelAdmin):
@@ -130,3 +132,19 @@ class OfflineLicenseAdmin(ReadOnlyAdmin):
         from django.utils import timezone
 
         queryset.filter(revoked_at__isnull=True).update(revoked_at=timezone.now())
+
+
+@admin.register(ReaderTraceCode)
+class ReaderTraceCodeAdmin(ReadOnlyAdmin):
+    """Look up who leaked a screenshot by the code seen on it (any case, dash optional)."""
+
+    list_display = ("code", "user", "book", "created_at")
+    search_fields = ("code", "user__phone", "book__title")
+    search_help_text = "کد روی اسکرین‌شات را وارد کنید، مثلاً K7Q2-M9XD یا k7q2m9xd."
+    list_select_related = ("user", "book")
+
+    def get_search_results(self, request, queryset, search_term):
+        code = normalize_code(search_term)
+        if len(code) == 9:
+            return queryset.filter(code=code), False
+        return super().get_search_results(request, queryset, search_term)

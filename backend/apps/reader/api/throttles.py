@@ -52,3 +52,9 @@ class OfflineThrottle(_SettingsRateThrottle):
     scope = "reader_offline"
     setting = "READER_OFFLINE_RATE"
     default = "10/day"
+
+
+class CaptureEventThrottle(_SettingsRateThrottle):
+    scope = "reader_capture"
+    setting = "READER_CAPTURE_EVENT_RATE"
+    default = "60/hour"

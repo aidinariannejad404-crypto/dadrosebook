@@ -475,3 +475,26 @@ user's own words and are never cut). Requires the entitlement. `Content-Disposit
 The reader stores the package encrypted (AES-GCM, non-extractable key kept in IndexedDB) and deletes
 it when the license expires, when the server says 403/404 for the book, or when the license is gone
 from `GET /library/offline/` on the next online open.
+
+## Phase 6c: screenshot protection (best effort, free) (`apps.reader`)
+
+### Session additions (`GET /library/<slug>/read/`)
+```jsonc
+"protection": {
+  "level": "standard" | "high",     // per ebook file, set in the admin (default "standard")
+  "trace_code": "K7Q2-M9XD"         // per user+book, drawn faintly all over every page; staff look it up in the admin
+}
+```
+- **standard**: blank screen (white, with «برای ادامه مطالعه به صفحه برگردید») whenever the
+  window/tab is not focused or not visible (`blur`, `visibilitychange`, `pagehide`), while a
+  screenshot key combination is held (Meta/Win, Meta+Shift, Ctrl+Shift on ChromeOS, Alt+PrintScreen),
+  on `PrintScreen` (then overwrite the clipboard), on 3+ finger touches, and when the pointer leaves
+  the window on desktop. Visible watermark + dense faint trace-code watermark.
+- **high**: all of the above, plus «حالت نوار مطالعه»: only a band of a few lines around the reading
+  position is shown sharply; the rest of the page is blurred/hidden, so one screenshot holds at most a
+  few lines.
+
+### `POST /library/<slug>/capture-events/` body `{ "kind": "print_screen" | "shortcut" | "multi_touch" | "devtools" }` → `204`
+The reader reports each detected capture attempt (not plain blur/visibility changes). Logged as
+`ReaderAccessLog.kind = "capture"` with the kind in `detail`. Throttled 60/hour (extra calls are
+dropped silently with `204`).

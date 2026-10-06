@@ -28,6 +28,7 @@ from ..services.session import chapter_payload, epub_package_for, reader_session
 from ..services.signing import CONTENT_TYPES, redeem_asset_token, redeem_token
 from .serializers import (
     BookmarkSerializer,
+    CaptureEventSerializer,
     CopySerializer,
     DeviceSerializer,
     HighlightSerializer,
@@ -37,6 +38,7 @@ from .serializers import (
     ReaderSessionSerializer,
 )
 from .throttles import (
+    CaptureEventThrottle,
     ChapterDayThrottle,
     ChapterMinuteThrottle,
     CopyThrottle,
@@ -375,4 +377,31 @@ class OfflineDetailView(ReaderBaseView):
     def delete(self, request, pk):
         if not offline.revoke(request.user, pk):
             raise NotFound({"detail": "مجوز آفلاین پیدا نشد.", "code": "no_license"})
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CaptureEventView(ReaderView):
+    """A capture attempt the reader detected (screenshot key, gesture). Over the rate: dropped."""
+
+    throttle_classes = [CaptureEventThrottle]
+
+    def check_throttles(self, request):
+        self.dropped = False
+        try:
+            super().check_throttles(request)
+        except Throttled:
+            self.dropped = True
+
+    def post(self, request, slug):
+        self.check_access()
+        serializer = CaptureEventSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not self.dropped:
+            audit.log(
+                request,
+                audit.Kind.CAPTURE,
+                user=request.user,
+                book=self.book,
+                detail=serializer.validated_data["kind"],
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
